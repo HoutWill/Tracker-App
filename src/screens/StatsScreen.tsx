@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { formatCurrency } from '../services/storageService';
-import { PieChart, ArrowDownRight, ArrowUpRight, PiggyBank, Layers, TrendingUp, Award, ChevronLeft, ChevronRight, BarChart2 } from 'lucide-react';
+import { PieChart, ArrowDownRight, PiggyBank, Layers, Award, ChevronLeft, ChevronRight, BarChart2, ChevronDown, Wallet } from 'lucide-react';
 
 type StatsTab = 'EXPENSE' | 'SAVING' | 'ALL';
 
 export const StatsScreen: React.FC = () => {
-  const { expenses, currency, hideBalances } = useExpenses();
+  const { expenses, currency, hideBalances, setSelectedExpenseForEdit } = useExpenses();
   const [activeTab, setActiveTab] = useState<StatsTab>('EXPENSE');
+  const [expandedExpenseCatId, setExpandedExpenseCatId] = useState<string | null>(null);
+  const [expandedSavingCatId, setExpandedSavingCatId] = useState<string | null>(null);
 
   // Month navigation window offset (0 = current 6 months ending this month)
   const [windowOffset, setWindowOffset] = useState<number>(0);
@@ -27,9 +29,10 @@ export const StatsScreen: React.FC = () => {
   const monthExpenseUSD = expenseItems.filter(e => e.date.startsWith(currentMonthStr)).reduce((sum, e) => sum + e.amount, 0);
   const totalExpenseUSD = expenseItems.reduce((sum, e) => sum + e.amount, 0);
   const totalSavingUSD = savingItems.reduce((sum, e) => sum + e.amount, 0);
+  const netBalanceUSD = totalSavingUSD - totalExpenseUSD;
 
-  // Dynamic Expense Category & Preset Grouping Breakdown
-  const expenseGroupMap = new Map<string, { id: string; name: string; icon: string; sum: number; count: number }>();
+  // Dynamic Expense Category Breakdown
+  const expenseGroupMap = new Map<string, { id: string; name: string; icon: string; sum: number; count: number; items: typeof expenseItems }>();
   expenseItems.forEach(item => {
     const key = item.categoryName || item.title || 'General';
     const icon = item.categoryIcon || 'receipt-outline';
@@ -37,6 +40,7 @@ export const StatsScreen: React.FC = () => {
     if (existing) {
       existing.sum += item.amount;
       existing.count += 1;
+      existing.items.push(item);
     } else {
       expenseGroupMap.set(key, {
         id: item.categoryId || key,
@@ -44,6 +48,7 @@ export const StatsScreen: React.FC = () => {
         icon,
         sum: item.amount,
         count: 1,
+        items: [item],
       });
     }
   });
@@ -55,8 +60,8 @@ export const StatsScreen: React.FC = () => {
     }))
     .sort((a, b) => b.sum - a.sum);
 
-  // Dynamic Savings Category & Preset Grouping Breakdown (Shows ALL items properly)
-  const savingGroupMap = new Map<string, { id: string; name: string; icon: string; sum: number; count: number }>();
+  // Dynamic Savings Category Breakdown
+  const savingGroupMap = new Map<string, { id: string; name: string; icon: string; sum: number; count: number; items: typeof savingItems }>();
   savingItems.forEach(item => {
     const key = item.categoryName || item.title || 'Vault';
     const icon = item.categoryIcon || 'piggy-bank';
@@ -64,6 +69,7 @@ export const StatsScreen: React.FC = () => {
     if (existing) {
       existing.sum += item.amount;
       existing.count += 1;
+      existing.items.push(item);
     } else {
       savingGroupMap.set(key, {
         id: item.categoryId || key,
@@ -71,6 +77,7 @@ export const StatsScreen: React.FC = () => {
         icon,
         sum: item.amount,
         count: 1,
+        items: [item],
       });
     }
   });
@@ -153,11 +160,15 @@ export const StatsScreen: React.FC = () => {
                 border: isActive
                   ? tab.id === 'SAVING'
                     ? '1px solid var(--accent-success)'
+                    : tab.id === 'ALL'
+                    ? '1px solid #7C4DFF'
                     : '1px solid var(--accent)'
                   : '1px solid transparent',
                 backgroundColor: isActive
                   ? tab.id === 'SAVING'
                     ? 'var(--accent-success)'
+                    : tab.id === 'ALL'
+                    ? '#7C4DFF'
                     : 'var(--accent)'
                   : 'transparent',
                 color: isActive ? '#FFF' : 'var(--text-secondary)',
@@ -375,32 +386,87 @@ export const StatsScreen: React.FC = () => {
               <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Breakdown</h3>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {expenseBreakdown.length > 0 ? (
-                expenseBreakdown.map(cat => (
-                  <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <CategoryIconRenderer icon={cat.icon} size={16} color="var(--accent)" />
-                        <span style={{ fontSize: '13px', fontWeight: 700 }}>{cat.name}</span>
-                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>({cat.count})</span>
+                expenseBreakdown.map(cat => {
+                  const isExpanded = expandedExpenseCatId === cat.id;
+                  return (
+                    <div
+                      key={cat.id}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                        padding: '10px 12px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid var(--border-glass)',
+                      }}
+                    >
+                      <div
+                        onClick={() => setExpandedExpenseCatId(isExpanded ? null : cat.id)}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <CategoryIconRenderer icon={cat.icon} size={16} color="var(--accent)" />
+                          <span style={{ fontSize: '13px', fontWeight: 700 }}>{cat.name}</span>
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>({cat.count})</span>
+                        </div>
+
+                        <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="tabular-nums" style={{ fontSize: '13px', fontWeight: 800 }}>
+                            {hideBalances ? '••••' : formatCurrency(cat.sum, currency)}
+                          </span>
+                          <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', minWidth: '32px', textAlign: 'right' }}>
+                            {cat.pct}%
+                          </span>
+                          <ChevronDown
+                            size={16}
+                            color="var(--accent)"
+                            style={{
+                              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.2s ease',
+                            }}
+                          />
+                        </div>
                       </div>
 
-                      <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span className="tabular-nums" style={{ fontSize: '13px', fontWeight: 800 }}>
-                          {hideBalances ? '••••' : formatCurrency(cat.sum, currency)}
-                        </span>
-                        <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', minWidth: '36px', textAlign: 'right' }}>
-                          {cat.pct}%
-                        </span>
+                      <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'rgba(255, 255, 255, 0.08)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${cat.pct}%`, backgroundColor: 'var(--accent)', borderRadius: '3px' }} />
                       </div>
-                    </div>
 
-                    <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'rgba(255, 255, 255, 0.08)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${cat.pct}%`, backgroundColor: 'var(--accent)', borderRadius: '3px' }} />
+                      {/* Display Each Data Entry Item Underneath */}
+                      {isExpanded && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed var(--border-glass)' }}>
+                          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)' }}>TRANSACTION DATA ENTRIES</div>
+                          {cat.items.map(item => (
+                            <div
+                              key={item.id}
+                              onClick={() => setSelectedExpenseForEdit(item)}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '6px 10px',
+                                borderRadius: '8px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <div>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>{item.title}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.date} • {item.paymentMethod || 'Card'}</div>
+                              </div>
+                              <span className="tabular-nums" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)' }}>
+                                {hideBalances ? '••' : formatCurrency(item.amount, currency)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
                   Empty
@@ -612,32 +678,87 @@ export const StatsScreen: React.FC = () => {
               <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Breakdown</h3>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {savingBreakdown.length > 0 ? (
-                savingBreakdown.map(cat => (
-                  <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <CategoryIconRenderer icon={cat.icon} size={16} color="var(--accent-success)" />
-                        <span style={{ fontSize: '13px', fontWeight: 700 }}>{cat.name}</span>
-                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>({cat.count})</span>
+                savingBreakdown.map(cat => {
+                  const isExpanded = expandedSavingCatId === cat.id;
+                  return (
+                    <div
+                      key={cat.id}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                        padding: '10px 12px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(0, 230, 118, 0.04)',
+                        border: '1px solid rgba(0, 230, 118, 0.25)',
+                      }}
+                    >
+                      <div
+                        onClick={() => setExpandedSavingCatId(isExpanded ? null : cat.id)}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <CategoryIconRenderer icon={cat.icon} size={16} color="var(--accent-success)" />
+                          <span style={{ fontSize: '13px', fontWeight: 700 }}>{cat.name}</span>
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>({cat.count})</span>
+                        </div>
+
+                        <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="tabular-nums" style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent-success)' }}>
+                            {hideBalances ? '••••' : formatCurrency(cat.sum, currency)}
+                          </span>
+                          <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent-success)', minWidth: '32px', textAlign: 'right' }}>
+                            {cat.pct}%
+                          </span>
+                          <ChevronDown
+                            size={16}
+                            color="var(--accent-success)"
+                            style={{
+                              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.2s ease',
+                            }}
+                          />
+                        </div>
                       </div>
 
-                      <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span className="tabular-nums" style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent-success)' }}>
-                          {hideBalances ? '••••' : formatCurrency(cat.sum, currency)}
-                        </span>
-                        <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent-success)', minWidth: '36px', textAlign: 'right' }}>
-                          {cat.pct}%
-                        </span>
+                      <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'rgba(255, 255, 255, 0.08)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${cat.pct}%`, backgroundColor: 'var(--accent-success)', borderRadius: '3px' }} />
                       </div>
-                    </div>
 
-                    <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'rgba(255, 255, 255, 0.08)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${cat.pct}%`, backgroundColor: 'var(--accent-success)', borderRadius: '3px' }} />
+                      {/* Display EACH Individual Savings Data Entry Item */}
+                      {isExpanded && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed rgba(0, 230, 118, 0.25)' }}>
+                          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--accent-success)' }}>SAVINGS DEPOSIT DATA ENTRIES</div>
+                          {cat.items.map(item => (
+                            <div
+                              key={item.id}
+                              onClick={() => setSelectedExpenseForEdit(item)}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '6px 10px',
+                                borderRadius: '8px',
+                                backgroundColor: 'rgba(0, 230, 118, 0.08)',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <div>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>{item.title}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.date} • {item.paymentMethod || 'Vault'}</div>
+                              </div>
+                              <span className="tabular-nums" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent-success)' }}>
+                                {hideBalances ? '••' : formatCurrency(item.amount, currency)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
                   Empty
@@ -648,7 +769,7 @@ export const StatsScreen: React.FC = () => {
         </div>
       )}
 
-      {/* 3. SEPARATE ALL / COMBINED DUAL VIEW */}
+      {/* 3. COMPLETE ALL / COMBINED DUAL VIEW (SHOWING ALL STAT CARDS & COMBINED BREAKDOWN) */}
       {activeTab === 'ALL' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {/* Dual Overview Bar Chart (Expenses vs Savings Side-by-Side) */}
@@ -656,7 +777,7 @@ export const StatsScreen: React.FC = () => {
             {/* Header & Date Navigation */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <BarChart2 size={20} color="var(--accent)" />
+                <BarChart2 size={20} color="#7C4DFF" />
                 <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Overview</h3>
               </div>
 
@@ -670,7 +791,7 @@ export const StatsScreen: React.FC = () => {
                 >
                   <ChevronLeft size={14} />
                 </button>
-                <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                <span style={{ fontSize: '11px', fontWeight: 800, color: '#7C4DFF' }}>
                   {barChartData[0].name} - {barChartData[5].name}
                 </span>
                 <button
@@ -697,8 +818,8 @@ export const StatsScreen: React.FC = () => {
                 alignItems: 'center',
                 padding: '8px 12px',
                 borderRadius: '10px',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid var(--border-glass)',
+                backgroundColor: 'rgba(124, 77, 255, 0.08)',
+                border: '1px solid rgba(124, 77, 255, 0.25)',
                 marginBottom: '16px',
               }}
             >
@@ -752,7 +873,7 @@ export const StatsScreen: React.FC = () => {
                       cursor: 'pointer',
                       padding: '4px',
                       borderRadius: '10px',
-                      backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+                      backgroundColor: isSelected ? 'rgba(124, 77, 255, 0.15)' : 'transparent',
                       transition: 'all 0.2s ease',
                     }}
                   >
@@ -786,6 +907,218 @@ export const StatsScreen: React.FC = () => {
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+          {/* ALL Tab Triple Metric Cards Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+            <div className="glass-panel" style={{ padding: '12px 10px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Expenses</div>
+              <div className="tabular-nums" style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent)', marginTop: '4px' }}>
+                {hideBalances ? '••' : formatCurrency(totalExpenseUSD, currency)}
+              </div>
+            </div>
+
+            <div className="glass-panel" style={{ padding: '12px 10px', borderColor: 'rgba(0, 230, 118, 0.3)' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Savings</div>
+              <div className="tabular-nums" style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent-success)', marginTop: '4px' }}>
+                {hideBalances ? '••' : formatCurrency(totalSavingUSD, currency)}
+              </div>
+            </div>
+
+            <div className="glass-panel" style={{ padding: '12px 10px', borderColor: netBalanceUSD >= 0 ? 'rgba(0, 230, 118, 0.3)' : 'rgba(255, 82, 82, 0.3)' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Net</div>
+              <div className="tabular-nums" style={{ fontSize: '13px', fontWeight: 800, color: netBalanceUSD >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)', marginTop: '4px' }}>
+                {hideBalances ? '••' : formatCurrency(netBalanceUSD, currency)}
+              </div>
+            </div>
+          </div>
+
+          {/* ALL Tab Combined Breakdown Section */}
+          <div className="glass-panel" style={{ padding: '16px', borderColor: 'rgba(124, 77, 255, 0.35)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', color: '#7C4DFF' }}>
+              <PieChart size={18} />
+              <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Breakdown</h3>
+            </div>
+
+            {/* Expenses Breakdown Subset */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Expenses Categories
+              </div>
+              {expenseBreakdown.length > 0 ? (
+                expenseBreakdown.map(cat => {
+                  const isExpanded = expandedExpenseCatId === cat.id;
+                  return (
+                    <div
+                      key={cat.id}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                        padding: '10px 12px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(108, 92, 231, 0.05)',
+                        border: '1px solid rgba(108, 92, 231, 0.2)',
+                      }}
+                    >
+                      <div
+                        onClick={() => setExpandedExpenseCatId(isExpanded ? null : cat.id)}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <CategoryIconRenderer icon={cat.icon} size={16} color="var(--accent)" />
+                          <span style={{ fontSize: '13px', fontWeight: 700 }}>{cat.name}</span>
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>({cat.count})</span>
+                        </div>
+
+                        <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="tabular-nums" style={{ fontSize: '13px', fontWeight: 800 }}>
+                            {hideBalances ? '••••' : formatCurrency(cat.sum, currency)}
+                          </span>
+                          <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)', minWidth: '32px', textAlign: 'right' }}>
+                            {cat.pct}%
+                          </span>
+                          <ChevronDown
+                            size={16}
+                            color="var(--accent)"
+                            style={{
+                              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.2s ease',
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'rgba(255, 255, 255, 0.08)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${cat.pct}%`, backgroundColor: 'var(--accent)', borderRadius: '3px' }} />
+                      </div>
+
+                      {/* Display Each Data Entry Item Underneath */}
+                      {isExpanded && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed var(--border-glass)' }}>
+                          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)' }}>TRANSACTION DATA ENTRIES</div>
+                          {cat.items.map(item => (
+                            <div
+                              key={item.id}
+                              onClick={() => setSelectedExpenseForEdit(item)}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '6px 10px',
+                                borderRadius: '8px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <div>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>{item.title}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.date} • {item.paymentMethod || 'Card'}</div>
+                              </div>
+                              <span className="tabular-nums" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)' }}>
+                                {hideBalances ? '••' : formatCurrency(item.amount, currency)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No expense data available</div>
+              )}
+            </div>
+
+            {/* Savings Breakdown Subset */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent-success)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Savings Categories
+              </div>
+              {savingBreakdown.length > 0 ? (
+                savingBreakdown.map(cat => {
+                  const isExpanded = expandedSavingCatId === cat.id;
+                  return (
+                    <div
+                      key={cat.id}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                        padding: '10px 12px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(0, 230, 118, 0.05)',
+                        border: '1px solid rgba(0, 230, 118, 0.25)',
+                      }}
+                    >
+                      <div
+                        onClick={() => setExpandedSavingCatId(isExpanded ? null : cat.id)}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <CategoryIconRenderer icon={cat.icon} size={16} color="var(--accent-success)" />
+                          <span style={{ fontSize: '13px', fontWeight: 700 }}>{cat.name}</span>
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>({cat.count})</span>
+                        </div>
+
+                        <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="tabular-nums" style={{ fontSize: '13px', fontWeight: 800, color: 'var(--accent-success)' }}>
+                            {hideBalances ? '••••' : formatCurrency(cat.sum, currency)}
+                          </span>
+                          <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent-success)', minWidth: '32px', textAlign: 'right' }}>
+                            {cat.pct}%
+                          </span>
+                          <ChevronDown
+                            size={16}
+                            color="var(--accent-success)"
+                            style={{
+                              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.2s ease',
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ height: '6px', borderRadius: '3px', backgroundColor: 'rgba(255, 255, 255, 0.08)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${cat.pct}%`, backgroundColor: 'var(--accent-success)', borderRadius: '3px' }} />
+                      </div>
+
+                      {/* Display EACH Individual Savings Data Entry Item */}
+                      {isExpanded && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed rgba(0, 230, 118, 0.25)' }}>
+                          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--accent-success)' }}>SAVINGS DEPOSIT DATA ENTRIES</div>
+                          {cat.items.map(item => (
+                            <div
+                              key={item.id}
+                              onClick={() => setSelectedExpenseForEdit(item)}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '6px 10px',
+                                borderRadius: '8px',
+                                backgroundColor: 'rgba(0, 230, 118, 0.08)',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <div>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>{item.title}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.date} • {item.paymentMethod || 'Vault'}</div>
+                              </div>
+                              <span className="tabular-nums" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent-success)' }}>
+                                {hideBalances ? '••' : formatCurrency(item.amount, currency)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No savings data available</div>
+              )}
             </div>
           </div>
         </div>

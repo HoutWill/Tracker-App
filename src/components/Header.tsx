@@ -49,25 +49,9 @@ export const Header: React.FC = () => {
         >
           <ShieldCheck size={20} />
         </div>
-        <div>
-          <h1 style={{ fontSize: '17px', fontWeight: 800, letterSpacing: '-0.4px', lineHeight: 1.1 }}>
-            Vault
-          </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
-            <span
-              style={{
-                width: '6px',
-                height: '6px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--accent-success)',
-                display: 'inline-block',
-              }}
-            />
-            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 700 }}>
-              Guest
-            </span>
-          </div>
-        </div>
+        <h1 style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.4px', lineHeight: 1.1 }}>
+          Vault
+        </h1>
       </div>
 
       {/* Right Control Action Pills */}
@@ -104,22 +88,24 @@ export const Header: React.FC = () => {
           {isDark ? <Sun size={15} color="var(--accent)" /> : <Moon size={15} color="var(--accent)" />}
         </button>
 
-        {/* AI Assistant Button Pill */}
+        {/* Agent Button Pill */}
         <button
           className="glass-pill"
           onClick={() => setIsAiChatOpen(true)}
           style={{
-            backgroundColor: 'rgba(210, 168, 255, 0.15)',
-            borderColor: 'rgba(210, 168, 255, 0.35)',
-            color: 'var(--accent-ai)',
-            width: '34px',
+            backgroundColor: 'rgba(108, 92, 231, 0.15)',
+            borderColor: 'rgba(108, 92, 231, 0.35)',
+            color: 'var(--accent)',
             height: '34px',
-            padding: 0,
-            justifyContent: 'center',
+            padding: '0 10px',
+            fontSize: '11px',
+            fontWeight: 800,
+            gap: '4px',
           }}
-          title="Open AI Assistant"
+          title="Open Agent Chat"
         >
-          <Sparkles size={15} />
+          <Sparkles size={14} />
+          <span>Agent</span>
         </button>
       </div>
     </header>

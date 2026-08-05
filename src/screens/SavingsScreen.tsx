@@ -10,8 +10,9 @@ import { PaymentMethod, QuickPreset } from '../types';
 import { Plus, Zap, CheckCircle2, Layers, SearchX, X, Check, PiggyBank, Target, TrendingUp, Trash2 } from 'lucide-react';
 
 const SAVING_PRESET_ICONS = [
-  'piggy-bank', 'wallet', 'shield-checkmark', 'target', 'sparkles', 'trending-up',
-  'flash', 'briefcase', 'lock-closed', 'vault', 'card'
+  'piggy-bank', 'vault', 'wallet', 'shield-check', 'target', 'trending-up',
+  'coins', 'sparkles', 'lock', 'card', 'briefcase', 'gift', 'building', 'home',
+  'plane', 'heart'
 ];
 
 export const SavingsScreen: React.FC = () => {

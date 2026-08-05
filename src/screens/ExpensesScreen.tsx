@@ -10,8 +10,11 @@ import { PaymentMethod, QuickPreset } from '../types';
 import { Plus, Zap, TrendingUp, Filter, CheckCircle2, Layers, SearchX, X, Check, ArrowDownRight, Trash2, Target, Edit3 } from 'lucide-react';
 
 const PRESET_ICONS = [
-  'receipt', 'laptop', 'coffee', 'utensils', 'car', 'trending-up', 'shopping-cart',
-  'bag-handle', 'film', 'game-controller', 'fitness', 'medical', 'wallet', 'piggy-bank'
+  'receipt', 'laptop', 'coffee', 'utensils', 'car', 'shopping-cart',
+  'shopping-bag', 'film', 'gamepad2', 'cpu', 'smartphone', 'home',
+  'bus', 'plane', 'zap', 'shirt', 'tv', 'music', 'dumbbell',
+  'heart', 'gift', 'book-open', 'scissors', 'wifi', 'camera',
+  'flame', 'building', 'credit-card'
 ];
 
 export const ExpensesScreen: React.FC = () => {

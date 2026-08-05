@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useExpenses } from './context/ExpenseContext';
 import { useTheme } from './context/ThemeContext';
 import { Header } from './components/Header';
 import { AddExpenseModal } from './components/AddExpenseModal';
 import { AddSavingModal } from './components/AddSavingModal';
 import { EditExpenseModal } from './components/EditExpenseModal';
 import { EditSavingModal } from './components/EditSavingModal';
+import { AiChatModal } from './components/AiChatModal';
 import { ExpensesScreen } from './screens/ExpensesScreen';
 import { SavingsScreen } from './screens/SavingsScreen';
 import { StatsScreen } from './screens/StatsScreen';
@@ -61,6 +61,7 @@ export const App: React.FC = () => {
       <AddSavingModal />
       <EditExpenseModal />
       <EditSavingModal />
+      <AiChatModal />
 
       {/* Bottom Navigation Bar */}
       <nav
