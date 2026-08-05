@@ -10,69 +10,79 @@ const __dirname = path.dirname(__filename);
 const app = express();
 let PORT = parseInt(process.env.PORT || '3000', 10);
 const DATA_DIR = path.join(__dirname, 'data');
-const DB_FILE = path.join(DATA_DIR, 'expenses.json');
 
 app.use(cors());
 app.use(express.json());
 
-// Ensure data directory & initial file exist (Default 0 entries)
+// Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-fs.writeFileSync(DB_FILE, JSON.stringify([], null, 2));
+// Helper to get sanitized guest DB filepath
+const getDbFilePath = (req) => {
+  const rawId = req.headers['x-guest-id'] || 'default_guest';
+  const cleanId = String(rawId).replace(/[^a-zA-Z0-9_-]/g, '_');
+  return path.join(DATA_DIR, `expenses_${cleanId}.json`);
+};
 
-// Helper to read DB
-const readExpenses = () => {
+// Helper to read DB for specific guest
+const readExpenses = (req) => {
+  const file = getDbFilePath(req);
   try {
-    const raw = fs.readFileSync(DB_FILE, 'utf8');
+    if (!fs.existsSync(file)) {
+      fs.writeFileSync(file, JSON.stringify([], null, 2));
+      return [];
+    }
+    const raw = fs.readFileSync(file, 'utf8');
     return JSON.parse(raw);
   } catch (e) {
     return [];
   }
 };
 
-// Helper to write DB
-const writeExpenses = (data) => {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+// Helper to write DB for specific guest
+const writeExpenses = (req, data) => {
+  const file = getDbFilePath(req);
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
 };
 
-// REST API Endpoints
+// REST API Endpoints with Anonymous Guest Isolation
 app.get('/api/expenses', (req, res) => {
-  const expenses = readExpenses();
+  const expenses = readExpenses(req);
   res.json(expenses);
 });
 
 app.post('/api/expenses', (req, res) => {
-  const expenses = readExpenses();
+  const expenses = readExpenses(req);
   const newItem = {
     ...req.body,
     id: 'exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
     createdAt: Date.now(),
   };
   const updated = [newItem, ...expenses];
-  writeExpenses(updated);
+  writeExpenses(req, updated);
   res.status(201).json(newItem);
 });
 
 app.put('/api/expenses/:id', (req, res) => {
   const { id } = req.params;
-  const expenses = readExpenses();
+  const expenses = readExpenses(req);
   const updated = expenses.map(e => (e.id === id ? { ...e, ...req.body } : e));
-  writeExpenses(updated);
+  writeExpenses(req, updated);
   res.json({ success: true });
 });
 
 app.delete('/api/expenses/:id', (req, res) => {
   const { id } = req.params;
-  const expenses = readExpenses();
+  const expenses = readExpenses(req);
   const updated = expenses.filter(e => e.id !== id);
-  writeExpenses(updated);
+  writeExpenses(req, updated);
   res.json({ success: true });
 });
 
 app.post('/api/expenses/reset', (req, res) => {
-  writeExpenses([]);
+  writeExpenses(req, []);
   res.json({ success: true });
 });
 
