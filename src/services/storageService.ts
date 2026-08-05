@@ -11,13 +11,48 @@ export const formatCurrency = (amountUSD: number, currency: CurrencyCode): strin
 };
 
 export const getGuestId = (): string => {
-  let gid = localStorage.getItem('guest_device_id');
-  if (!gid) {
-    gid = 'guest_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
-    localStorage.setItem('guest_device_id', gid);
+  try {
+    let gid = localStorage.getItem('guest_device_id');
+    if (!gid) {
+      gid = 'guest_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+      localStorage.setItem('guest_device_id', gid);
+    }
+    return gid;
+  } catch (e) {
+    return 'guest_default';
   }
-  return gid;
 };
+
+const DEFAULT_DEMO_EXPENSES: ExpenseItem[] = [
+  {
+    id: 'exp-demo-1',
+    title: 'Emergency Vault Deposit',
+    amount: 50,
+    currency: 'USD',
+    type: 'SAVING',
+    categoryId: 'cat-saving-vault',
+    categoryName: 'Vault',
+    categoryIcon: 'piggy-bank',
+    categoryColor: '#00E676',
+    date: new Date().toISOString().split('T')[0],
+    paymentMethod: 'Bank',
+    createdAt: Date.now() - 3600000,
+  },
+  {
+    id: 'exp-demo-2',
+    title: 'Iced Coffee',
+    amount: 3.5,
+    currency: 'USD',
+    type: 'EXPENSE',
+    categoryId: 'cat-coffee',
+    categoryName: 'Coffee',
+    categoryIcon: 'cafe-outline',
+    categoryColor: '#6C5CE7',
+    date: new Date().toISOString().split('T')[0],
+    paymentMethod: 'Card',
+    createdAt: Date.now() - 7200000,
+  },
+];
 
 export const StorageService = {
   async getExpenses(): Promise<ExpenseItem[]> {
@@ -26,14 +61,25 @@ export const StorageService = {
       const res = await fetch('/api/expenses', {
         headers: { 'x-guest-id': guestId },
       });
-      if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         return await res.json();
       }
     } catch (e) {
       console.warn('API unavailable, reading local fallback');
     }
-    const local = localStorage.getItem(`expenses_${guestId}`) || localStorage.getItem('expenses');
-    return local ? JSON.parse(local) : [];
+
+    try {
+      const local = localStorage.getItem(`expenses_${guestId}`) || localStorage.getItem('expenses');
+      if (local) {
+        return JSON.parse(local);
+      }
+      // Save initial demo items for new visitors
+      localStorage.setItem(`expenses_${guestId}`, JSON.stringify(DEFAULT_DEMO_EXPENSES));
+      return DEFAULT_DEMO_EXPENSES;
+    } catch (e) {
+      return DEFAULT_DEMO_EXPENSES;
+    }
   },
 
   async addExpense(item: Omit<ExpenseItem, 'id' | 'createdAt'>): Promise<ExpenseItem> {
@@ -53,7 +99,8 @@ export const StorageService = {
         },
         body: JSON.stringify(item),
       });
-      if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         return await res.json();
       }
     } catch (e) {
@@ -62,7 +109,9 @@ export const StorageService = {
 
     const current = await this.getExpenses();
     const updated = [newItem, ...current];
-    localStorage.setItem(`expenses_${guestId}`, JSON.stringify(updated));
+    try {
+      localStorage.setItem(`expenses_${guestId}`, JSON.stringify(updated));
+    } catch (e) {}
     return newItem;
   },
 
@@ -81,7 +130,9 @@ export const StorageService = {
 
     const current = await this.getExpenses();
     const updated = current.map(e => (e.id === id ? { ...e, ...updatedFields } : e));
-    localStorage.setItem(`expenses_${guestId}`, JSON.stringify(updated));
+    try {
+      localStorage.setItem(`expenses_${guestId}`, JSON.stringify(updated));
+    } catch (e) {}
   },
 
   async deleteExpense(id: string): Promise<void> {
@@ -95,7 +146,9 @@ export const StorageService = {
 
     const current = await this.getExpenses();
     const updated = current.filter(e => e.id !== id);
-    localStorage.setItem(`expenses_${guestId}`, JSON.stringify(updated));
+    try {
+      localStorage.setItem(`expenses_${guestId}`, JSON.stringify(updated));
+    } catch (e) {}
   },
 
   async clearAll(): Promise<void> {
@@ -106,29 +159,37 @@ export const StorageService = {
         headers: { 'x-guest-id': guestId },
       });
     } catch (e) {}
-    localStorage.removeItem(`expenses_${guestId}`);
-    localStorage.removeItem('expenses');
+    try {
+      localStorage.removeItem(`expenses_${guestId}`);
+      localStorage.removeItem('expenses');
+    } catch (e) {}
   },
 
   getCustomPresetAmounts(): Record<string, number> {
     const guestId = getGuestId();
-    const local = localStorage.getItem(`preset_custom_amounts_${guestId}`) || localStorage.getItem('preset_custom_amounts');
-    return local ? JSON.parse(local) : {};
+    try {
+      const local = localStorage.getItem(`preset_custom_amounts_${guestId}`) || localStorage.getItem('preset_custom_amounts');
+      return local ? JSON.parse(local) : {};
+    } catch (e) {
+      return {};
+    }
   },
 
   saveCustomPresetAmount(presetId: string, amount: number): void {
     const guestId = getGuestId();
     const current = this.getCustomPresetAmounts();
     current[presetId] = amount;
-    localStorage.setItem(`preset_custom_amounts_${guestId}`, JSON.stringify(current));
+    try {
+      localStorage.setItem(`preset_custom_amounts_${guestId}`, JSON.stringify(current));
+    } catch (e) {}
   },
 
   getPresetsList(type: 'EXPENSE' | 'SAVING', defaultList: QuickPreset[]): QuickPreset[] {
     const guestId = getGuestId();
     const key = type === 'EXPENSE' ? `expense_presets_custom_${guestId}` : `saving_presets_custom_${guestId}`;
-    const local = localStorage.getItem(key) || localStorage.getItem(type === 'EXPENSE' ? 'expense_presets_custom' : 'saving_presets_custom');
-    if (!local) return defaultList;
     try {
+      const local = localStorage.getItem(key) || localStorage.getItem(type === 'EXPENSE' ? 'expense_presets_custom' : 'saving_presets_custom');
+      if (!local) return defaultList;
       return JSON.parse(local);
     } catch (e) {
       return defaultList;
@@ -138,6 +199,8 @@ export const StorageService = {
   savePresetsList(type: 'EXPENSE' | 'SAVING', list: QuickPreset[]): void {
     const guestId = getGuestId();
     const key = type === 'EXPENSE' ? `expense_presets_custom_${guestId}` : `saving_presets_custom_${guestId}`;
-    localStorage.setItem(key, JSON.stringify(list));
+    try {
+      localStorage.setItem(key, JSON.stringify(list));
+    } catch (e) {}
   },
 };
