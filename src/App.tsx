@@ -48,7 +48,7 @@ export const App: React.FC = () => {
       <Header />
 
       {/* Main Active Screen */}
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, paddingBottom: '90px' }}>
         {activeTab === 'EXPENSES' && <ExpensesScreen />}
         {activeTab === 'SAVINGS' && <SavingsScreen />}
         {activeTab === 'STATS' && <StatsScreen />}
@@ -63,22 +63,26 @@ export const App: React.FC = () => {
       <EditSavingModal />
       <AiChatModal />
 
-      {/* Bottom Navigation Bar */}
+      {/* Modern Floating Liquid Glass Dock Bottom Navigation Bar */}
       <nav
         style={{
           position: 'fixed',
-          bottom: 0,
+          bottom: '16px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '100%',
-          maxWidth: '480px',
-          height: '64px',
-          backgroundColor: 'var(--bg-card)',
-          backdropFilter: 'blur(20px)',
-          borderTop: '1px solid var(--border-glass)',
+          width: 'calc(100% - 24px)',
+          maxWidth: '440px',
+          height: '62px',
+          backgroundColor: 'rgba(25, 25, 30, 0.85)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: '24px',
+          boxShadow: '0 12px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08) inset',
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'center',
+          padding: '0 8px',
           zIndex: 40,
         }}
       >
@@ -98,15 +102,17 @@ export const App: React.FC = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabName)}
               style={{
-                background: 'none',
-                border: 'none',
+                background: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+                border: isActive ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
+                borderRadius: '16px',
+                padding: '6px 10px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: '3px',
                 color: isActive ? tabColor : 'var(--text-muted)',
                 cursor: 'pointer',
-                transition: 'color 0.2s ease',
+                transition: 'all 0.2s ease',
               }}
             >
               <Icon size={19} />

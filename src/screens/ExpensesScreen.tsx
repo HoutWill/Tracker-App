@@ -39,6 +39,7 @@ export const ExpensesScreen: React.FC = () => {
   const [activePreset, setActivePreset] = useState<QuickPreset | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('Card');
   const [presetAmount, setPresetAmount] = useState<string>('');
+  const [presetCurrency, setPresetCurrency] = useState<'USD' | 'KHR'>('USD');
   const [presetDate, setPresetDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   // Edit Budget Target state
@@ -49,6 +50,7 @@ export const ExpensesScreen: React.FC = () => {
   const [isCreatingPreset, setIsCreatingPreset] = useState<boolean>(false);
   const [newPresetTitle, setNewPresetTitle] = useState<string>('');
   const [newPresetAmount, setNewPresetAmount] = useState<string>('');
+  const [newPresetCurrency, setNewPresetCurrency] = useState<'USD' | 'KHR'>('USD');
   const [newPresetCategory, setNewPresetCategory] = useState<string>('');
   const [newPresetIcon, setNewPresetIcon] = useState<string>('receipt');
 
@@ -78,6 +80,7 @@ export const ExpensesScreen: React.FC = () => {
   const handleOpenPresetModal = (preset: QuickPreset) => {
     setActivePreset(preset);
     setPresetAmount(preset.amount.toString());
+    setPresetCurrency(preset.currency || 'USD');
     setPresetDate(new Date().toISOString().split('T')[0]);
     setSelectedPayment('Card');
   };
@@ -91,16 +94,18 @@ export const ExpensesScreen: React.FC = () => {
       return;
     }
 
-    const updatedList = presetsList.map(p => (p.id === activePreset.id ? { ...p, amount: num } : p));
+    const updatedList = presetsList.map(p => (p.id === activePreset.id ? { ...p, amount: num, currency: presetCurrency } : p));
     setPresetsList(updatedList);
     StorageService.savePresetsList('EXPENSE', updatedList);
 
     const cat = categories.find(c => c.id === activePreset.categoryId) || categories[0];
 
+    const amountUSD = presetCurrency === 'KHR' ? num / 4000 : num;
+
     await addExpense({
       title: activePreset.title,
-      amount: num,
-      currency: activePreset.currency,
+      amount: amountUSD,
+      currency: presetCurrency,
       type: 'EXPENSE',
       categoryId: cat.id,
       categoryName: cat.name,
@@ -111,7 +116,7 @@ export const ExpensesScreen: React.FC = () => {
       notes: `Quick log via ${selectedPayment}`,
     });
 
-    setToastMsg(`Logged "${activePreset.title}" (${formatCurrency(num, currency)})!`);
+    setToastMsg(`Logged "${activePreset.title}" (${formatCurrency(amountUSD, currency)})!`);
     setActivePreset(null);
     setTimeout(() => setToastMsg(null), 3000);
   };
@@ -158,11 +163,13 @@ export const ExpensesScreen: React.FC = () => {
 
     const cat = categories.find(c => c.id === newPresetCategory) || expenseCategories[0] || categories[0];
 
+    const amountUSD = newPresetCurrency === 'KHR' ? num / 4000 : num;
+
     const newPreset: QuickPreset = {
       id: 'preset-custom-' + Date.now(),
       title: newPresetTitle.trim(),
-      amount: num,
-      currency: 'USD',
+      amount: amountUSD,
+      currency: newPresetCurrency,
       categoryId: cat.id,
       icon: newPresetIcon || cat.icon || 'receipt',
       type: 'EXPENSE',
@@ -602,29 +609,64 @@ export const ExpensesScreen: React.FC = () => {
 
             <div>
               <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                Amount
+                Amount & Currency
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={newPresetAmount}
-                onChange={e => setNewPresetAmount(e.target.value)}
-                placeholder="0.00"
-                required
-                style={{
-                  width: '100%',
-                  height: '42px',
-                  padding: '0 12px',
-                  borderRadius: '10px',
-                  border: '1px solid var(--border-glass)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  color: pageAccent,
-                  fontSize: '15px',
-                  fontWeight: 800,
-                  marginTop: '4px',
-                  outline: 'none',
-                }}
-              />
+              <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={newPresetAmount}
+                  onChange={e => setNewPresetAmount(e.target.value)}
+                  placeholder="0.00"
+                  required
+                  style={{
+                    flex: 1,
+                    height: '42px',
+                    padding: '0 12px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--border-glass)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: pageAccent,
+                    fontSize: '15px',
+                    fontWeight: 800,
+                    outline: 'none',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '4px', width: '120px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setNewPresetCurrency('USD')}
+                    style={{
+                      flex: 1,
+                      borderRadius: '8px',
+                      border: newPresetCurrency === 'USD' ? `1px solid ${pageAccent}` : '1px solid var(--border-glass)',
+                      backgroundColor: newPresetCurrency === 'USD' ? pageAccent : 'rgba(255, 255, 255, 0.05)',
+                      color: '#FFF',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    $ USD
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewPresetCurrency('KHR')}
+                    style={{
+                      flex: 1,
+                      borderRadius: '8px',
+                      border: newPresetCurrency === 'KHR' ? `1px solid ${pageAccent}` : '1px solid var(--border-glass)',
+                      backgroundColor: newPresetCurrency === 'KHR' ? pageAccent : 'rgba(255, 255, 255, 0.05)',
+                      color: '#FFF',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ៛ KHR
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Category Selector */}
@@ -792,30 +834,65 @@ export const ExpensesScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Editable Amount Input */}
+            {/* Editable Amount & Currency Input */}
             <div>
               <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                Amount
+                Amount & Currency
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={presetAmount}
-                onChange={e => setPresetAmount(e.target.value)}
-                style={{
-                  width: '100%',
-                  height: '42px',
-                  padding: '0 12px',
-                  borderRadius: '10px',
-                  border: '1px solid var(--border-glass)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  color: 'var(--text-primary)',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  marginTop: '4px',
-                  outline: 'none',
-                }}
-              />
+              <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={presetAmount}
+                  onChange={e => setPresetAmount(e.target.value)}
+                  style={{
+                    flex: 1,
+                    height: '42px',
+                    padding: '0 12px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--border-glass)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    outline: 'none',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '4px', width: '120px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setPresetCurrency('USD')}
+                    style={{
+                      flex: 1,
+                      borderRadius: '8px',
+                      border: presetCurrency === 'USD' ? `1px solid ${pageAccent}` : '1px solid var(--border-glass)',
+                      backgroundColor: presetCurrency === 'USD' ? pageAccent : 'rgba(255, 255, 255, 0.05)',
+                      color: '#FFF',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    $ USD
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPresetCurrency('KHR')}
+                    style={{
+                      flex: 1,
+                      borderRadius: '8px',
+                      border: presetCurrency === 'KHR' ? `1px solid ${pageAccent}` : '1px solid var(--border-glass)',
+                      backgroundColor: presetCurrency === 'KHR' ? pageAccent : 'rgba(255, 255, 255, 0.05)',
+                      color: '#FFF',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ៛ KHR
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Payment Method Selector */}
