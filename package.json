@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "deploy": "npx wrangler deploy --assets=./dist",
     "preview": "vite preview",
     "start": "node server.js"
   },
