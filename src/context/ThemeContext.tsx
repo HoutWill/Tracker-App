@@ -7,12 +7,12 @@ export interface PageColors {
 
 export const DEFAULT_PAGE_COLORS: PageColors = {
   EXPENSES: '#6C5CE7', // Electric Violet
-  SAVING: '#00E676',   // Emerald Green
+  SAVING: '#00B894',   // Refined Emerald Green
 };
 
 export const COLOR_PALETTE_OPTIONS = [
   { name: 'Violet', hex: '#6C5CE7' },
-  { name: 'Emerald', hex: '#00E676' },
+  { name: 'Emerald', hex: '#00B894' },
   { name: 'Cyan', hex: '#00CEC9' },
   { name: 'Orange', hex: '#FF7675' },
   { name: 'Pink', hex: '#FD79A8' },
@@ -21,8 +21,8 @@ export const COLOR_PALETTE_OPTIONS = [
 ];
 
 export const PRESET_COLOR_PALETTE = [
-  '#6C5CE7', '#00E676', '#00CEC9', '#FF7675', '#FD79A8',
-  '#FDCB6E', '#74B9FF', '#A29BFE', '#E17055', '#00B894'
+  '#6C5CE7', '#00B894', '#00CEC9', '#FF7675', '#FD79A8',
+  '#FDCB6E', '#74B9FF', '#A29BFE', '#E17055', '#10B981'
 ];
 
 export const getPresetColor = (index: number): string => {
@@ -62,7 +62,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const saved = localStorage.getItem('page_theme_colors');
     if (!saved) return DEFAULT_PAGE_COLORS;
     try {
-      return { ...DEFAULT_PAGE_COLORS, ...JSON.parse(saved) };
+      const parsed = JSON.parse(saved);
+      if (parsed.SAVING === '#00E676') {
+        parsed.SAVING = '#00B894';
+      }
+      return { ...DEFAULT_PAGE_COLORS, ...parsed };
     } catch (e) {
       return DEFAULT_PAGE_COLORS;
     }

@@ -16,7 +16,7 @@ const SAVING_PRESET_ICONS = [
 
 export const SavingsScreen: React.FC = () => {
   const { pageColors } = useTheme();
-  const pageAccent = pageColors?.SAVING || '#00E676';
+  const pageAccent = pageColors?.SAVING || '#00B894';
 
   const {
     expenses,
