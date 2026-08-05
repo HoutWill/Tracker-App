@@ -1,0 +1,5 @@
+npx skills add https://github.com/anthropics/skills --skill frontend-design
+npx skills add https://github.com/anthropics/skills --skill skill-creator
+npx skills add https://github.com/nextlevelbuilder/ui-ux-pro-max-skill --skill ui-ux-pro-max
+npx skills add https://github.com/browser-use/browser-use --skill browser-use
+npx skills add https://github.com/affaan-m/ECC --skill taste

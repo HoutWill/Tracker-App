@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Expense Tracker",
+    "slug": "expense-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "expensetracker",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#191919"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.expensetracker.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#191919"
+      },
+      "package": "com.expensetracker.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4b8a1583-ab4a-4a57-af5f-4035ef9ca1cf"
+      }
+    }
+  }
+}
