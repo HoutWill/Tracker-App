@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useExpenses } from '../context/ExpenseContext';
-import { Wallet, Sun, Moon, CreditCard, Sparkles } from 'lucide-react';
+import { ShieldCheck, Sun, Moon, Sparkles, DollarSign } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { isDark, toggleTheme, pageColors } = useTheme();
@@ -19,55 +19,92 @@ export const Header: React.FC = () => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '14px 16px',
+        height: '60px',
+        padding: '0 16px',
         borderBottom: '1px solid var(--border-glass)',
         backgroundColor: 'var(--bg-card)',
-        backdropFilter: 'blur(20px)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
         position: 'sticky',
         top: 0,
-        zIndex: 40,
+        zIndex: 50,
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
       }}
     >
+      {/* Left Brand Identifier */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div
           style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '12px',
+            width: '36px',
+            height: '36px',
+            borderRadius: '11px',
             border: `1px solid ${hexToRgba(accentColor, 0.35)}`,
-            backgroundColor: hexToRgba(accentColor, 0.15),
+            backgroundColor: hexToRgba(accentColor, 0.14),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--accent)',
+            color: accentColor,
+            boxShadow: `0 2px 10px ${hexToRgba(accentColor, 0.25)}`,
           }}
         >
-          <Wallet size={22} />
+          <ShieldCheck size={20} />
         </div>
         <div>
-          <h1 style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.4px' }}>Vault</h1>
-          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>PWA</p>
+          <h1 style={{ fontSize: '17px', fontWeight: 800, letterSpacing: '-0.4px', lineHeight: 1.1 }}>
+            Vault
+          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
+            <span
+              style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--accent-success)',
+                display: 'inline-block',
+              }}
+            />
+            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 700 }}>
+              Guest
+            </span>
+          </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {/* Theme Toggle Button */}
+      {/* Right Control Action Pills */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {/* Currency Switcher Pill */}
         <button
           className="glass-pill"
-          onClick={toggleTheme}
-          style={{ width: '36px', height: '36px', padding: 0, justifyContent: 'center' }}
-          title="Toggle Theme"
+          onClick={toggleCurrency}
+          style={{
+            height: '34px',
+            padding: '0 10px',
+            fontSize: '11px',
+            fontWeight: 800,
+            gap: '4px',
+          }}
+          title="Switch Currency"
         >
-          {isDark ? <Sun size={16} color="var(--accent)" /> : <Moon size={16} color="var(--accent)" />}
-        </button>
-
-        {/* Currency Toggle Button */}
-        <button className="glass-pill" onClick={toggleCurrency} title="Switch Currency">
-          <CreditCard size={14} color="var(--accent)" />
+          <DollarSign size={13} color="var(--accent)" />
           <span>{currency === 'USD' ? 'USD' : 'KHR'}</span>
         </button>
 
-        {/* AI Assistant Button */}
+        {/* Light / Dark Mode Toggle Pill */}
+        <button
+          className="glass-pill"
+          onClick={toggleTheme}
+          style={{
+            width: '34px',
+            height: '34px',
+            padding: 0,
+            justifyContent: 'center',
+          }}
+          title="Toggle Theme"
+        >
+          {isDark ? <Sun size={15} color="var(--accent)" /> : <Moon size={15} color="var(--accent)" />}
+        </button>
+
+        {/* AI Assistant Button Pill */}
         <button
           className="glass-pill"
           onClick={() => setIsAiChatOpen(true)}
@@ -75,14 +112,14 @@ export const Header: React.FC = () => {
             backgroundColor: 'rgba(210, 168, 255, 0.15)',
             borderColor: 'rgba(210, 168, 255, 0.35)',
             color: 'var(--accent-ai)',
-            width: '36px',
-            height: '36px',
+            width: '34px',
+            height: '34px',
             padding: 0,
             justifyContent: 'center',
           }}
           title="Open AI Assistant"
         >
-          <Sparkles size={16} />
+          <Sparkles size={15} />
         </button>
       </div>
     </header>
