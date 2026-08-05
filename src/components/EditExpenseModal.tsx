@@ -1,67 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
-import { PaymentMethod, TransactionType } from '../types';
-import { X, Trash2, Check, PiggyBank, ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { PaymentMethod } from '../types';
+import { X, Check, ArrowDownRight, Trash2 } from 'lucide-react';
 
-export const ExpenseDetailModal: React.FC = () => {
-  const {
-    selectedExpenseForEdit,
-    setSelectedExpenseForEdit,
-    updateExpense,
-    deleteExpense,
-    categories,
-  } = useExpenses();
+export const EditExpenseModal: React.FC = () => {
+  const { selectedExpenseForEdit, setSelectedExpenseForEdit, updateExpense, deleteExpense, categories, currency } = useExpenses();
 
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
-  const [type, setType] = useState<TransactionType>('EXPENSE');
   const [categoryId, setCategoryId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Card');
   const [dateStr, setDateStr] = useState('');
   const [notes, setNotes] = useState('');
 
+  const isSavingItem = selectedExpenseForEdit?.type === 'SAVING' || selectedExpenseForEdit?.categoryId.startsWith('cat-saving');
+
+  // Pure Expense categories list
+  const expenseCategories = categories.filter(c => c.type !== 'SAVING' && c.type !== 'INCOME' && !c.id.startsWith('cat-saving'));
+
   useEffect(() => {
-    if (selectedExpenseForEdit) {
+    if (selectedExpenseForEdit && !isSavingItem) {
       setTitle(selectedExpenseForEdit.title || '');
       setAmount(selectedExpenseForEdit.amount ? selectedExpenseForEdit.amount.toString() : '0');
-      setType(selectedExpenseForEdit.type || (selectedExpenseForEdit.categoryId === 'cat-saving' ? 'SAVING' : 'EXPENSE'));
-      setCategoryId(selectedExpenseForEdit.categoryId || categories[0]?.id || 'cat-food');
+      setCategoryId(selectedExpenseForEdit.categoryId || expenseCategories[0]?.id || 'cat-food');
       setPaymentMethod(selectedExpenseForEdit.paymentMethod || 'Card');
       setDateStr(selectedExpenseForEdit.date || new Date().toISOString().split('T')[0]);
       setNotes(selectedExpenseForEdit.notes || '');
     }
   }, [selectedExpenseForEdit]);
 
-  if (!selectedExpenseForEdit) return null;
+  if (!selectedExpenseForEdit || isSavingItem) return null;
 
-  const handleUpdate = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     const num = parseFloat(amount);
     if (!title.trim() || isNaN(num) || num <= 0) {
-      alert('Please enter a valid title and positive amount.');
+      alert('Please enter a valid title and amount.');
       return;
     }
 
-    const selectedCat = categories.find(c => c.id === categoryId) || categories[0];
+    const cat = categories.find(c => c.id === categoryId) || expenseCategories[0];
 
     await updateExpense(selectedExpenseForEdit.id, {
       title: title.trim(),
       amount: num,
-      type,
-      categoryId: selectedCat.id,
-      categoryName: selectedCat.name,
-      categoryIcon: selectedCat.icon,
-      categoryColor: selectedCat.color,
-      paymentMethod,
+      type: 'EXPENSE',
+      categoryId: cat.id,
+      categoryName: cat.name,
+      categoryIcon: cat.icon,
+      categoryColor: cat.color,
       date: dateStr,
+      paymentMethod,
       notes: notes.trim(),
     });
+
     setSelectedExpenseForEdit(null);
   };
 
-  const handleDelete = () => {
-    if (window.confirm(`Delete "${selectedExpenseForEdit.title}"?`)) {
-      deleteExpense(selectedExpenseForEdit.id);
+  const handleDelete = async () => {
+    if (window.confirm(`Delete expense "${selectedExpenseForEdit.title}"?`)) {
+      await deleteExpense(selectedExpenseForEdit.id);
       setSelectedExpenseForEdit(null);
     }
   };
@@ -71,8 +70,8 @@ export const ExpenseDetailModal: React.FC = () => {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(10px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backdropFilter: 'blur(12px)',
         zIndex: 100,
         display: 'flex',
         alignItems: 'center',
@@ -81,97 +80,87 @@ export const ExpenseDetailModal: React.FC = () => {
       }}
       onClick={() => setSelectedExpenseForEdit(null)}
     >
-      <div
+      <form
         className="glass-panel"
+        onSubmit={handleSubmit}
         onClick={e => e.stopPropagation()}
         style={{
           width: '100%',
-          maxWidth: '440px',
+          maxWidth: '430px',
           maxHeight: '90vh',
           overflowY: 'auto',
-          padding: '20px',
+          padding: '22px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px',
+          gap: '14px',
+          borderColor: 'rgba(108, 92, 231, 0.4)',
         }}
       >
-        {/* Modal Header */}
+        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
               style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                backgroundColor: 'rgba(46, 170, 220, 0.15)',
-                border: '1px solid rgba(46, 170, 220, 0.3)',
+                width: '38px',
+                height: '38px',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(108, 92, 231, 0.15)',
+                border: '1px solid rgba(108, 92, 231, 0.4)',
                 color: 'var(--accent)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <CategoryIconRenderer icon={selectedExpenseForEdit.categoryIcon || 'receipt-outline'} size={18} />
+              <ArrowDownRight size={22} />
             </div>
-            <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Edit Record</h3>
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Edit</h3>
+            </div>
           </div>
-          <button
-            onClick={() => setSelectedExpenseForEdit(null)}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-          >
-            <X size={20} />
-          </button>
-        </div>
 
-        {/* Transaction Type Selector */}
-        <div>
-          <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Transaction Type
-          </label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '4px' }}>
-            {[
-              { id: 'EXPENSE', label: 'Expense', icon: ArrowDownRight },
-              { id: 'SAVING', label: 'Saving', icon: PiggyBank },
-              { id: 'INCOME', label: 'Income', icon: ArrowUpRight },
-            ].map(t => {
-              const isActive = type === t.id;
-              const Icon = t.icon;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  className="glass-pill"
-                  onClick={() => setType(t.id as TransactionType)}
-                  style={{
-                    justifyContent: 'center',
-                    padding: '8px 4px',
-                    backgroundColor: isActive ? 'var(--accent)' : 'rgba(255, 255, 255, 0.06)',
-                    borderColor: isActive ? 'var(--accent)' : 'var(--border-glass)',
-                    color: isActive ? '#FFF' : 'var(--text-primary)',
-                    fontSize: '11px',
-                    gap: '4px',
-                  }}
-                >
-                  <Icon size={12} />
-                  {t.label}
-                </button>
-              );
-            })}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={handleDelete}
+              style={{
+                background: 'rgba(255, 82, 82, 0.15)',
+                border: '1px solid rgba(255, 82, 82, 0.3)',
+                color: 'var(--accent-danger)',
+                borderRadius: '10px',
+                padding: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title="Delete"
+            >
+              <Trash2 size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedExpenseForEdit(null)}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            >
+              <X size={20} />
+            </button>
           </div>
         </div>
 
         {/* Title Input */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Title / Name
+            Title
           </label>
           <input
             type="text"
             value={title}
             onChange={e => setTitle(e.target.value)}
+            required
             style={{
               width: '100%',
-              height: '40px',
+              height: '42px',
               padding: '0 12px',
               borderRadius: '10px',
               border: '1px solid var(--border-glass)',
@@ -187,39 +176,42 @@ export const ExpenseDetailModal: React.FC = () => {
         {/* Amount Input */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Amount (USD $)
+            Amount ({currency})
           </label>
           <input
             type="number"
             step="0.01"
             value={amount}
             onChange={e => setAmount(e.target.value)}
+            required
             style={{
               width: '100%',
-              height: '40px',
+              height: '42px',
               padding: '0 12px',
               borderRadius: '10px',
               border: '1px solid var(--border-glass)',
               backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              color: 'var(--text-primary)',
-              fontSize: '13px',
+              color: 'var(--accent-danger)',
+              fontSize: '15px',
+              fontWeight: 800,
               marginTop: '4px',
               outline: 'none',
             }}
           />
         </div>
 
-        {/* Category Selector */}
+        {/* Expense Category Selector */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
             Category
           </label>
           <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingTop: '4px', paddingBottom: '4px' }}>
-            {categories.map(cat => {
+            {expenseCategories.map(cat => {
               const isActive = categoryId === cat.id;
               return (
                 <button
                   key={cat.id}
+                  type="button"
                   className="glass-pill"
                   onClick={() => setCategoryId(cat.id)}
                   style={{
@@ -239,7 +231,7 @@ export const ExpenseDetailModal: React.FC = () => {
         {/* Payment Method Selector */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Payment Method
+            Payment
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
             {(['Card', 'Cash', 'Bank', 'Pay'] as const).map(pm => {
@@ -247,6 +239,7 @@ export const ExpenseDetailModal: React.FC = () => {
               return (
                 <button
                   key={pm}
+                  type="button"
                   className="glass-pill"
                   onClick={() => setPaymentMethod(pm)}
                   style={{
@@ -265,7 +258,7 @@ export const ExpenseDetailModal: React.FC = () => {
         {/* Date Input */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Date (YYYY-MM-DD)
+            Date
           </label>
           <input
             type="date"
@@ -289,7 +282,7 @@ export const ExpenseDetailModal: React.FC = () => {
         {/* Notes Input */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Notes / Memo
+            Notes
           </label>
           <textarea
             value={notes}
@@ -311,51 +304,29 @@ export const ExpenseDetailModal: React.FC = () => {
           />
         </div>
 
-        {/* Modal Action Buttons */}
-        <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-          <button
-            onClick={handleDelete}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '10px 16px',
-              borderRadius: '10px',
-              border: '1px solid rgba(255, 123, 114, 0.35)',
-              backgroundColor: 'rgba(255, 123, 114, 0.15)',
-              color: 'var(--accent-danger)',
-              fontWeight: 800,
-              fontSize: '12px',
-              cursor: 'pointer',
-            }}
-          >
-            <Trash2 size={14} />
-            Delete
-          </button>
-
-          <button
-            onClick={handleUpdate}
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              padding: '10px',
-              borderRadius: '10px',
-              border: 'none',
-              backgroundColor: 'var(--accent)',
-              color: '#FFF',
-              fontWeight: 800,
-              fontSize: '13px',
-              cursor: 'pointer',
-            }}
-          >
-            <Check size={16} />
-            Save Changes
-          </button>
-        </div>
-      </div>
+        {/* Save Button */}
+        <button
+          type="submit"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            padding: '12px',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: 'var(--accent)',
+            color: '#FFF',
+            fontWeight: 800,
+            fontSize: '14px',
+            cursor: 'pointer',
+            marginTop: '6px',
+          }}
+        >
+          <Check size={18} />
+          Save
+        </button>
+      </form>
     </div>
   );
 };

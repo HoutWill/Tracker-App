@@ -10,8 +10,7 @@ import { SettingsScreen } from './src/screens/SettingsScreen';
 import { QuickAddModal } from './src/components/QuickAddModal';
 import { ExpenseDetailModal } from './src/components/ExpenseDetailModal';
 import { AiChatModal } from './src/components/AiChatModal';
-import { NotionDatabaseIcon, CalendarIcon, WalletIcon } from './src/components/SvgIcons';
-import { ActiveTab } from './src/types';
+import { Ionicons } from '@expo/vector-icons';
 
 function MainApp() {
   const { theme, isDark } = useTheme();
@@ -58,43 +57,91 @@ function MainApp() {
         {activeTab === 'settings' && <SettingsScreen />}
       </View>
 
-      {/* Notion Bottom Tab Navigation Bar */}
-      <View style={[styles.bottomBar, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
+      {/* Liquid Glass iOS Bottom Navigation Bar */}
+      <View
+        style={[
+          styles.bottomBar,
+          {
+            backgroundColor: isDark ? 'rgba(25, 25, 25, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+          },
+        ]}
+      >
         <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'home' ? { backgroundColor: theme.bgHover } : null]}
+          style={[
+            styles.tabBtn,
+            activeTab === 'home'
+              ? { backgroundColor: isDark ? 'rgba(46, 170, 220, 0.18)' : 'rgba(46, 170, 220, 0.1)' }
+              : null,
+          ]}
           onPress={() => setActiveTab('home')}
+          activeOpacity={0.7}
         >
-          <NotionDatabaseIcon size={20} color={activeTab === 'home' ? theme.accent : theme.textMuted} />
+          <Ionicons
+            name={activeTab === 'home' ? 'home' : 'home-outline'}
+            size={20}
+            color={activeTab === 'home' ? theme.accent : theme.textMuted}
+          />
           <Text style={[styles.tabText, { color: activeTab === 'home' ? theme.accent : theme.textMuted }]}>
-            Database
+            Home
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'calendar' ? { backgroundColor: theme.bgHover } : null]}
+          style={[
+            styles.tabBtn,
+            activeTab === 'calendar'
+              ? { backgroundColor: isDark ? 'rgba(46, 170, 220, 0.18)' : 'rgba(46, 170, 220, 0.1)' }
+              : null,
+          ]}
           onPress={() => setActiveTab('calendar')}
+          activeOpacity={0.7}
         >
-          <CalendarIcon size={20} color={activeTab === 'calendar' ? theme.accent : theme.textMuted} />
+          <Ionicons
+            name={activeTab === 'calendar' ? 'calendar' : 'calendar-outline'}
+            size={20}
+            color={activeTab === 'calendar' ? theme.accent : theme.textMuted}
+          />
           <Text style={[styles.tabText, { color: activeTab === 'calendar' ? theme.accent : theme.textMuted }]}>
             Calendar
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'analytics' ? { backgroundColor: theme.bgHover } : null]}
+          style={[
+            styles.tabBtn,
+            activeTab === 'analytics'
+              ? { backgroundColor: isDark ? 'rgba(46, 170, 220, 0.18)' : 'rgba(46, 170, 220, 0.1)' }
+              : null,
+          ]}
           onPress={() => setActiveTab('analytics')}
+          activeOpacity={0.7}
         >
-          <WalletIcon size={20} color={activeTab === 'analytics' ? theme.accent : theme.textMuted} />
+          <Ionicons
+            name={activeTab === 'analytics' ? 'stats-chart' : 'stats-chart-outline'}
+            size={20}
+            color={activeTab === 'analytics' ? theme.accent : theme.textMuted}
+          />
           <Text style={[styles.tabText, { color: activeTab === 'analytics' ? theme.accent : theme.textMuted }]}>
             Analytics
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'settings' ? { backgroundColor: theme.bgHover } : null]}
+          style={[
+            styles.tabBtn,
+            activeTab === 'settings'
+              ? { backgroundColor: isDark ? 'rgba(46, 170, 220, 0.18)' : 'rgba(46, 170, 220, 0.1)' }
+              : null,
+          ]}
           onPress={() => setActiveTab('settings')}
+          activeOpacity={0.7}
         >
-          <Text style={[styles.gearIcon, { color: activeTab === 'settings' ? theme.accent : theme.textMuted }]}>⚙️</Text>
+          <Ionicons
+            name={activeTab === 'settings' ? 'settings' : 'settings-outline'}
+            size={20}
+            color={activeTab === 'settings' ? theme.accent : theme.textMuted}
+          />
           <Text style={[styles.tabText, { color: activeTab === 'settings' ? theme.accent : theme.textMuted }]}>
             Settings
           </Text>
@@ -129,25 +176,23 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     flexDirection: 'row',
-    height: 56,
+    height: 60,
     borderTopWidth: 1,
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
   },
   tabBtn: {
     flex: 1,
     height: 44,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   tabText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     marginTop: 2,
-  },
-  gearIcon: {
-    fontSize: 16,
+    letterSpacing: -0.2,
   },
 });

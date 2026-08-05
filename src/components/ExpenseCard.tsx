@@ -1,10 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ExpenseItem } from '../types';
-import { useTheme } from '../context/ThemeContext';
 import { useExpenses } from '../context/ExpenseContext';
-import { formatCurrency, convertCurrency } from '../services/storageService';
-import { CategoryBadge } from './CategoryBadge';
+import { formatCurrency } from '../services/storageService';
+import { CategoryIconRenderer } from './CategoryIconRenderer';
+import { Edit2, Trash2, PiggyBank, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 
 interface ExpenseCardProps {
   item: ExpenseItem;
@@ -12,129 +11,221 @@ interface ExpenseCardProps {
 }
 
 export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
-  const { theme } = useTheme();
-  const { currency } = useExpenses();
+  const { currency, hideBalances, deleteExpense, setSelectedExpenseForEdit } = useExpenses();
 
-  const formattedMain = formatCurrency(item.amount, currency);
+  const isSaving = item.type === 'SAVING' || item.categoryId.startsWith('cat-saving');
+  const isIncome = item.type === 'INCOME' || item.categoryId === 'cat-income';
+
+  // Strict Color Directives: Expense = RED, Saving = GREEN, Income = GREEN
+  const itemColor = isSaving || isIncome ? 'var(--accent-success)' : 'var(--accent-danger)';
+  const itemBg = isSaving || isIncome ? 'rgba(0, 230, 118, 0.12)' : 'rgba(255, 82, 82, 0.12)';
+  const itemBorder = isSaving || isIncome ? 'rgba(0, 230, 118, 0.3)' : 'rgba(255, 82, 82, 0.3)';
+
+  const formattedMain = hideBalances
+    ? currency === 'USD'
+      ? '$ ••••'
+      : '៛ ••••'
+    : formatCurrency(item.amount, currency);
   const secondaryCurrency = currency === 'USD' ? 'KHR' : 'USD';
-  const secondaryVal = formatCurrency(item.amount, secondaryCurrency);
+  const secondaryVal = hideBalances ? '••••' : formatCurrency(item.amount, secondaryCurrency);
+
+  const handleDeleteQuick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm(`Delete "${item.title}" (${formatCurrency(item.amount, currency)})?`)) {
+      deleteExpense(item.id);
+    }
+  };
+
+  const handleEditQuick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedExpenseForEdit(item);
+  };
 
   return (
-    <TouchableOpacity
-      style={[styles.card, { backgroundColor: theme.bgCard, borderColor: theme.border }]}
-      onPress={onPress}
-      activeOpacity={0.7}
+    <div
+      className="glass-panel"
+      onClick={onPress || (() => setSelectedExpenseForEdit(item))}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 14px',
+        marginBottom: '10px',
+        cursor: 'pointer',
+        transition: 'transform 0.15s ease, border-color 0.15s ease',
+        borderColor: 'var(--border-glass)',
+      }}
     >
-      <View style={styles.leftCol}>
-        {/* Emoji Block Icon */}
-        <View style={[styles.iconBox, { backgroundColor: theme.bgMain }]}>
-          <Text style={styles.emojiText}>{item.categoryIcon || '💸'}</Text>
-        </View>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+        {/* Category Icon Container (Clean Neutral Glass Container) */}
+        <div
+          style={{
+            width: '38px',
+            height: '38px',
+            borderRadius: '12px',
+            border: '1px solid var(--border-glass)',
+            backgroundColor: 'var(--pill-bg)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--text-primary)',
+            flexShrink: 0,
+          }}
+        >
+          {isSaving ? <PiggyBank size={18} /> : <CategoryIconRenderer icon={item.categoryIcon || 'receipt-outline'} size={18} color="var(--text-primary)" />}
+        </div>
 
-        {/* Info Column */}
-        <View style={styles.infoCol}>
-          <Text style={[styles.title, { color: theme.textPrimary }]} numberOfLines={1}>
+        {/* Info Column (Standard Text Primary Color) */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h4
+            style={{
+              fontSize: '14px',
+              fontWeight: 700,
+              letterSpacing: '-0.2px',
+              marginBottom: '4px',
+              color: 'var(--text-primary)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
             {item.title}
-          </Text>
+          </h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            {/* Category Name Badge */}
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '2px 8px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontWeight: 700,
+                backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-glass)',
+              }}
+            >
+              <CategoryIconRenderer icon={item.categoryIcon || 'receipt'} size={11} color="var(--text-secondary)" />
+              {item.categoryName}
+            </span>
 
-          <View style={styles.propsRow}>
-            {/* Category Property Pill */}
-            <CategoryBadge
-              name={item.categoryName}
-              color={item.categoryColor}
-              size="sm"
-            />
+            {/* Type Badge: Expense = Red, Saving = Green */}
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                padding: '2px 6px',
+                borderRadius: '6px',
+                backgroundColor: itemBg,
+                color: itemColor,
+                border: `1px solid ${itemBorder}`,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '3px',
+              }}
+            >
+              {isSaving ? (
+                <>
+                  <PiggyBank size={10} /> Saving
+                </>
+              ) : isIncome ? (
+                <>
+                  <ArrowUpRight size={10} /> Income
+                </>
+              ) : (
+                <>
+                  <ArrowDownRight size={10} /> Expense
+                </>
+              )}
+            </span>
 
-            {/* Payment Method Badge */}
-            <View style={[styles.paymentPill, { backgroundColor: theme.bgHover }]}>
-              <Text style={[styles.paymentText, { color: theme.textSecondary }]}>
-                {item.paymentMethod}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                padding: '2px 6px',
+                borderRadius: '6px',
+                border: '1px solid var(--border-glass)',
+                backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              {item.paymentMethod}
+            </span>
+          </div>
+        </div>
+      </div>
 
-      {/* Right Price Column */}
-      <View style={styles.rightCol}>
-        <Text style={[styles.mainPrice, { color: theme.textPrimary }]}>
-          {formattedMain}
-        </Text>
-        <Text style={[styles.secondaryPrice, { color: theme.textMuted }]}>
-          {secondaryVal}
-        </Text>
-        <Text style={[styles.dateText, { color: theme.textMuted }]}>
-          {item.date}
-        </Text>
-      </View>
-    </TouchableOpacity>
+      {/* Right Price & Quick Action Column */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+        <div style={{ textAlign: 'right' }}>
+          <div
+            className="tabular-nums"
+            style={{
+              fontSize: '14px',
+              fontWeight: 800,
+              letterSpacing: '-0.3px',
+              color: itemColor,
+            }}
+          >
+            {isSaving ? `+${formattedMain}` : isIncome ? `+${formattedMain}` : formattedMain}
+          </div>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {secondaryVal} • {item.date}
+          </div>
+        </div>
+
+        {/* Touch-Isolated Action Buttons */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            borderLeft: '1px solid var(--border-glass)',
+            paddingLeft: '8px',
+          }}
+        >
+          <button
+            onClick={handleEditQuick}
+            style={{
+              width: '30px',
+              height: '30px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-glass)',
+              backgroundColor: 'rgba(255, 255, 255, 0.06)',
+              color: 'var(--text-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+            title="Edit Record"
+          >
+            <Edit2 size={13} />
+          </button>
+
+          <button
+            onClick={handleDeleteQuick}
+            style={{
+              width: '30px',
+              height: '30px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 123, 114, 0.35)',
+              backgroundColor: 'rgba(255, 123, 114, 0.15)',
+              color: 'var(--accent-danger)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+            title="Delete Record"
+          >
+            <Trash2 size={13} />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    marginHorizontal: 16,
-    marginBottom: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  leftCol: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 10,
-  },
-  iconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emojiText: {
-    fontSize: 20,
-  },
-  infoCol: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  propsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
-  paymentPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  paymentText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  rightCol: {
-    alignItems: 'flex-end',
-    marginLeft: 8,
-  },
-  mainPrice: {
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  secondaryPrice: {
-    fontSize: 11,
-    marginTop: 1,
-  },
-  dateText: {
-    fontSize: 10,
-    marginTop: 2,
-  },
-});

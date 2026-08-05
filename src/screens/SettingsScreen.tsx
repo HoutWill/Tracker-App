@@ -1,273 +1,318 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-} from 'react-native';
-import { useTheme } from '../context/ThemeContext';
+import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
-import { StorageService } from '../services/storageService';
-import { BackTapIcon } from '../components/SvgIcons';
+import { useTheme, COLOR_PALETTE_OPTIONS, PageColors } from '../context/ThemeContext';
+import { formatCurrency } from '../services/storageService';
+import { Settings, Shield, Eye, EyeOff, Target, Download, Trash2, User, Sun, Moon, Palette, RotateCcw, Check, CheckCircle2 } from 'lucide-react';
 
 export const SettingsScreen: React.FC = () => {
-  const { theme, isDark, toggleTheme } = useTheme();
-  const { currency, setCurrency, clearAllData, reloadExpenses } = useExpenses();
+  const { isDark, toggleTheme, pageColors, setPageColor, resetDefaultColors } = useTheme();
+  const {
+    monthlyBudget,
+    setMonthlyBudget,
+    hideBalances,
+    setHideBalances,
+    currency,
+    exportCSVData,
+    clearAllData,
+  } = useExpenses();
 
-  const [geminiKey, setGeminiKey] = useState('');
-  const [deepSeekKey, setDeepSeekKey] = useState('');
-  const [saveStatus, setSaveStatus] = useState('');
-  const [deepSeekSaveStatus, setDeepSeekSaveStatus] = useState('');
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    StorageService.getGeminiApiKey().then(setGeminiKey);
-    StorageService.getDeepSeekApiKey().then(setDeepSeekKey);
-  }, []);
-
-  const handleSaveGeminiKey = async () => {
-    await StorageService.saveGeminiApiKey(geminiKey);
-    setSaveStatus('✓ Gemini Key Saved!');
-    setTimeout(() => setSaveStatus(''), 3000);
+  const handleExportCSV = () => {
+    const csvContent = exportCSVData();
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `expense_tracker_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const handleSaveDeepSeekKey = async () => {
-    await StorageService.saveDeepSeekApiKey(deepSeekKey);
-    setDeepSeekSaveStatus('✓ DeepSeek Key Saved!');
-    setTimeout(() => setDeepSeekSaveStatus(''), 3000);
+  const handleClearData = async () => {
+    if (window.confirm('Are you sure you want to reset all expense data? This action cannot be undone.')) {
+      await clearAllData();
+    }
   };
 
-  const handleResetData = async () => {
-    await clearAllData();
-    Alert.alert('Reset Complete', 'Database cleared and reset with sample data.');
+  const handleSaveColors = () => {
+    localStorage.setItem('page_theme_colors', JSON.stringify(pageColors));
+    setToastMsg('Saved!');
+    setTimeout(() => setToastMsg(null), 2500);
   };
+
+  const handleResetColors = () => {
+    resetDefaultColors();
+    setToastMsg('Reset!');
+    setTimeout(() => setToastMsg(null), 2500);
+  };
+
+  const pageNames: { key: keyof PageColors; label: string }[] = [
+    { key: 'EXPENSES', label: 'Expenses' },
+    { key: 'SAVING', label: 'Saving' },
+  ];
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.bgMain }]}>
-      <View style={styles.headerBox}>
-        <Text style={[styles.title, { color: theme.textPrimary }]}>⚙️ App Settings</Text>
-        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-          Configure Currency, Theme, DeepSeek / Gemini AI Keys, and Back-Tap Shortcuts
-        </Text>
-      </View>
+    <div style={{ padding: '16px', paddingBottom: '90px' }}>
+      {/* Toast Feedback Notification Banner */}
+      {toastMsg && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+            borderRadius: '14px',
+            border: '1px solid rgba(126, 231, 135, 0.4)',
+            backgroundColor: 'rgba(126, 231, 135, 0.18)',
+            color: 'var(--accent-success)',
+            fontSize: '14px',
+            fontWeight: 800,
+            marginBottom: '14px',
+            boxShadow: '0 8px 24px rgba(0, 230, 118, 0.25)',
+          }}
+        >
+          <CheckCircle2 size={20} />
+          <span>{toastMsg}</span>
+        </div>
+      )}
 
-      {/* Section 1: Appearance & Currency */}
-      <View style={[styles.card, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
-        <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>🎨 Appearance & Currency</Text>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+        <Settings size={20} color="var(--accent)" />
+        <h2 style={{ fontSize: '18px', fontWeight: 800 }}>Settings</h2>
+      </div>
 
-        <View style={styles.settingRow}>
-          <Text style={[styles.label, { color: theme.textPrimary }]}>Notion Theme</Text>
-          <TouchableOpacity
-            style={[styles.btnPill, { backgroundColor: theme.bgMain, borderColor: theme.border }]}
-            onPress={toggleTheme}
+      {/* User Workspace Profile Card */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div
+          style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '14px',
+            backgroundColor: 'rgba(108, 92, 231, 0.15)',
+            border: '1px solid rgba(108, 92, 231, 0.3)',
+            color: 'var(--accent)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <User size={24} />
+        </div>
+        <div>
+          <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Personal Workspace</h3>
+          <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Liquid Glass PWA Database</p>
+        </div>
+      </div>
+
+      {/* Light / Dark Mode Theme Switcher Card */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {isDark ? <Moon size={18} color="var(--accent)" /> : <Sun size={18} color="#FDCB6E" />}
+          <div>
+            <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Theme Mode</h4>
+            <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Switch between Dark and Light mode</p>
+          </div>
+        </div>
+
+        <button
+          className="glass-pill"
+          onClick={toggleTheme}
+          style={{
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'var(--accent)',
+            color: isDark ? 'var(--text-primary)' : '#FFF',
+          }}
+        >
+          {isDark ? <Sun size={14} /> : <Moon size={14} />}
+          <span>{isDark ? 'Dark' : 'Light'}</span>
+        </button>
+      </div>
+
+      {/* Page Theme Colors Customizer Card (Expenses & Saving Only) */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Palette size={18} color="var(--accent)" />
+            <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Page Colors</h4>
+          </div>
+
+          <button
+            className="glass-pill"
+            onClick={handleResetColors}
+            style={{ fontSize: '11px', padding: '4px 10px', color: 'var(--accent-danger)', borderColor: 'rgba(255, 82, 82, 0.3)' }}
+            title="Reset Default Colors"
           >
-            <Text style={[styles.btnPillText, { color: theme.textPrimary }]}>
-              {isDark ? '🌙 Obsidian Dark' : '☀️ Paper Light'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <RotateCcw size={12} /> Reset
+          </button>
+        </div>
 
-        <View style={styles.settingRow}>
-          <Text style={[styles.label, { color: theme.textPrimary }]}>Primary Currency</Text>
-          <TouchableOpacity
-            style={[styles.btnPill, { backgroundColor: theme.bgMain, borderColor: theme.border }]}
-            onPress={() => setCurrency(currency === 'USD' ? 'KHR' : 'USD')}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+          {pageNames.map(p => (
+            <div key={p.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700 }}>{p.label}</span>
+
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {COLOR_PALETTE_OPTIONS.map(c => {
+                  const isSelected = pageColors[p.key] === c.hex;
+                  return (
+                    <button
+                      key={c.hex}
+                      onClick={() => setPageColor(p.key, c.hex)}
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        backgroundColor: c.hex,
+                        border: isSelected ? '2px solid #FFF' : '1px solid transparent',
+                        boxShadow: isSelected ? `0 0 10px ${c.hex}` : 'none',
+                        cursor: 'pointer',
+                        transform: isSelected ? 'scale(1.15)' : 'scale(1)',
+                        transition: 'transform 0.15s ease',
+                      }}
+                      title={c.name}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Explicit Save Action Button */}
+        <button
+          onClick={handleSaveColors}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            padding: '12px',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: 'var(--accent)',
+            color: '#FFF',
+            fontWeight: 800,
+            fontSize: '14px',
+            cursor: 'pointer',
+          }}
+        >
+          <Check size={18} />
+          Save
+        </button>
+      </div>
+
+      {/* Monthly Budget Goal Selector */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <Target size={16} color="var(--accent)" />
+          <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Monthly Target Budget</h4>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+          {[500, 1000, 1500, 2500].map(amt => (
+            <button
+              key={amt}
+              className="glass-pill"
+              onClick={() => setMonthlyBudget(amt)}
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                backgroundColor: monthlyBudget === amt ? 'var(--accent)' : 'rgba(255, 255, 255, 0.06)',
+                borderColor: monthlyBudget === amt ? 'var(--accent)' : 'var(--border-glass)',
+                color: monthlyBudget === amt ? '#FFF' : 'var(--text-primary)',
+              }}
+            >
+              {formatCurrency(amt, currency)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Privacy Mode (Hide Balances Toggle) */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Shield size={18} color="var(--accent)" />
+          <div>
+            <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Privacy Mode</h4>
+            <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Mask values in public ($••••)</p>
+          </div>
+        </div>
+
+        <button
+          className="glass-pill"
+          onClick={() => setHideBalances(!hideBalances)}
+          style={{
+            backgroundColor: hideBalances ? 'var(--accent)' : 'rgba(255, 255, 255, 0.06)',
+            color: hideBalances ? '#FFF' : 'var(--text-primary)',
+          }}
+        >
+          {hideBalances ? <EyeOff size={14} /> : <Eye size={14} />}
+          <span>{hideBalances ? 'Hidden' : 'Visible'}</span>
+        </button>
+      </div>
+
+      {/* Export CSV Data */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Export CSV Report</h4>
+            <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Download full transactions backup</p>
+          </div>
+
+          <button
+            onClick={handleExportCSV}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              borderRadius: '10px',
+              border: 'none',
+              backgroundColor: 'var(--accent)',
+              color: '#FFF',
+              fontWeight: 800,
+              fontSize: '12px',
+              cursor: 'pointer',
+            }}
           >
-            <Text style={[styles.btnPillText, { color: theme.accent }]}>
-              {currency === 'USD' ? '🇺🇸 USD ($)' : '🇰🇭 Riel (៛ KHR)'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+            <Download size={14} />
+            Export CSV
+          </button>
+        </div>
+      </div>
 
-      {/* Section 2: DeepSeek AI Key Setup */}
-      <View style={[styles.card, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
-        <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>🐳 DeepSeek AI Key (Active Engine)</Text>
-        <Text style={[styles.hint, { color: theme.textSecondary }]}>
-          Your DeepSeek API Key powers the conversational AI Agent with high-speed natural language parsing and financial analysis!
-        </Text>
+      {/* Danger Zone: Clear Data */}
+      <div className="glass-panel" style={{ padding: '16px', borderColor: 'rgba(255, 123, 114, 0.3)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--accent-danger)' }}>Reset Data</h4>
+            <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Clear stored database entries</p>
+          </div>
 
-        <TextInput
-          style={[styles.input, { backgroundColor: theme.bgMain, color: theme.textPrimary, borderColor: theme.border }]}
-          placeholder="sk-e31a4ca..."
-          placeholderTextColor={theme.textMuted}
-          secureTextEntry
-          value={deepSeekKey}
-          onChangeText={setDeepSeekKey}
-        />
-
-        <View style={styles.keyActionRow}>
-          <TouchableOpacity style={[styles.saveBtn, { backgroundColor: theme.accent }]} onPress={handleSaveDeepSeekKey}>
-            <Text style={styles.saveBtnText}>Save DeepSeek Key</Text>
-          </TouchableOpacity>
-          {deepSeekSaveStatus ? <Text style={[styles.statusText, { color: '#7EE787' }]}>{deepSeekSaveStatus}</Text> : null}
-        </View>
-      </View>
-
-      {/* Section 3: Google Gemini AI Key Setup */}
-      <View style={[styles.card, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
-        <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>🤖 Google Gemini AI Key (Fallback Engine)</Text>
-        <Text style={[styles.hint, { color: theme.textSecondary }]}>
-          Optional fallback engine if you also want Google Gemini API support.
-        </Text>
-
-        <TextInput
-          style={[styles.input, { backgroundColor: theme.bgMain, color: theme.textPrimary, borderColor: theme.border }]}
-          placeholder="AIzaSy..."
-          placeholderTextColor={theme.textMuted}
-          secureTextEntry
-          value={geminiKey}
-          onChangeText={setGeminiKey}
-        />
-
-        <View style={styles.keyActionRow}>
-          <TouchableOpacity style={[styles.saveBtn, { backgroundColor: theme.accent }]} onPress={handleSaveGeminiKey}>
-            <Text style={styles.saveBtnText}>Save Gemini Key</Text>
-          </TouchableOpacity>
-          {saveStatus ? <Text style={[styles.statusText, { color: '#7EE787' }]}>{saveStatus}</Text> : null}
-        </View>
-      </View>
-
-      {/* Section 3: Back-Tap & Gesture Shortcut Guide */}
-      <View style={[styles.card, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
-        <View style={styles.titleWithIcon}>
-          <BackTapIcon size={20} color={theme.accent} />
-          <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>📱 Back Tap / Gesture Shortcut</Text>
-        </View>
-        <Text style={[styles.hint, { color: theme.textSecondary }]}>
-          You can double-tap or triple-tap the back of your phone to open Quick Add instantly from anywhere!
-        </Text>
-
-        <View style={[styles.stepBox, { backgroundColor: theme.bgMain }]}>
-          <Text style={[styles.stepTitle, { color: theme.textPrimary }]}>iOS Setup (Back Tap):</Text>
-          <Text style={[styles.stepText, { color: theme.textSecondary }]}>
-            1. Open iOS Settings ➔ Accessibility ➔ Touch ➔ Back Tap.{'\n'}
-            2. Choose "Double Tap" or "Triple Tap".{'\n'}
-            3. Select "Shortcuts" and create a shortcut opening URI: <Text style={{ color: theme.accent, fontWeight: '700' }}>expensetracker://quick-add</Text>
-          </Text>
-        </View>
-      </View>
-
-      {/* Section 4: Data Maintenance */}
-      <View style={[styles.card, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
-        <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>💾 Data Management</Text>
-
-        <TouchableOpacity style={[styles.dangerBtn, { backgroundColor: '#492926' }]} onPress={handleResetData}>
-          <Text style={styles.dangerBtnText}>Reset Database & Restore Samples</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <button
+            onClick={handleClearData}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 123, 114, 0.4)',
+              backgroundColor: 'rgba(255, 123, 114, 0.15)',
+              color: 'var(--accent-danger)',
+              fontWeight: 800,
+              fontSize: '12px',
+              cursor: 'pointer',
+            }}
+          >
+            <Trash2 size={14} />
+            Reset Data
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  headerBox: {
-    padding: 16,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  subtitle: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  card: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  titleWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 6,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  btnPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  btnPillText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  hint: {
-    fontSize: 12,
-    lineHeight: 16,
-    marginBottom: 10,
-  },
-  input: {
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    fontSize: 13,
-    marginBottom: 10,
-  },
-  keyActionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  saveBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  saveBtnText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  stepBox: {
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 4,
-  },
-  stepTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  stepText: {
-    fontSize: 11,
-    lineHeight: 16,
-  },
-  dangerBtn: {
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  dangerBtnText: {
-    color: '#FF7B72',
-    fontSize: 12,
-    fontWeight: '800',
-  },
-});

@@ -1,32 +1,30 @@
 {
-  "name": "expense-tracker-app",
+  "name": "expense-tracker-pwa",
+  "private": true,
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "expo start --host lan --port 8085",
-    "tunnel": "expo start --tunnel --port 8085",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web --port 8085"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "start": "node server.js"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~3.2.3",
-    "@expo/vector-icons": "^14.0.2",
-    "@google/generative-ai": "^0.19.0",
-    "@react-native-async-storage/async-storage": "1.23.1",
-    "expo": "~51.0.28",
-    "expo-font": "~12.0.10",
-    "expo-linking": "~6.3.1",
-    "expo-status-bar": "~1.12.1",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-native": "0.74.5",
-    "react-native-svg": "15.2.0",
-    "react-native-web": "~0.19.10"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "lucide-react": "^0.381.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "@expo/ngrok": "^4.1.0"
-  },
-  "private": true
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  }
 }
