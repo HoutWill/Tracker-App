@@ -7,7 +7,7 @@ import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { EXPENSE_QUICK_PRESETS } from '../constants/presets';
 import { formatCurrency, StorageService } from '../services/storageService';
 import { PaymentMethod, QuickPreset } from '../types';
-import { Plus, Zap, TrendingUp, Filter, CheckCircle2, Layers, SearchX, X, Check, ArrowDownRight, Trash2 } from 'lucide-react';
+import { Plus, Zap, TrendingUp, Filter, CheckCircle2, Layers, SearchX, X, Check, ArrowDownRight, Trash2, Target, Edit3 } from 'lucide-react';
 
 const PRESET_ICONS = [
   'receipt', 'laptop', 'coffee', 'utensils', 'car', 'trending-up', 'shopping-cart',
@@ -24,6 +24,7 @@ export const ExpensesScreen: React.FC = () => {
     currency,
     categories,
     monthlyBudget,
+    setMonthlyBudget,
     hideBalances,
     addExpense,
     setIsAddExpenseOpen,
@@ -36,6 +37,10 @@ export const ExpensesScreen: React.FC = () => {
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('Card');
   const [presetAmount, setPresetAmount] = useState<string>('');
   const [presetDate, setPresetDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  // Edit Budget Target state
+  const [isEditingBudget, setIsEditingBudget] = useState<boolean>(false);
+  const [customBudgetInput, setCustomBudgetInput] = useState<string>(monthlyBudget.toString());
 
   // New Preset Modal state
   const [isCreatingPreset, setIsCreatingPreset] = useState<boolean>(false);
@@ -62,7 +67,10 @@ export const ExpensesScreen: React.FC = () => {
   const totalExpenseUSD = expenseItems.reduce((sum, e) => sum + e.amount, 0);
   const totalFilteredUSD = filteredExpenseItems.reduce((sum, e) => sum + e.amount, 0);
   const averageExpenseUSD = expenseItems.length > 0 ? totalExpenseUSD / expenseItems.length : 0;
-  const budgetProgress = Math.min(100, Math.round((totalExpenseUSD / (monthlyBudget || 1000)) * 100));
+
+  const currentBudget = monthlyBudget || 1000;
+  const remainingBudgetUSD = Math.max(0, currentBudget - totalExpenseUSD);
+  const budgetProgress = Math.min(100, Math.round((totalExpenseUSD / currentBudget) * 100));
 
   const handleOpenPresetModal = (preset: QuickPreset) => {
     setActivePreset(preset);
@@ -114,6 +122,19 @@ export const ExpensesScreen: React.FC = () => {
       setToastMsg('Preset deleted!');
       setTimeout(() => setToastMsg(null), 2500);
     }
+  };
+
+  const handleSaveBudget = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = parseFloat(customBudgetInput);
+    if (isNaN(val) || val <= 0) {
+      alert('Please enter a valid budget amount.');
+      return;
+    }
+    setMonthlyBudget(val);
+    setIsEditingBudget(false);
+    setToastMsg(`Budget target updated to ${formatCurrency(val, currency)}!`);
+    setTimeout(() => setToastMsg(null), 2500);
   };
 
   const handleCategorySelect = (catId: string) => {
@@ -180,7 +201,7 @@ export const ExpensesScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Unified All-in-One Hero Expenses Card */}
+      {/* Unified All-in-One Hero Expenses Card with Explicit Budget Target */}
       <div
         className="glass-panel"
         style={{
@@ -190,25 +211,39 @@ export const ExpensesScreen: React.FC = () => {
           marginBottom: '16px',
         }}
       >
-        {/* Top Header Row */}
+        {/* Top Header Row with Budget Edit Button */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: pageAccent }}>
             <ArrowDownRight size={20} />
             <span style={{ fontSize: '15px', fontWeight: 800 }}>Expenses</span>
           </div>
-          <span
-            style={{
-              fontSize: '11px',
-              fontWeight: 800,
-              padding: '3px 9px',
-              borderRadius: '8px',
-              backgroundColor: hexToRgba(pageAccent, 0.2),
-              color: pageAccent,
-              border: `1px solid ${hexToRgba(pageAccent, 0.35)}`,
-            }}
-          >
-            {expenseItems.length}
-          </span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              className="glass-pill"
+              onClick={() => {
+                setCustomBudgetInput(currentBudget.toString());
+                setIsEditingBudget(true);
+              }}
+              style={{ fontSize: '11px', padding: '3px 8px', color: pageAccent, borderColor: hexToRgba(pageAccent, 0.4) }}
+              title="Set Target Budget"
+            >
+              <Target size={12} /> Budget: {formatCurrency(currentBudget, currency)}
+            </button>
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                padding: '3px 9px',
+                borderRadius: '8px',
+                backgroundColor: hexToRgba(pageAccent, 0.2),
+                color: pageAccent,
+                border: `1px solid ${hexToRgba(pageAccent, 0.35)}`,
+              }}
+            >
+              {expenseItems.length}
+            </span>
+          </div>
         </div>
 
         {/* Main Big Balance Amount */}
@@ -219,15 +254,23 @@ export const ExpensesScreen: React.FC = () => {
           {hideBalances ? (currency === 'USD' ? '$ ••••••' : '៛ ••••••') : formatCurrency(totalExpenseUSD, currency)}
         </div>
 
-        {/* Target Budget Progress Bar */}
+        {/* Spending Budget Target Progress Bar & Remaining Allowance */}
         <div style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontWeight: 700, marginBottom: '6px' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              Budget: {formatCurrency(currentBudget, currency)}
+            </span>
+            <span style={{ color: budgetProgress > 90 ? 'var(--accent-danger)' : pageAccent, fontWeight: 800 }}>
+              {hideBalances ? '••••' : formatCurrency(remainingBudgetUSD, currency)} Left
+            </span>
+          </div>
+
           <div
             style={{
-              height: '7px',
+              height: '8px',
               borderRadius: '4px',
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
               overflow: 'hidden',
-              marginBottom: '6px',
             }}
           >
             <div
@@ -240,9 +283,6 @@ export const ExpensesScreen: React.FC = () => {
                 transition: 'width 0.3s ease',
               }}
             />
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right', fontWeight: 600 }}>
-            {budgetProgress}% of {formatCurrency(monthlyBudget || 1000, currency)}
           </div>
         </div>
 
@@ -305,6 +345,122 @@ export const ExpensesScreen: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Budget Modal */}
+      {isEditingBudget && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 100,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+          onClick={() => setIsEditingBudget(false)}
+        >
+          <form
+            className="glass-panel"
+            onSubmit={handleSaveBudget}
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '380px',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              borderColor: hexToRgba(pageAccent, 0.35),
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Target size={18} color={pageAccent} />
+                <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Budget Target</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditingBudget(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                Target Amount
+              </label>
+              <input
+                type="number"
+                step="50"
+                value={customBudgetInput}
+                onChange={e => setCustomBudgetInput(e.target.value)}
+                placeholder="1000"
+                required
+                style={{
+                  width: '100%',
+                  height: '44px',
+                  padding: '0 12px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--border-glass)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  color: pageAccent,
+                  fontSize: '16px',
+                  fontWeight: 800,
+                  marginTop: '4px',
+                  outline: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {[500, 1000, 1500, 2500].map(amt => (
+                <button
+                  key={amt}
+                  type="button"
+                  className="glass-pill"
+                  onClick={() => setCustomBudgetInput(amt.toString())}
+                  style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    backgroundColor: customBudgetInput === amt.toString() ? pageAccent : 'rgba(255, 255, 255, 0.06)',
+                    borderColor: customBudgetInput === amt.toString() ? pageAccent : 'var(--border-glass)',
+                    color: customBudgetInput === amt.toString() ? '#FFF' : 'var(--text-primary)',
+                  }}
+                >
+                  ${amt}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="submit"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '12px',
+                borderRadius: '12px',
+                border: 'none',
+                backgroundColor: pageAccent,
+                color: '#FFF',
+                fontWeight: 800,
+                fontSize: '14px',
+                cursor: 'pointer',
+                marginTop: '6px',
+              }}
+            >
+              <Check size={18} />
+              Save
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Grid 1-Tap Quick Presets Section with Vibrant Colorful Icons */}
       <div style={{ marginBottom: '18px' }}>

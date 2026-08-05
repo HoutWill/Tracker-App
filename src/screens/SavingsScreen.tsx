@@ -23,6 +23,8 @@ export const SavingsScreen: React.FC = () => {
     filteredExpenses,
     currency,
     categories,
+    savingGoal,
+    setSavingGoal,
     hideBalances,
     addExpense,
     setIsAddSavingOpen,
@@ -35,6 +37,10 @@ export const SavingsScreen: React.FC = () => {
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('Bank');
   const [presetAmount, setPresetAmount] = useState<string>('');
   const [presetDate, setPresetDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  // Edit Savings Goal Target state
+  const [isEditingGoal, setIsEditingGoal] = useState<boolean>(false);
+  const [customGoalInput, setCustomGoalInput] = useState<string>(savingGoal.toString());
 
   // New Preset Modal state
   const [isCreatingPreset, setIsCreatingPreset] = useState<boolean>(false);
@@ -60,7 +66,9 @@ export const SavingsScreen: React.FC = () => {
 
   const totalSavingUSD = savingItems.reduce((sum, e) => sum + e.amount, 0);
   const averageSavingUSD = savingItems.length > 0 ? totalSavingUSD / savingItems.length : 0;
-  const goalSavingUSD = savingItems.filter(s => s.categoryId === 'cat-saving-goal' || s.categoryId === 'cat-saving-vault').reduce((sum, s) => sum + s.amount, 0);
+
+  const currentGoal = savingGoal || 2000;
+  const goalProgressPct = Math.min(100, Math.round((totalSavingUSD / currentGoal) * 100));
 
   const handleOpenPresetModal = (preset: QuickPreset) => {
     setActivePreset(preset);
@@ -112,6 +120,19 @@ export const SavingsScreen: React.FC = () => {
       setToastMsg('Preset deleted!');
       setTimeout(() => setToastMsg(null), 2500);
     }
+  };
+
+  const handleSaveGoal = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = parseFloat(customGoalInput);
+    if (isNaN(val) || val <= 0) {
+      alert('Please enter a valid goal amount.');
+      return;
+    }
+    setSavingGoal(val);
+    setIsEditingGoal(false);
+    setToastMsg(`Savings goal target updated to ${formatCurrency(val, currency)}!`);
+    setTimeout(() => setToastMsg(null), 2500);
   };
 
   const handleCategorySelect = (catId: string) => {
@@ -178,7 +199,7 @@ export const SavingsScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Unified All-in-One Hero Vault Card displaying Saved, Average, and Goal */}
+      {/* Unified All-in-One Hero Vault Card displaying Saved, Goal, Progress Bar, and Metrics */}
       <div
         className="glass-panel"
         style={{
@@ -188,25 +209,40 @@ export const SavingsScreen: React.FC = () => {
           marginBottom: '16px',
         }}
       >
-        {/* Top Header Row */}
+        {/* Top Header Row with Goal Editor Button */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: pageAccent }}>
             <PiggyBank size={20} />
             <span style={{ fontSize: '15px', fontWeight: 800 }}>Vault</span>
           </div>
-          <span
-            style={{
-              fontSize: '11px',
-              fontWeight: 800,
-              padding: '3px 9px',
-              borderRadius: '8px',
-              backgroundColor: hexToRgba(pageAccent, 0.2),
-              color: pageAccent,
-              border: `1px solid ${hexToRgba(pageAccent, 0.35)}`,
-            }}
-          >
-            {savingItems.length}
-          </span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              className="glass-pill"
+              onClick={() => {
+                setCustomGoalInput(currentGoal.toString());
+                setIsEditingGoal(true);
+              }}
+              style={{ fontSize: '11px', padding: '3px 8px', color: pageAccent, borderColor: hexToRgba(pageAccent, 0.4) }}
+              title="Set Saving Goal Target"
+            >
+              <Target size={12} /> Goal: {formatCurrency(currentGoal, currency)}
+            </button>
+
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                padding: '3px 9px',
+                borderRadius: '8px',
+                backgroundColor: hexToRgba(pageAccent, 0.2),
+                color: pageAccent,
+                border: `1px solid ${hexToRgba(pageAccent, 0.35)}`,
+              }}
+            >
+              {savingItems.length}
+            </span>
+          </div>
         </div>
 
         {/* Main Big Balance Amount */}
@@ -217,10 +253,42 @@ export const SavingsScreen: React.FC = () => {
             fontWeight: 800,
             letterSpacing: '-0.8px',
             color: pageAccent,
-            marginBottom: '16px',
+            marginBottom: '14px',
           }}
         >
           {hideBalances ? '••••••••' : formatCurrency(totalSavingUSD, currency)}
+        </div>
+
+        {/* Savings Goal Progress Bar */}
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontWeight: 700, marginBottom: '6px' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              Target: {formatCurrency(currentGoal, currency)}
+            </span>
+            <span style={{ color: pageAccent, fontWeight: 800 }}>
+              {goalProgressPct}% Completed
+            </span>
+          </div>
+
+          <div
+            style={{
+              height: '8px',
+              borderRadius: '4px',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                width: `${goalProgressPct}%`,
+                backgroundColor: pageAccent,
+                borderRadius: '4px',
+                boxShadow: `0 0 10px ${hexToRgba(pageAccent, 0.4)}`,
+                transition: 'width 0.3s ease',
+              }}
+            />
+          </div>
         </div>
 
         {/* Integrated Bottom 3-Metrics Bar inside the Vault Card */}
@@ -300,12 +368,128 @@ export const SavingsScreen: React.FC = () => {
             <div>
               <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>Goal</div>
               <div className="tabular-nums" style={{ fontSize: '12px', fontWeight: 800 }}>
-                {hideBalances ? '••••' : formatCurrency(goalSavingUSD, currency)}
+                {hideBalances ? '••••' : formatCurrency(currentGoal, currency)}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Edit Savings Goal Modal */}
+      {isEditingGoal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 100,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+          onClick={() => setIsEditingGoal(false)}
+        >
+          <form
+            className="glass-panel"
+            onSubmit={handleSaveGoal}
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '380px',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              borderColor: hexToRgba(pageAccent, 0.35),
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Target size={18} color={pageAccent} />
+                <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Savings Goal</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditingGoal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                Target Goal Amount
+              </label>
+              <input
+                type="number"
+                step="100"
+                value={customGoalInput}
+                onChange={e => setCustomGoalInput(e.target.value)}
+                placeholder="2000"
+                required
+                style={{
+                  width: '100%',
+                  height: '44px',
+                  padding: '0 12px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--border-glass)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  color: pageAccent,
+                  fontSize: '16px',
+                  fontWeight: 800,
+                  marginTop: '4px',
+                  outline: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {[1000, 2000, 3000, 5000].map(amt => (
+                <button
+                  key={amt}
+                  type="button"
+                  className="glass-pill"
+                  onClick={() => setCustomGoalInput(amt.toString())}
+                  style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    backgroundColor: customGoalInput === amt.toString() ? pageAccent : 'rgba(255, 255, 255, 0.06)',
+                    borderColor: customGoalInput === amt.toString() ? pageAccent : 'var(--border-glass)',
+                    color: customGoalInput === amt.toString() ? '#FFF' : 'var(--text-primary)',
+                  }}
+                >
+                  ${amt}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="submit"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '12px',
+                borderRadius: '12px',
+                border: 'none',
+                backgroundColor: pageAccent,
+                color: '#FFF',
+                fontWeight: 800,
+                fontSize: '14px',
+                cursor: 'pointer',
+                marginTop: '6px',
+              }}
+            >
+              <Check size={18} />
+              Save
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Grid 1-Tap Savings Quick Log Section with Vibrant Colorful Icons */}
       <div style={{ marginBottom: '18px' }}>

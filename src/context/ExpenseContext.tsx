@@ -24,6 +24,7 @@ interface ExpenseContextType {
   isAiChatOpen: boolean;
   selectedExpenseForEdit: ExpenseItem | null;
   monthlyBudget: number;
+  savingGoal: number;
   hideBalances: boolean;
   addExpense: (expense: Omit<ExpenseItem, 'id' | 'createdAt'>) => Promise<void>;
   updateExpense: (id: string, updated: Partial<ExpenseItem>) => Promise<void>;
@@ -42,6 +43,7 @@ interface ExpenseContextType {
   setIsAiChatOpen: (open: boolean) => void;
   setSelectedExpenseForEdit: (item: ExpenseItem | null) => void;
   setMonthlyBudget: (amount: number) => void;
+  setSavingGoal: (amount: number) => void;
   setHideBalances: (hide: boolean) => void;
   reloadExpenses: () => Promise<void>;
   clearAllData: () => Promise<void>;
@@ -65,7 +67,17 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isAddSavingOpen, setIsAddSavingOpen] = useState<boolean>(false);
   const [isAiChatOpen, setIsAiChatOpen] = useState<boolean>(false);
   const [selectedExpenseForEdit, setSelectedExpenseForEdit] = useState<ExpenseItem | null>(null);
-  const [monthlyBudget, setMonthlyBudgetState] = useState<number>(1000);
+
+  const [monthlyBudget, setMonthlyBudgetState] = useState<number>(() => {
+    const saved = localStorage.getItem('monthly_budget_target');
+    return saved ? parseFloat(saved) : 1000;
+  });
+
+  const [savingGoal, setSavingGoalState] = useState<number>(() => {
+    const saved = localStorage.getItem('saving_goal_target');
+    return saved ? parseFloat(saved) : 2000;
+  });
+
   const [hideBalances, setHideBalances] = useState<boolean>(false);
 
   const reloadExpenses = async () => {
@@ -83,6 +95,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const setMonthlyBudget = (amount: number) => {
     setMonthlyBudgetState(amount);
+    localStorage.setItem('monthly_budget_target', amount.toString());
+  };
+
+  const setSavingGoal = (amount: number) => {
+    setSavingGoalState(amount);
+    localStorage.setItem('saving_goal_target', amount.toString());
   };
 
   const resetAllFilters = () => {
@@ -100,8 +118,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await reloadExpenses();
   };
 
-  const updateExpense = async (id: string, updatedFields: Partial<ExpenseItem>) => {
-    await StorageService.updateExpense(id, updatedFields);
+  const updateExpense = async (id: string, updated: Partial<ExpenseItem>) => {
+    await StorageService.updateExpense(id, updated);
     await reloadExpenses();
   };
 
@@ -115,78 +133,57 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await reloadExpenses();
   };
 
-  const exportCSVData = () => {
-    const headers = ['Date', 'Title', 'Amount (USD)', 'Type', 'Category', 'Payment Method', 'Notes'];
+  const exportCSVData = (): string => {
+    const headers = ['ID', 'Title', 'Amount', 'Currency', 'Category', 'Date', 'PaymentMethod', 'Notes'];
     const rows = expenses.map(e => [
-      `"${e.date}"`,
-      `"${(e.title || '').replace(/"/g, '""')}"`,
-      `"${e.amount}"`,
-      `"${e.type || 'EXPENSE'}"`,
+      e.id,
+      `"${e.title.replace(/"/g, '""')}"`,
+      e.amount,
+      e.currency,
       `"${e.categoryName}"`,
-      `"${e.paymentMethod}"`,
+      e.date,
+      e.paymentMethod,
       `"${(e.notes || '').replace(/"/g, '""')}"`,
     ]);
     return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   };
 
-  const currentList = Array.isArray(expenses) ? expenses : [];
-  const todayStr = new Date().toISOString().split('T')[0];
-  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  // Filtered expenses calculation
+  let filtered = [...expenses];
 
-  let filtered = currentList.filter(item => {
-    if (!item) return false;
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(
+      e => e.title.toLowerCase().includes(q) || e.categoryName.toLowerCase().includes(q)
+    );
+  }
 
+  if (categoryFilter) {
+    filtered = filtered.filter(e => e.categoryId === categoryFilter);
+  }
 
+  if (paymentFilter !== 'ALL') {
+    filtered = filtered.filter(e => e.paymentMethod === paymentFilter);
+  }
 
-    if (searchQuery && searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      const matchTitle = (item.title || '').toLowerCase().includes(q);
-      const matchCat = (item.categoryName || '').toLowerCase().includes(q);
-      const matchNotes = (item.notes || '').toLowerCase().includes(q);
-      const matchPayment = (item.paymentMethod || '').toLowerCase().includes(q);
-      const matchDate = (item.date || '').toLowerCase().includes(q);
-      const matchAmount = item.amount.toString().includes(q);
-
-      if (!matchTitle && !matchCat && !matchNotes && !matchPayment && !matchDate && !matchAmount) {
-        return false;
-      }
+  if (selectedDate) {
+    filtered = filtered.filter(e => e.date === selectedDate);
+  } else if (dateRangeFilter !== 'ALL') {
+    const now = new Date();
+    if (dateRangeFilter === 'TODAY') {
+      const todayStr = now.toISOString().split('T')[0];
+      filtered = filtered.filter(e => e.date === todayStr);
+    } else if (dateRangeFilter === 'THIS_MONTH') {
+      const monthPrefix = now.toISOString().slice(0, 7);
+      filtered = filtered.filter(e => e.date.startsWith(monthPrefix));
     }
-
-    if (selectedDate && item.date !== selectedDate) {
-      return false;
-    }
-
-    if (categoryFilter && item.categoryId !== categoryFilter) {
-      return false;
-    }
-
-    if (paymentFilter !== 'ALL' && item.paymentMethod !== paymentFilter) {
-      return false;
-    }
-
-    if (dateRangeFilter === 'TODAY' && item.date !== todayStr) {
-      return false;
-    }
-    if (dateRangeFilter === 'THIS_MONTH' && !item.date.startsWith(currentMonthStr)) {
-      return false;
-    }
-
-    return true;
-  });
+  }
 
   filtered.sort((a, b) => {
-    if (sortBy === 'NEWEST') {
-      return new Date(b.date).getTime() - new Date(a.date).getTime() || b.createdAt - a.createdAt;
-    }
-    if (sortBy === 'OLDEST') {
-      return new Date(a.date).getTime() - new Date(b.date).getTime() || a.createdAt - b.createdAt;
-    }
-    if (sortBy === 'HIGHEST') {
-      return b.amount - a.amount;
-    }
-    if (sortBy === 'LOWEST') {
-      return a.amount - b.amount;
-    }
+    if (sortBy === 'NEWEST') return b.createdAt - a.createdAt;
+    if (sortBy === 'OLDEST') return a.createdAt - b.createdAt;
+    if (sortBy === 'HIGHEST') return b.amount - a.amount;
+    if (sortBy === 'LOWEST') return a.amount - b.amount;
     return 0;
   });
 
@@ -209,6 +206,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isAiChatOpen,
         selectedExpenseForEdit,
         monthlyBudget,
+        savingGoal,
         hideBalances,
         addExpense,
         updateExpense,
@@ -227,6 +225,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setIsAiChatOpen,
         setSelectedExpenseForEdit,
         setMonthlyBudget,
+        setSavingGoal,
         setHideBalances,
         reloadExpenses,
         clearAllData,
