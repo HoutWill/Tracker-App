@@ -9,7 +9,7 @@ import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { SAVING_QUICK_PRESETS } from '../constants/presets';
 import { formatCurrency, StorageService, getTodayDateString } from '../services/storageService';
 import { PaymentMethod, QuickPreset } from '../types';
-import { Plus, Zap, CheckCircle2, Layers, SearchX, X, Check, PiggyBank, Target, TrendingUp, Trash2 } from 'lucide-react';
+import { Plus, Zap, CheckCircle2, Layers, SearchX, X, Check, PiggyBank, Target, TrendingUp, Trash2, CreditCard } from 'lucide-react';
 
 const SAVING_PRESET_ICONS = [
   'piggy-bank', 'vault', 'wallet', 'shield-check', 'target', 'trending-up',
@@ -17,7 +17,11 @@ const SAVING_PRESET_ICONS = [
   'plane', 'heart'
 ];
 
-export const SavingsScreen: React.FC = () => {
+interface SavingsScreenProps {
+  onSwitchTab?: (tab: any) => void;
+}
+
+export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => {
   const { pageColors } = useTheme();
   const pageAccent = pageColors?.SAVING || '#00B894';
 
@@ -214,13 +218,72 @@ export const SavingsScreen: React.FC = () => {
             fontSize: '14px',
             fontWeight: 800,
             marginBottom: '14px',
-            boxShadow: `0 8px 24px ${hexToRgba(pageAccent, 0.25)}`,
           }}
         >
           <CheckCircle2 size={20} />
           <span>{toastMsg}</span>
         </div>
       )}
+
+      {/* Top Segmented Group Bar: Expenses vs Saving */}
+      <div
+        className="glass-panel"
+        style={{
+          display: 'flex',
+          padding: '4px',
+          borderRadius: '16px',
+          marginBottom: '14px',
+          backgroundColor: 'var(--bg-card)',
+          borderColor: 'var(--border-glass)',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => onSwitchTab?.('EXPENSES')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '10px 12px',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: 'transparent',
+            color: 'var(--text-secondary)',
+            fontWeight: 600,
+            fontSize: '13px',
+            cursor: 'pointer',
+          }}
+        >
+          <CreditCard size={16} />
+          <span>Expenses</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSwitchTab?.('SAVINGS')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '10px 12px',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: pageAccent,
+            color: '#141416',
+            fontWeight: 800,
+            fontSize: '13px',
+            cursor: 'pointer',
+            boxShadow: `0 4px 12px ${hexToRgba(pageAccent, 0.35)}`,
+          }}
+        >
+          <PiggyBank size={16} />
+          <span>Saving</span>
+        </button>
+      </div>
 
       {/* Unified All-in-One Hero Vault Card displaying Saved, Goal, Progress Bar, and Metrics */}
       <div

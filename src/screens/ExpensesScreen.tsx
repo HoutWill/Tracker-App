@@ -9,7 +9,7 @@ import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { EXPENSE_QUICK_PRESETS } from '../constants/presets';
 import { formatCurrency, StorageService, getTodayDateString } from '../services/storageService';
 import { PaymentMethod, QuickPreset } from '../types';
-import { Plus, Zap, TrendingUp, Filter, CheckCircle2, Layers, SearchX, X, Check, ArrowDownRight, Trash2, Target, Edit3 } from 'lucide-react';
+import { Plus, Zap, TrendingUp, Filter, CheckCircle2, Layers, SearchX, X, Check, ArrowDownRight, Trash2, Target, Edit3, CreditCard, PiggyBank } from 'lucide-react';
 
 const PRESET_ICONS = [
   'receipt', 'laptop', 'coffee', 'utensils', 'car', 'shopping-cart',
@@ -19,7 +19,11 @@ const PRESET_ICONS = [
   'flame', 'building', 'credit-card'
 ];
 
-export const ExpensesScreen: React.FC = () => {
+interface ExpensesScreenProps {
+  onSwitchTab?: (tab: any) => void;
+}
+
+export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) => {
   const { pageColors } = useTheme();
   const pageAccent = pageColors?.EXPENSES || '#6C5CE7';
 
@@ -218,13 +222,72 @@ export const ExpensesScreen: React.FC = () => {
             fontSize: '14px',
             fontWeight: 800,
             marginBottom: '14px',
-            boxShadow: '0 8px 24px rgba(0, 230, 118, 0.25)',
           }}
         >
           <CheckCircle2 size={20} />
           <span>{toastMsg}</span>
         </div>
       )}
+
+      {/* Top Segmented Group Bar: Expenses vs Saving */}
+      <div
+        className="glass-panel"
+        style={{
+          display: 'flex',
+          padding: '4px',
+          borderRadius: '16px',
+          marginBottom: '14px',
+          backgroundColor: 'var(--bg-card)',
+          borderColor: 'var(--border-glass)',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => onSwitchTab?.('EXPENSES')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '10px 12px',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: pageAccent,
+            color: '#FFF',
+            fontWeight: 800,
+            fontSize: '13px',
+            cursor: 'pointer',
+            boxShadow: `0 4px 12px ${hexToRgba(pageAccent, 0.35)}`,
+          }}
+        >
+          <CreditCard size={16} />
+          <span>Expenses</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSwitchTab?.('SAVINGS')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '10px 12px',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: 'transparent',
+            color: 'var(--text-secondary)',
+            fontWeight: 600,
+            fontSize: '13px',
+            cursor: 'pointer',
+          }}
+        >
+          <PiggyBank size={16} />
+          <span>Saving</span>
+        </button>
+      </div>
 
       {/* Unified All-in-One Hero Expenses Card with Explicit Budget Target */}
       <div

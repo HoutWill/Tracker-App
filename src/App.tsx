@@ -67,8 +67,8 @@ export const AppContent: React.FC = () => {
 
       {/* Main Active Screen */}
       <main style={{ flex: 1, paddingBottom: '90px' }}>
-        {activeTab === 'EXPENSES' && <ExpensesScreen />}
-        {activeTab === 'SAVINGS' && <SavingsScreen />}
+        {activeTab === 'EXPENSES' && <ExpensesScreen onSwitchTab={setActiveTab} />}
+        {activeTab === 'SAVINGS' && <SavingsScreen onSwitchTab={setActiveTab} />}
         {activeTab === 'STATS' && <StatsScreen />}
         {activeTab === 'PLANNER' && <PlannerScreen />}
         {activeTab === 'CALENDAR' && <CalendarScreen />}
