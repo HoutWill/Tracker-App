@@ -116,43 +116,24 @@ export const StorageService = {
   getCachedExpenses(): ExpenseItem[] {
     const guestId = getGuestId();
     try {
-      const keys = ['pitrack_expenses_data', `expenses_${guestId}`, 'expenses'];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('expenses_')) {
-          keys.push(k);
+      const masterKey = `pitrack_expenses_${guestId}`;
+      const raw = localStorage.getItem(masterKey) || localStorage.getItem('pitrack_expenses_data');
+      if (raw) {
+        const parsed: ExpenseItem[] = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.sort((a, b) => b.createdAt - a.createdAt);
         }
       }
 
-      const mergedMap = new Map<string, ExpenseItem>();
-      for (const key of keys) {
-        const raw = localStorage.getItem(key);
-        if (raw) {
-          try {
-            const parsed: ExpenseItem[] = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
-              parsed.forEach(item => {
-                if (item && item.id && !mergedMap.has(item.id)) {
-                  mergedMap.set(item.id, item);
-                }
-              });
-            }
-          } catch (e) {}
-        }
+      // Check if user has initialized before
+      const initialized = localStorage.getItem('pitrack_expenses_initialized');
+      if (initialized) {
+        return [];
       }
 
-      if (mergedMap.size > 0) {
-        const merged = Array.from(mergedMap.values()).sort((a, b) => b.createdAt - a.createdAt);
-        try {
-          localStorage.setItem('pitrack_expenses_data', JSON.stringify(merged));
-          localStorage.setItem(`expenses_${guestId}`, JSON.stringify(merged));
-        } catch (e) {}
-        return merged;
-      }
-
-      // First time initialization ONLY
+      localStorage.setItem('pitrack_expenses_initialized', 'true');
+      localStorage.setItem(masterKey, JSON.stringify(DEFAULT_DEMO_EXPENSES));
       localStorage.setItem('pitrack_expenses_data', JSON.stringify(DEFAULT_DEMO_EXPENSES));
-      localStorage.setItem(`expenses_${guestId}`, JSON.stringify(DEFAULT_DEMO_EXPENSES));
       return DEFAULT_DEMO_EXPENSES;
     } catch (e) {
       return DEFAULT_DEMO_EXPENSES;
@@ -175,14 +156,14 @@ export const StorageService = {
         return null;
       })
       .then(serverData => {
-        if (Array.isArray(serverData)) {
+        if (Array.isArray(serverData) && serverData.length > 0) {
           const mergedMap = new Map<string, ExpenseItem>();
           serverData.forEach(item => mergedMap.set(item.id, item));
           cached.forEach(item => mergedMap.set(item.id, item));
           const merged = Array.from(mergedMap.values()).sort((a, b) => b.createdAt - a.createdAt);
           try {
             localStorage.setItem('pitrack_expenses_data', JSON.stringify(merged));
-            localStorage.setItem(`expenses_${guestId}`, JSON.stringify(merged));
+            localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(merged));
           } catch (e) {}
         }
       })
@@ -205,7 +186,7 @@ export const StorageService = {
       const current = this.getCachedExpenses();
       const updated = [newItem, ...current.filter(e => e.id !== newItem.id)];
       localStorage.setItem('pitrack_expenses_data', JSON.stringify(updated));
-      localStorage.setItem(`expenses_${guestId}`, JSON.stringify(updated));
+      localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
     // 2. Sync to API in background without blocking UI or fetching full list again
@@ -231,7 +212,7 @@ export const StorageService = {
       const current = this.getCachedExpenses();
       const updated = current.map(e => (e.id === id ? { ...e, ...updatedFields } : e));
       localStorage.setItem('pitrack_expenses_data', JSON.stringify(updated));
-      localStorage.setItem(`expenses_${guestId}`, JSON.stringify(updated));
+      localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
     // 2. Sync PUT in background
@@ -253,7 +234,7 @@ export const StorageService = {
       const current = this.getCachedExpenses();
       const updated = current.filter(e => e.id !== id);
       localStorage.setItem('pitrack_expenses_data', JSON.stringify(updated));
-      localStorage.setItem(`expenses_${guestId}`, JSON.stringify(updated));
+      localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
     // 2. Sync DELETE in background
@@ -267,7 +248,8 @@ export const StorageService = {
     const guestId = getGuestId();
     try {
       localStorage.setItem('pitrack_expenses_data', JSON.stringify([]));
-      localStorage.setItem(`expenses_${guestId}`, JSON.stringify([]));
+      localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify([]));
+      localStorage.setItem('pitrack_expenses_initialized', 'true');
       localStorage.removeItem('expenses');
     } catch (e) {}
 
