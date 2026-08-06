@@ -97,14 +97,10 @@ export const COLOR_PALETTE_OPTIONS = [
   { name: 'Orange', hex: '#FF7675' },
 ];
 
-export const PRESET_COLOR_PALETTE = [
+export const DEFAULT_PRESET_PALETTE = [
   '#11B5C6', '#0E4F88', '#C88A58', '#00FF9D', '#6C5CE7',
   '#00B894', '#FDCB6E', '#FF7675', '#FD79A8', '#00CEC9'
 ];
-
-export const getPresetColor = (index: number): string => {
-  return PRESET_COLOR_PALETTE[index % PRESET_COLOR_PALETTE.length];
-};
 
 export const hexToRgba = (hex: string, alpha: number): string => {
   if (!hex || !hex.startsWith('#')) return `rgba(17, 181, 198, ${alpha})`;
@@ -119,6 +115,22 @@ export const hexToRgba = (hex: string, alpha: number): string => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
+export const generateRandomVibrantHex = (): string => {
+  const hue = Math.floor(Math.random() * 360);
+  const saturation = 75 + Math.floor(Math.random() * 25);
+  const lightness = 50 + Math.floor(Math.random() * 15);
+  
+  // Convert HSL to Hex
+  const l = lightness / 100;
+  const a = (saturation * Math.min(l, 1 - l)) / 100;
+  const f = (n: number) => {
+    const k = (n + hue / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+};
+
 interface ThemeContextType {
   isDark: boolean;
   toggleTheme: () => void;
@@ -128,6 +140,9 @@ interface ThemeContextType {
   setColorPack: (packId: string) => void;
   pageColors: PageColors;
   setPageColor: (pageKey: keyof PageColors, colorHex: string) => void;
+  presetPalette: string[];
+  setPresetColorItem: (index: number, colorHex: string) => void;
+  randomizePresetPalette: () => void;
   resetDefaultColors: () => void;
 }
 
@@ -154,6 +169,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { ...DEFAULT_PAGE_COLORS, ...JSON.parse(saved) };
     } catch (e) {
       return DEFAULT_PAGE_COLORS;
+    }
+  });
+
+  const [presetPalette, setPresetPalette] = useState<string[]>(() => {
+    const saved = localStorage.getItem('custom_preset_palette');
+    if (!saved) return DEFAULT_PRESET_PALETTE;
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      return DEFAULT_PRESET_PALETTE;
     }
   });
 
@@ -207,9 +232,26 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
+  const setPresetColorItem = (index: number, colorHex: string) => {
+    setPresetPalette(prev => {
+      const updated = [...prev];
+      updated[index % updated.length] = colorHex;
+      localStorage.setItem('custom_preset_palette', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const randomizePresetPalette = () => {
+    const randomColors = DEFAULT_PRESET_PALETTE.map(() => generateRandomVibrantHex());
+    setPresetPalette(randomColors);
+    localStorage.setItem('custom_preset_palette', JSON.stringify(randomColors));
+  };
+
   const resetDefaultColors = () => {
     setHolidayTheme('DEFAULT');
     setColorPack('MODERN');
+    setPresetPalette(DEFAULT_PRESET_PALETTE);
+    localStorage.removeItem('custom_preset_palette');
   };
 
   return (
@@ -222,6 +264,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setColorPack,
       pageColors,
       setPageColor,
+      presetPalette,
+      setPresetColorItem,
+      randomizePresetPalette,
       resetDefaultColors
     }}>
       {children}

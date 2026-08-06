@@ -1,6 +1,7 @@
 import React from 'react';
 import { QuickPreset, CurrencyCode } from '../types';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
+import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { formatCurrency } from '../services/storageService';
 import { Plus, Zap } from 'lucide-react';
 
@@ -13,16 +14,6 @@ interface ArtPresetGridProps {
   colorOffset?: number;
 }
 
-// Bright, High-Contrast Vibrant Pastel Palette (Ultra-Readable)
-const BRIGHT_PASTEL_PALETTE = [
-  { bg: 'rgba(230, 255, 250, 0.95)', text: '#064E3B', icon: '#059669', badgeBg: '#D1FAE5', border: '#A7F3D0' }, // Mint
-  { bg: 'rgba(255, 251, 235, 0.95)', text: '#78350F', icon: '#D97706', badgeBg: '#FEF3C7', border: '#FDE68A' }, // Amber
-  { bg: 'rgba(255, 241, 242, 0.95)', text: '#881337', icon: '#E11D48', badgeBg: '#FFE4E6', border: '#FECDD3' }, // Rose
-  { bg: 'rgba(243, 232, 255, 0.95)', text: '#581C87', icon: '#7C3AED', badgeBg: '#E9D5FF', border: '#DDD6FE' }, // Purple
-  { bg: 'rgba(224, 242, 254, 0.95)', text: '#0C4A6E', icon: '#0284C7', badgeBg: '#BAE6FD', border: '#7DD3FC' }, // Sky
-  { bg: 'rgba(254, 249, 195, 0.95)', text: '#713F12', icon: '#CA8A04', badgeBg: '#FEF08A', border: '#FDE047' }, // Sun
-];
-
 export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
   presetsList,
   currency,
@@ -31,6 +22,8 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
   onAddPreset,
   colorOffset = 0,
 }) => {
+  const { presetPalette } = useTheme();
+
   return (
     <div style={{ marginBottom: '18px' }}>
       {/* Header */}
@@ -49,10 +42,10 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
         </button>
       </div>
 
-      {/* Bright, Ultra-Readable Tactile Pastel Preset Grid */}
+      {/* Dynamic Customizable Full-Spectrum Preset Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
         {presetsList.map((preset, idx) => {
-          const theme = BRIGHT_PASTEL_PALETTE[(idx + colorOffset) % BRIGHT_PASTEL_PALETTE.length];
+          const tileHex = presetPalette[(idx + colorOffset) % presetPalette.length] || pageAccent;
           return (
             <button
               key={preset.id}
@@ -65,12 +58,12 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                 justifyContent: 'space-between',
                 padding: '12px 8px 10px 8px',
                 borderRadius: '16px',
-                border: `2px solid ${theme.border}`,
-                backgroundColor: theme.bg,
+                border: `2px solid ${hexToRgba(tileHex, 0.4)}`,
+                backgroundColor: hexToRgba(tileHex, 0.12),
                 textAlign: 'center',
                 cursor: 'pointer',
-                boxShadow: '0 6px 16px rgba(0, 0, 0, 0.18)',
-                transition: 'all 0.15s ease-in-out',
+                boxShadow: `0 6px 16px ${hexToRgba(tileHex, 0.18)}`,
+                transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
                 minHeight: '110px',
               }}
             >
@@ -80,17 +73,17 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                   width: '42px',
                   height: '42px',
                   borderRadius: '12px',
-                  backgroundColor: theme.badgeBg,
-                  border: `1px solid ${theme.border}`,
+                  backgroundColor: hexToRgba(tileHex, 0.25),
+                  border: `1px solid ${hexToRgba(tileHex, 0.5)}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: theme.icon,
+                  color: tileHex,
                   marginBottom: '6px',
-                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+                  boxShadow: `0 2px 8px ${hexToRgba(tileHex, 0.25)}`,
                 }}
               >
-                <CategoryIconRenderer icon={preset.icon} size={22} color={theme.icon} />
+                <CategoryIconRenderer icon={preset.icon} size={22} color={tileHex} />
               </div>
 
               {/* Title & Price Pill */}
@@ -100,7 +93,7 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                     fontSize: '12px',
                     fontWeight: 900,
                     lineHeight: '1.2',
-                    color: theme.text,
+                    color: 'var(--text-primary)',
                     marginBottom: '4px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
@@ -117,11 +110,11 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                     display: 'block',
                     padding: '3px 6px',
                     borderRadius: '8px',
-                    backgroundColor: theme.badgeBg,
-                    border: `1px solid ${theme.border}`,
+                    backgroundColor: hexToRgba(tileHex, 0.25),
+                    border: `1px solid ${hexToRgba(tileHex, 0.45)}`,
                     fontSize: '11px',
                     fontWeight: 900,
-                    color: theme.text,
+                    color: tileHex,
                     width: '100%',
                   }}
                 >

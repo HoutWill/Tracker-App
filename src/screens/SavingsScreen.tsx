@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
-import { useTheme, hexToRgba, getPresetColor } from '../context/ThemeContext';
+import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { ExpenseCard } from '../components/ExpenseCard';
 import { FilterControlBar } from '../components/FilterControlBar';
 import { TripFolderBar } from '../components/TripFolderBar';

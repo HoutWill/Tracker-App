@@ -15,6 +15,9 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
     setColorPack,
     pageColors,
     setPageColor,
+    presetPalette,
+    setPresetColorItem,
+    randomizePresetPalette,
     resetDefaultColors,
   } = useTheme();
 
@@ -201,12 +204,26 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
           </div>
         )}
 
-        {/* Section 3: Custom Preset & Page Accent Pickers */}
+        {/* Section 3: Full Range Custom Preset & Page Color Customizer */}
         {activeSection === 'PRESET' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Page Accent Custom Pickers */}
             {pageNames.map(p => (
               <div key={p.key} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <span style={{ fontSize: '13px', fontWeight: 800 }}>{p.label} Accent</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 800 }}>{p.label} Accent</span>
+                  {/* Full Hex Color Picker */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                    <span>Custom</span>
+                    <input
+                      type="color"
+                      value={pageColors[p.key]}
+                      onChange={e => setPageColor(p.key, e.target.value)}
+                      style={{ width: '26px', height: '26px', borderRadius: '50%', border: 'none', cursor: 'pointer', backgroundColor: 'transparent' }}
+                    />
+                  </label>
+                </div>
+
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {COLOR_PALETTE_OPTIONS.map(c => {
                     const isSelected = pageColors[p.key] === c.hex;
@@ -233,6 +250,84 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
                 </div>
               </div>
             ))}
+
+            {/* Presets Color Spectrum & Randomizer Card */}
+            <div
+              style={{
+                padding: '14px',
+                borderRadius: '14px',
+                backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid var(--border-glass)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 style={{ fontSize: '13px', fontWeight: 800 }}>Preset Tiles Spectrum</h4>
+                  <p style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Full color range & randomizer</p>
+                </div>
+
+                {/* Randomize Palette Button */}
+                <button
+                  type="button"
+                  className="glass-pill"
+                  onClick={randomizePresetPalette}
+                  style={{ fontSize: '11px', padding: '4px 10px', color: 'var(--accent)', borderColor: 'rgba(46, 170, 220, 0.4)' }}
+                  title="Generate Random Colors Across Spectrum"
+                >
+                  <Sparkles size={12} /> Random
+                </button>
+              </div>
+
+              {/* Preset Slot Color Dots with Native Full Color Picker */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
+                {presetPalette.map((hexColor, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <label
+                      style={{
+                        position: 'relative',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        backgroundColor: hexColor,
+                        border: '2px solid rgba(255, 255, 255, 0.3)',
+                        boxShadow: `0 2px 10px ${hexColor}66`,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      title={`Preset ${idx + 1} Color - Click to change`}
+                    >
+                      <input
+                        type="color"
+                        value={hexColor}
+                        onChange={e => setPresetColorItem(idx, e.target.value)}
+                        style={{
+                          opacity: 0,
+                          position: 'absolute',
+                          inset: 0,
+                          width: '100%',
+                          height: '100%',
+                          cursor: 'pointer',
+                        }}
+                      />
+                    </label>
+                    <span style={{ fontSize: '9px', fontWeight: 800, color: 'var(--text-secondary)' }}>#{idx + 1}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
