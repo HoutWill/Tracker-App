@@ -13,14 +13,14 @@ interface ArtPresetGridProps {
   colorOffset?: number;
 }
 
-// Warm Organic Palette (Espresso, Terracotta, Sage Green, Ochre Gold, Royal Indigo, Warm Rose)
-const ORGANIC_PALETTE = [
-  { bg: '#2C221E', accent: '#E8A87C', border: '#4A3B35' }, // Warm Espresso
-  { bg: '#261F24', accent: '#E27D60', border: '#42333D' }, // Terracotta
-  { bg: '#1C2621', accent: '#85DCB', border: '#2D3D35' }, // Sage Mint
-  { bg: '#2B261D', accent: '#C38D9E', border: '#453C2D' }, // Ochre Gold
-  { bg: '#1E222A', accent: '#41B3A3', border: '#303744' }, // Slate Blue
-  { bg: '#2A1E24', accent: '#FF6F59', border: '#45303B' }, // Coral Berry
+// Bright, High-Contrast Vibrant Pastel Palette (Ultra-Readable)
+const BRIGHT_PASTEL_PALETTE = [
+  { bg: 'rgba(230, 255, 250, 0.95)', text: '#064E3B', icon: '#059669', badgeBg: '#D1FAE5', border: '#A7F3D0' }, // Mint
+  { bg: 'rgba(255, 251, 235, 0.95)', text: '#78350F', icon: '#D97706', badgeBg: '#FEF3C7', border: '#FDE68A' }, // Amber
+  { bg: 'rgba(255, 241, 242, 0.95)', text: '#881337', icon: '#E11D48', badgeBg: '#FFE4E6', border: '#FECDD3' }, // Rose
+  { bg: 'rgba(243, 232, 255, 0.95)', text: '#581C87', icon: '#7C3AED', badgeBg: '#E9D5FF', border: '#DDD6FE' }, // Purple
+  { bg: 'rgba(224, 242, 254, 0.95)', text: '#0C4A6E', icon: '#0284C7', badgeBg: '#BAE6FD', border: '#7DD3FC' }, // Sky
+  { bg: 'rgba(254, 249, 195, 0.95)', text: '#713F12', icon: '#CA8A04', badgeBg: '#FEF08A', border: '#FDE047' }, // Sun
 ];
 
 export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
@@ -43,16 +43,16 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
           type="button"
           className="glass-pill"
           onClick={onAddPreset}
-          style={{ fontSize: '11px', padding: '4px 10px', color: pageAccent, borderColor: 'rgba(255, 255, 255, 0.15)' }}
+          style={{ fontSize: '11px', padding: '4px 10px', color: pageAccent, borderColor: 'rgba(255, 255, 255, 0.2)' }}
         >
           <Plus size={12} /> Add
         </button>
       </div>
 
-      {/* Warm Tactile Clay & Paper Cards Grid (No Glass, No Robotic Look) */}
+      {/* Bright, Ultra-Readable Tactile Pastel Preset Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
         {presetsList.map((preset, idx) => {
-          const theme = ORGANIC_PALETTE[(idx + colorOffset) % ORGANIC_PALETTE.length];
+          const theme = BRIGHT_PASTEL_PALETTE[(idx + colorOffset) % BRIGHT_PASTEL_PALETTE.length];
           return (
             <button
               key={preset.id}
@@ -63,45 +63,45 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '14px 8px 10px 8px',
+                padding: '12px 8px 10px 8px',
                 borderRadius: '16px',
-                border: `1px solid ${theme.border}`,
+                border: `2px solid ${theme.border}`,
                 backgroundColor: theme.bg,
                 textAlign: 'center',
                 cursor: 'pointer',
-                boxShadow: '0 6px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                boxShadow: '0 6px 16px rgba(0, 0, 0, 0.18)',
                 transition: 'all 0.15s ease-in-out',
                 minHeight: '110px',
               }}
             >
-              {/* Tactile Icon Badge */}
+              {/* Vibrant Icon Badge */}
               <div
                 style={{
                   width: '42px',
                   height: '42px',
                   borderRadius: '12px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                  backgroundColor: theme.badgeBg,
                   border: `1px solid ${theme.border}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: theme.accent,
-                  boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.4)',
+                  color: theme.icon,
                   marginBottom: '6px',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
                 }}
               >
-                <CategoryIconRenderer icon={preset.icon} size={20} color={theme.accent} />
+                <CategoryIconRenderer icon={preset.icon} size={22} color={theme.icon} />
               </div>
 
-              {/* Title & Solid Price Tag */}
+              {/* Title & Price Pill */}
               <div style={{ width: '100%' }}>
                 <div
                   style={{
                     fontSize: '12px',
-                    fontWeight: 700,
+                    fontWeight: 900,
                     lineHeight: '1.2',
-                    color: '#F0EAD6',
-                    marginBottom: '6px',
+                    color: theme.text,
+                    marginBottom: '4px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -110,18 +110,18 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                   {preset.title}
                 </div>
 
-                {/* Solid Price Pill */}
+                {/* High Contrast Price Pill */}
                 <div
                   className="tabular-nums"
                   style={{
                     display: 'block',
                     padding: '3px 6px',
                     borderRadius: '8px',
-                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                    backgroundColor: theme.badgeBg,
                     border: `1px solid ${theme.border}`,
                     fontSize: '11px',
-                    fontWeight: 800,
-                    color: theme.accent,
+                    fontWeight: 900,
+                    color: theme.text,
                     width: '100%',
                   }}
                 >
