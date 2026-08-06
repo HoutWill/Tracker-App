@@ -45,8 +45,8 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
       {/* Dynamic 9-Bar Quick Presets Grid (Strictly 3x3) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
         {presetsList.slice(0, 9).map((preset, idx) => {
-          const customHex = presetPalette[idx % presetPalette.length] || DEFAULT_PRESET_PALETTE[idx % DEFAULT_PRESET_PALETTE.length];
-          const tileHex = customHex;
+          const rawHex = presetPalette[idx % presetPalette.length];
+          const tileHex = (!rawHex || rawHex === '#FFFFFF') ? DEFAULT_PRESET_PALETTE[idx % DEFAULT_PRESET_PALETTE.length] : rawHex;
 
           return (
             <button
@@ -60,34 +60,32 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                 justifyContent: 'space-between',
                 padding: '12px 8px 10px 8px',
                 borderRadius: '18px',
-                border: `1.5px solid ${hexToRgba(tileHex, 0.4)}`,
-                backgroundColor: hexToRgba(tileHex, 0.15),
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
+                border: 'none',
+                background: `linear-gradient(135deg, ${tileHex} 0%, ${tileHex}DD 100%)`,
+                color: '#FFF',
                 textAlign: 'center',
                 cursor: 'pointer',
-                boxShadow: `0 4px 14px ${hexToRgba(tileHex, 0.2)}`,
+                boxShadow: `0 6px 16px ${hexToRgba(tileHex, 0.35)}`,
                 transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
-                minHeight: '110px',
+                minHeight: '112px',
               }}
             >
-              {/* Icon Badge */}
+              {/* White Translucent Icon Badge Circle */}
               <div
                 style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '12px',
-                  backgroundColor: hexToRgba(tileHex, 0.25),
-                  border: `1px solid ${hexToRgba(tileHex, 0.45)}`,
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.25)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#FFF',
                   marginBottom: '6px',
-                  boxShadow: `0 2px 8px ${hexToRgba(tileHex, 0.25)}`,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
                 }}
               >
-                <CategoryIconRenderer icon={preset.icon} size={22} color={tileHex} />
+                <CategoryIconRenderer icon={preset.icon} size={20} color="#FFF" />
               </div>
 
               {/* Title & Price Pill */}
@@ -97,7 +95,7 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                     fontSize: '12px',
                     fontWeight: 900,
                     lineHeight: '1.2',
-                    color: 'var(--text-primary)',
+                    color: '#FFF',
                     marginBottom: '4px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
@@ -107,18 +105,17 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                   {preset.title}
                 </div>
 
-                {/* High Contrast Price Pill */}
+                {/* Translucent Price Pill */}
                 <div
                   className="tabular-nums"
                   style={{
                     display: 'block',
                     padding: '3px 6px',
                     borderRadius: '8px',
-                    backgroundColor: hexToRgba(tileHex, 0.2),
-                    border: `1px solid ${hexToRgba(tileHex, 0.4)}`,
+                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
                     fontSize: '11px',
                     fontWeight: 900,
-                    color: tileHex,
+                    color: '#FFF',
                     width: '100%',
                   }}
                 >

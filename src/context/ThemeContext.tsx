@@ -171,7 +171,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const saved = localStorage.getItem('custom_preset_palette');
     if (!saved) return DEFAULT_PRESET_PALETTE;
     try {
-      return JSON.parse(saved);
+      const parsed: string[] = JSON.parse(saved);
+      return parsed.map((c, i) => (!c || c === '#FFFFFF' ? DEFAULT_PRESET_PALETTE[i % DEFAULT_PRESET_PALETTE.length] : c));
     } catch (e) {
       return DEFAULT_PRESET_PALETTE;
     }
