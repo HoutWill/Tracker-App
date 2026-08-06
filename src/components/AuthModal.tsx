@@ -80,13 +80,44 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         }
         userData = data.user;
       } else {
-        // Fallback for static host environments without Node backend
-        const safeId = cleanEmail.replace(/[^a-z0-9]/g, '_') || 'user_1';
-        userData = {
-          accountId: `usr_${safeId}`,
-          email: cleanEmail,
-          name: name.trim() || cleanEmail.split('@')[0],
-        };
+        // Fallback Client-Side Database for Static Host Environments
+        const regUsersRaw = localStorage.getItem('pitrack_registered_users');
+        let regUsers: Array<{ email: string; passwordHash: string; accountId: string; name: string }> = [];
+        try {
+          if (regUsersRaw) regUsers = JSON.parse(regUsersRaw);
+        } catch (e) {}
+
+        if (tab === 'REGISTER') {
+          const existing = regUsers.find(u => u.email === cleanEmail);
+          if (existing) {
+            throw new Error('Email is already registered. Please log in.');
+          }
+          const safeId = cleanEmail.replace(/[^a-z0-9]/g, '_') || 'user_1';
+          const newRegUser = {
+            accountId: `usr_${safeId}_${Date.now()}`,
+            email: cleanEmail,
+            passwordHash: password,
+            name: name.trim() || cleanEmail.split('@')[0],
+          };
+          regUsers.push(newRegUser);
+          localStorage.setItem('pitrack_registered_users', JSON.stringify(regUsers));
+          userData = {
+            accountId: newRegUser.accountId,
+            email: newRegUser.email,
+            name: newRegUser.name,
+          };
+        } else {
+          // LOGIN TAB: Strictly verify registered user and correct password!
+          const foundUser = regUsers.find(u => u.email === cleanEmail && u.passwordHash === password);
+          if (!foundUser) {
+            throw new Error('Invalid email or password');
+          }
+          userData = {
+            accountId: foundUser.accountId,
+            email: foundUser.email,
+            name: foundUser.name,
+          };
+        }
       }
 
       if (!userData) {
