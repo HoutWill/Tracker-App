@@ -42,6 +42,8 @@ import {
   GraduationCap,
   Shirt,
   Bus,
+  Users,
+  PartyPopper,
 } from 'lucide-react';
 
 interface Props {
@@ -78,6 +80,13 @@ export const CategoryIconRenderer: React.FC<Props> = ({ icon, size = 16, color =
     case 'plane':
     case 'travel':
       return <Plane {...props} />;
+    case 'users':
+    case 'team':
+    case 'teamwork':
+      return <Users {...props} />;
+    case 'party-popper':
+    case 'party':
+      return <PartyPopper {...props} />;
     case 'flash-outline':
     case 'zap':
     case 'electricity':
@@ -139,8 +148,11 @@ export const CategoryIconRenderer: React.FC<Props> = ({ icon, size = 16, color =
     case 'receipt':
       return <Receipt {...props} />;
     case 'home':
+    case 'house':
     case 'rent':
       return <Home {...props} />;
+    case 'gadget':
+      return <Laptop {...props} />;
     case 'building':
       return <Building {...props} />;
     case 'gift':

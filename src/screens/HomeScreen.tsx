@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useExpenses, TypeTabOption } from '../context/ExpenseContext';
 import { ExpenseCard } from '../components/ExpenseCard';
 import { FilterControlBar } from '../components/FilterControlBar';
+import { TripFolderBar } from '../components/TripFolderBar';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { EXPENSE_QUICK_PRESETS, SAVING_QUICK_PRESETS, QUICK_PRESETS } from '../constants/presets';
 import { formatCurrency } from '../services/storageService';
@@ -21,11 +22,13 @@ export const HomeScreen: React.FC = () => {
     addExpense,
     setIsAddExpenseOpen,
     setSelectedExpenseForEdit,
+    selectedTripId,
+    trips,
   } = useExpenses();
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [activePreset, setActivePreset] = useState<typeof QUICK_PRESETS[0] | null>(null);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('Card');
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('Cash');
   const [selectedType, setSelectedType] = useState<TransactionType>('EXPENSE');
   const [presetAmount, setPresetAmount] = useState<string>('');
   const [presetDate, setPresetDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -50,7 +53,7 @@ export const HomeScreen: React.FC = () => {
     setActivePreset(preset);
     setPresetAmount(preset.amount.toString());
     setPresetDate(new Date().toISOString().split('T')[0]);
-    setSelectedPayment('Card');
+    setSelectedPayment('Cash');
     setSelectedType(preset.type || (preset.categoryId.startsWith('cat-saving') ? 'SAVING' : 'EXPENSE'));
   };
 
@@ -65,6 +68,14 @@ export const HomeScreen: React.FC = () => {
 
     const cat = categories.find(c => c.id === activePreset.categoryId) || categories[0];
 
+    const matchingTrip = selectedTripId
+      ? trips.find(t => t.id === selectedTripId)
+      : trips.find(t =>
+          t.name.toLowerCase() === activePreset.title.toLowerCase() ||
+          t.category.toLowerCase() === activePreset.title.toLowerCase() ||
+          activePreset.categoryId.includes(t.category.toLowerCase())
+        );
+
     await addExpense({
       title: activePreset.title,
       amount: num,
@@ -77,6 +88,7 @@ export const HomeScreen: React.FC = () => {
       date: presetDate,
       paymentMethod: selectedPayment,
       notes: `Quick log (${selectedType}) via ${selectedPayment}`,
+      tripId: matchingTrip?.id,
     });
 
     setToastMsg(`Logged ${selectedType} "${activePreset.title}" (${formatCurrency(num, currency)})!`);
@@ -237,6 +249,9 @@ export const HomeScreen: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Trip Folder Travel & Event Organizer Bar */}
+      <TripFolderBar />
 
       {/* Dynamic 1-Tap Quick Log Section based on active mode */}
       <div style={{ marginBottom: '18px' }}>
@@ -438,10 +453,10 @@ export const HomeScreen: React.FC = () => {
             {/* Payment Method Selector */}
             <div>
               <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                Payment Method
+                Payment
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '6px' }}>
-                {(['Card', 'Cash', 'Bank', 'Pay'] as const).map(pm => {
+                {(['Cash', 'Bank'] as const).map(pm => {
                   const isActive = selectedPayment === pm;
                   return (
                     <button
@@ -455,6 +470,7 @@ export const HomeScreen: React.FC = () => {
                         borderColor: isActive ? 'var(--accent)' : 'var(--border-glass)',
                         color: isActive ? '#FFF' : 'var(--text-primary)',
                         fontSize: '12px',
+                        fontWeight: isActive ? 800 : 600,
                       }}
                     >
                       {pm}
@@ -467,7 +483,7 @@ export const HomeScreen: React.FC = () => {
             {/* Date Input */}
             <div>
               <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                Transaction Date
+                Date
               </label>
               <input
                 type="date"
@@ -488,7 +504,7 @@ export const HomeScreen: React.FC = () => {
               />
             </div>
 
-            {/* Confirm & Log Button */}
+            {/* Confirm Button */}
             <button
               onClick={handleConfirmPreset}
               style={{
@@ -508,7 +524,7 @@ export const HomeScreen: React.FC = () => {
               }}
             >
               <Check size={18} />
-              Confirm & Save Record
+              Confirm
             </button>
           </div>
         </div>

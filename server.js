@@ -57,10 +57,10 @@ app.post('/api/expenses', (req, res) => {
   const expenses = readExpenses(req);
   const newItem = {
     ...req.body,
-    id: 'exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-    createdAt: Date.now(),
+    id: req.body.id || ('exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000)),
+    createdAt: req.body.createdAt || Date.now(),
   };
-  const updated = [newItem, ...expenses];
+  const updated = [newItem, ...expenses.filter(e => e.id !== newItem.id)];
   writeExpenses(req, updated);
   res.status(201).json(newItem);
 });

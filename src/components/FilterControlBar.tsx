@@ -5,6 +5,8 @@ import { CategoryIconRenderer } from './CategoryIconRenderer';
 import { Search, SlidersHorizontal, X, RotateCcw } from 'lucide-react';
 import { PaymentMethod } from '../types';
 
+import { TripFolderBar } from './TripFolderBar';
+
 interface FilterControlBarProps {
   screenType?: 'EXPENSE' | 'SAVING';
 }
@@ -182,7 +184,7 @@ export const FilterControlBar: React.FC<FilterControlBarProps> = ({ screenType =
               Payment
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {(['ALL', 'Card', 'Cash', 'Bank', 'Pay'] as const).map(pm => {
+              {(['ALL', 'Cash', 'Bank'] as const).map(pm => {
                 const isActive = paymentFilter === pm;
                 return (
                   <button

@@ -11,7 +11,13 @@ import { SavingsScreen } from './screens/SavingsScreen';
 import { StatsScreen } from './screens/StatsScreen';
 import { CalendarScreen } from './screens/CalendarScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { AtmosphericBackground } from './components/AtmosphericBackground';
 import { CreditCard, PiggyBank, BarChart3, Calendar, Settings } from 'lucide-react';
+
+import { CreateTripModal } from './components/CreateTripModal';
+import { CreateExpenseFolderModal } from './components/CreateExpenseFolderModal';
+import { CreateSavingFolderModal } from './components/CreateSavingFolderModal';
+import { EditTripModal } from './components/EditTripModal';
 
 export type TabName = 'EXPENSES' | 'SAVINGS' | 'STATS' | 'CALENDAR' | 'SETTINGS';
 
@@ -44,6 +50,9 @@ export const App: React.FC = () => {
         flexDirection: 'column',
       }}
     >
+      {/* Animated Atmospheric Theme Background Effects */}
+      <AtmosphericBackground />
+
       {/* Universal Header */}
       <Header />
 
@@ -62,6 +71,10 @@ export const App: React.FC = () => {
       <EditExpenseModal />
       <EditSavingModal />
       <AiChatModal />
+      <CreateTripModal />
+      <CreateExpenseFolderModal />
+      <CreateSavingFolderModal />
+      <EditTripModal />
 
       {/* Modern Floating Liquid Glass Dock Bottom Navigation Bar */}
       <nav

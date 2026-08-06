@@ -10,7 +10,7 @@ export const EditExpenseModal: React.FC = () => {
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Card');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
   const [dateStr, setDateStr] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -24,7 +24,7 @@ export const EditExpenseModal: React.FC = () => {
       setTitle(selectedExpenseForEdit.title || '');
       setAmount(selectedExpenseForEdit.amount ? selectedExpenseForEdit.amount.toString() : '0');
       setCategoryId(selectedExpenseForEdit.categoryId || expenseCategories[0]?.id || 'cat-food');
-      setPaymentMethod(selectedExpenseForEdit.paymentMethod || 'Card');
+      setPaymentMethod(selectedExpenseForEdit.paymentMethod || 'Cash');
       setDateStr(selectedExpenseForEdit.date || new Date().toISOString().split('T')[0]);
       setNotes(selectedExpenseForEdit.notes || '');
     }
@@ -234,7 +234,7 @@ export const EditExpenseModal: React.FC = () => {
             Payment
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-            {(['Card', 'Cash', 'Bank', 'Pay'] as const).map(pm => {
+            {(['Cash', 'Bank'] as const).map(pm => {
               const isActive = paymentMethod === pm;
               return (
                 <button

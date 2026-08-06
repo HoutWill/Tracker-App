@@ -3,7 +3,7 @@ import { ExpenseItem } from '../types';
 import { useExpenses } from '../context/ExpenseContext';
 import { formatCurrency } from '../services/storageService';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
-import { Edit2, Trash2, PiggyBank, ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { PiggyBank, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 
 interface ExpenseCardProps {
   item: ExpenseItem;
@@ -11,7 +11,7 @@ interface ExpenseCardProps {
 }
 
 export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
-  const { currency, hideBalances, deleteExpense, setSelectedExpenseForEdit } = useExpenses();
+  const { currency, hideBalances, setSelectedExpenseForEdit } = useExpenses();
 
   const isSaving = item.type === 'SAVING' || item.categoryId.startsWith('cat-saving');
   const isIncome = item.type === 'INCOME' || item.categoryId === 'cat-income';
@@ -28,18 +28,6 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
     : formatCurrency(item.amount, currency);
   const secondaryCurrency = currency === 'USD' ? 'KHR' : 'USD';
   const secondaryVal = hideBalances ? '••••' : formatCurrency(item.amount, secondaryCurrency);
-
-  const handleDeleteQuick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.confirm(`Delete "${item.title}" (${formatCurrency(item.amount, currency)})?`)) {
-      deleteExpense(item.id);
-    }
-  };
-
-  const handleEditQuick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedExpenseForEdit(item);
-  };
 
   return (
     <div
@@ -158,8 +146,8 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
         </div>
       </div>
 
-      {/* Right Price & Quick Action Column */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+      {/* Right Price Column */}
+      <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
         <div style={{ textAlign: 'right' }}>
           <div
             className="tabular-nums"
@@ -175,55 +163,6 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
           <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
             {secondaryVal} • {item.date}
           </div>
-        </div>
-
-        {/* Touch-Isolated Action Buttons */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            borderLeft: '1px solid var(--border-glass)',
-            paddingLeft: '8px',
-          }}
-        >
-          <button
-            onClick={handleEditQuick}
-            style={{
-              width: '30px',
-              height: '30px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-glass)',
-              backgroundColor: 'rgba(255, 255, 255, 0.06)',
-              color: 'var(--text-secondary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-            }}
-            title="Edit Record"
-          >
-            <Edit2 size={13} />
-          </button>
-
-          <button
-            onClick={handleDeleteQuick}
-            style={{
-              width: '30px',
-              height: '30px',
-              borderRadius: '8px',
-              border: '1px solid rgba(255, 123, 114, 0.35)',
-              backgroundColor: 'rgba(255, 123, 114, 0.15)',
-              color: 'var(--accent-danger)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-            }}
-            title="Delete Record"
-          >
-            <Trash2 size={13} />
-          </button>
         </div>
       </div>
     </div>

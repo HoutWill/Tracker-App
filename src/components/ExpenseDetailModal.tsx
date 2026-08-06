@@ -17,7 +17,7 @@ export const ExpenseDetailModal: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<TransactionType>('EXPENSE');
   const [categoryId, setCategoryId] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Card');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
   const [dateStr, setDateStr] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -27,7 +27,7 @@ export const ExpenseDetailModal: React.FC = () => {
       setAmount(selectedExpenseForEdit.amount ? selectedExpenseForEdit.amount.toString() : '0');
       setType(selectedExpenseForEdit.type || (selectedExpenseForEdit.categoryId === 'cat-saving' ? 'SAVING' : 'EXPENSE'));
       setCategoryId(selectedExpenseForEdit.categoryId || categories[0]?.id || 'cat-food');
-      setPaymentMethod(selectedExpenseForEdit.paymentMethod || 'Card');
+      setPaymentMethod(selectedExpenseForEdit.paymentMethod || 'Cash');
       setDateStr(selectedExpenseForEdit.date || new Date().toISOString().split('T')[0]);
       setNotes(selectedExpenseForEdit.notes || '');
     }
@@ -242,7 +242,7 @@ export const ExpenseDetailModal: React.FC = () => {
             Payment Method
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-            {(['Card', 'Cash', 'Bank', 'Pay'] as const).map(pm => {
+            {(['Cash', 'Bank'] as const).map(pm => {
               const isActive = paymentMethod === pm;
               return (
                 <button

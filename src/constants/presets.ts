@@ -10,6 +10,9 @@ export const EXPENSE_QUICK_PRESETS: QuickPreset[] = [
   { id: 'preset-bills', title: 'Bills', amount: 45.0, currency: 'USD', categoryId: 'cat-bills', icon: 'receipt', type: 'EXPENSE' },
   { id: 'preset-tech', title: 'Tech', amount: 20.0, currency: 'USD', categoryId: 'cat-tech', icon: 'laptop', type: 'EXPENSE' },
   { id: 'preset-fun', title: 'Fun', amount: 12.0, currency: 'USD', categoryId: 'cat-fun', icon: 'film', type: 'EXPENSE' },
+  { id: 'preset-travel', title: 'Travel', amount: 45.0, currency: 'USD', categoryId: 'cat-travel', icon: 'plane', type: 'EXPENSE' },
+  { id: 'preset-team', title: 'Team', amount: 25.0, currency: 'USD', categoryId: 'cat-team', icon: 'users', type: 'EXPENSE' },
+  { id: 'preset-party', title: 'Party', amount: 30.0, currency: 'USD', categoryId: 'cat-party', icon: 'party-popper', type: 'EXPENSE' },
 ];
 
 export const SAVING_QUICK_PRESETS: QuickPreset[] = [

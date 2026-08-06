@@ -235,7 +235,7 @@ export const EditSavingModal: React.FC = () => {
             Source
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-            {(['Bank', 'Pay', 'Cash', 'Card'] as const).map(pm => {
+            {(['Cash', 'Bank'] as const).map(pm => {
               const isActive = paymentMethod === pm;
               return (
                 <button

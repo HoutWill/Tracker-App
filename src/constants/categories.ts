@@ -12,6 +12,9 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-fun', name: 'Fun', icon: 'film', color: 'purple', budgetMonthly: 120, type: 'EXPENSE' },
   { id: 'cat-tech', name: 'Tech', icon: 'cpu', color: 'yellow', budgetMonthly: 100, type: 'EXPENSE' },
   { id: 'cat-health', name: 'Health', icon: 'activity', color: 'green', budgetMonthly: 100, type: 'EXPENSE' },
+  { id: 'cat-travel', name: 'Travel', icon: 'plane', color: 'blue', budgetMonthly: 250, type: 'EXPENSE' },
+  { id: 'cat-team', name: 'Team', icon: 'users', color: 'purple', budgetMonthly: 150, type: 'EXPENSE' },
+  { id: 'cat-party', name: 'Party', icon: 'party-popper', color: 'pink', budgetMonthly: 100, type: 'EXPENSE' },
 
   // SAVINGS CATEGORIES (1-Word Only)
   { id: 'cat-saving-vault', name: 'Vault', icon: 'piggy-bank', color: 'green', budgetMonthly: 500, type: 'SAVING' },

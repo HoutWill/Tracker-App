@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
 import { formatCurrency } from '../services/storageService';
-import { getDateDetails } from '../services/khmerCalendarService';
+import { getDateDetails, CAMBODIA_NATIONAL_HOLIDAYS, WORLD_CELEBRATION_DAYS } from '../services/khmerCalendarService';
 import { ExpenseCard } from '../components/ExpenseCard';
-import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Check, Flag, Sparkles } from 'lucide-react';
+import { BuddhaIcon, BenOfferingIcon, CambodiaFlagBadge } from '../components/CalendarCustomIcons';
+import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Flag, Sparkles, Sun, Heart, Globe, Users } from 'lucide-react';
 
-type CalendarViewMode = 'YEAR' | 'MONTH' | 'WEEK' | 'DAY';
+type CalendarViewMode = 'YEAR' | 'MONTH';
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -24,6 +25,7 @@ export const CalendarScreen: React.FC = () => {
   const [viewDate, setViewDate] = useState<Date>(new Date());
   const [selectedDay, setSelectedDay] = useState<string>(new Date().toISOString().split('T')[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isHolidaysOpen, setIsHolidaysOpen] = useState(false);
 
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -33,7 +35,7 @@ export const CalendarScreen: React.FC = () => {
 
   const emptyLeadingCells = Array.from({ length: firstDayOfWeek });
 
-  const days = [];
+  const days: any[] = [];
   for (let d = 1; d <= daysInMonth; d++) {
     const monthStr = (month + 1).toString().padStart(2, '0');
     const dayStr = d.toString().padStart(2, '0');
@@ -116,13 +118,138 @@ export const CalendarScreen: React.FC = () => {
 
   const getHeaderTitleLabel = () => {
     if (viewMode === 'YEAR') return `Year ${year}`;
-    if (viewMode === 'MONTH') return `${MONTH_NAMES[month]} ${year}`;
-    if (viewMode === 'WEEK') return `Week of ${selectedDay}`;
-    return `Day ${selectedDay}`;
+    return `${MONTH_NAMES[month]} ${year}`;
   };
+
+  const currentMonthPrefix = `${year}-${(month + 1).toString().padStart(2, '0')}`;
+  const monthHolidays = CAMBODIA_NATIONAL_HOLIDAYS.filter(h => h.dateStr.startsWith(currentMonthPrefix));
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
+      {/* Collapsible Cambodian National Holidays Bar (Filtered by Selected Month) */}
+      <div
+        className="glass-panel"
+        style={{
+          padding: '12px 16px',
+          marginBottom: '14px',
+          borderRadius: '16px',
+          borderColor: 'rgba(255, 123, 114, 0.35)',
+          backgroundColor: 'rgba(255, 123, 114, 0.06)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(255, 123, 114, 0.18)',
+                color: 'var(--accent-danger)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Flag size={16} />
+            </div>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Holidays • បុណ្យជាតិ</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                {monthHolidays.length > 0
+                  ? `${monthHolidays.length} Public Holidays in ${MONTH_NAMES[month]}`
+                  : `No Public Holidays in ${MONTH_NAMES[month]}`}
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsHolidaysOpen(!isHolidaysOpen)}
+            className="glass-pill"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '6px 12px',
+              fontSize: '11px',
+              fontWeight: 800,
+              color: 'var(--accent-danger)',
+              borderColor: 'rgba(255, 123, 114, 0.3)',
+              backgroundColor: 'rgba(255, 123, 114, 0.12)',
+              cursor: 'pointer',
+            }}
+          >
+            {isHolidaysOpen ? 'Close' : 'Open'}
+            {isHolidaysOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        </div>
+
+        {/* Collapsible List of Holidays in Khmer & English for Selected Month */}
+        {isHolidaysOpen && (
+          <div
+            style={{
+              marginTop: '12px',
+              paddingTop: '12px',
+              borderTop: '1px solid var(--border-glass)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              maxHeight: '220px',
+              overflowY: 'auto',
+            }}
+          >
+            {monthHolidays.length > 0 ? (
+              monthHolidays.map(h => (
+                <div
+                  key={h.dateStr + h.nameEn}
+                  onClick={() => {
+                    setSelectedDay(h.dateStr);
+                    setViewDate(new Date(h.dateStr + 'T00:00:00'));
+                  }}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '8px 12px',
+                    borderRadius: '10px',
+                    backgroundColor: selectedDay === h.dateStr ? 'rgba(255, 123, 114, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                    border: selectedDay === h.dateStr ? '1px solid var(--accent-danger)' : '1px solid var(--border-glass)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Sparkles size={14} color="var(--accent-danger)" />
+                    <div>
+                      {h.nameKh && (
+                        <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-primary)' }}>{h.nameKh}</div>
+                      )}
+                      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>{h.nameEn}</div>
+                    </div>
+                  </div>
+                  <span
+                    className="tabular-nums"
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      color: 'var(--accent-danger)',
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      backgroundColor: 'rgba(255, 123, 114, 0.15)',
+                    }}
+                  >
+                    {h.dateStr}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>
+                No national public holidays scheduled for {MONTH_NAMES[month]} {year}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* National Public Holiday Banner (Red Day Off Theme) */}
       {selectedDateDetails.holiday && (
         <div
@@ -141,17 +268,17 @@ export const CalendarScreen: React.FC = () => {
             boxShadow: '0 8px 24px rgba(255, 82, 82, 0.25)',
           }}
         >
-          <Flag size={20} color="var(--accent-danger)" />
+          <CambodiaFlagBadge size={22} />
           <div>
-            <div>{selectedDateDetails.holiday.nameEn}</div>
+            <div>{selectedDateDetails.holiday.nameKh || selectedDateDetails.holiday.nameEn}</div>
             <div style={{ fontSize: '10px', opacity: 0.9, fontWeight: 700 }}>
-              Day Off • National Public Holiday (Cambodia)
+              {selectedDateDetails.holiday.nameEn} • National Public Holiday
             </div>
           </div>
         </div>
       )}
 
-      {/* Pchum Ben / Cultural Festival Season Banner (Kan Ben 1-15) */}
+      {/* Pchum Ben / Cultural Festival Season Banner (Kan Ben 1-15) - Blue Theme */}
       {selectedDateDetails.culturalEvent && !selectedDateDetails.holiday && (
         <div
           style={{
@@ -160,25 +287,52 @@ export const CalendarScreen: React.FC = () => {
             gap: '10px',
             padding: '12px 16px',
             borderRadius: '14px',
-            border: '1px solid rgba(253, 203, 110, 0.5)',
-            backgroundColor: 'rgba(253, 203, 110, 0.16)',
-            color: '#FDCB6E',
+            border: '1px solid rgba(41, 128, 185, 0.5)',
+            backgroundColor: 'rgba(41, 128, 185, 0.16)',
+            color: '#2980B9',
             fontSize: '13px',
             fontWeight: 800,
             marginBottom: '14px',
           }}
         >
-          <Sparkles size={18} color="#FDCB6E" />
+          <BenOfferingIcon size={22} color="#2980B9" />
           <div>
             <div>{selectedDateDetails.culturalEvent}</div>
             <div style={{ fontSize: '10px', opacity: 0.9, fontWeight: 700 }}>
-              Pchum Ben Season (Merit Offering Period)
+              Pchum Ben Season (Bay Ben Merit Offering Period)
             </div>
           </div>
         </div>
       )}
 
-      {/* Buddhist Holy Day Banner (Neutral Lotus Theme) */}
+      {/* World Appreciation & Celebration Days Banner (Mother's Day, Father's Day, Girlfriend/Boyfriend Day, Halloween, Chinese New Year, Easter, etc.) */}
+      {selectedDateDetails.worldDay && !selectedDateDetails.holiday && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+            borderRadius: '14px',
+            border: '1px solid rgba(255, 107, 129, 0.5)',
+            backgroundColor: 'rgba(255, 107, 129, 0.16)',
+            color: '#FF6B81',
+            fontSize: '13px',
+            fontWeight: 800,
+            marginBottom: '14px',
+          }}
+        >
+          <span style={{ fontSize: '20px' }}>{selectedDateDetails.worldDay.emoji || '💖'}</span>
+          <div>
+            <div>{selectedDateDetails.worldDay.nameKh} ({selectedDateDetails.worldDay.nameEn})</div>
+            <div style={{ fontSize: '10px', opacity: 0.9, fontWeight: 700 }}>
+              World Celebration & Appreciation Day
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Buddhist Holy Day Banner (Dedicated Buddha Silhouette Icon) */}
       {selectedDateDetails.isBuddhaDay && !selectedDateDetails.holiday && (
         <div
           style={{
@@ -187,19 +341,19 @@ export const CalendarScreen: React.FC = () => {
             gap: '10px',
             padding: '12px 16px',
             borderRadius: '14px',
-            border: '1px solid var(--border-glass)',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)',
-            color: 'var(--text-primary)',
+            border: '1px solid rgba(243, 156, 18, 0.5)',
+            backgroundColor: 'rgba(243, 156, 18, 0.15)',
+            color: '#F39C12',
             fontSize: '13px',
             fontWeight: 800,
             marginBottom: '14px',
           }}
         >
-          <span style={{ fontSize: '20px' }}>🪷</span>
+          <BuddhaIcon size={22} color="#F39C12" />
           <div>
             <div>{selectedDateDetails.buddhaDayName}</div>
             <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 700 }}>
-              Buddhist Holy Day (4 Days / Month)
+              Buddhist Holy Day (4 Days / Month • Uposatha)
             </div>
           </div>
         </div>
@@ -259,8 +413,6 @@ export const CalendarScreen: React.FC = () => {
             {[
               { id: 'YEAR', label: 'Year View', desc: '12-month annual overview' },
               { id: 'MONTH', label: 'Month View', desc: '30-day interactive month grid' },
-              { id: 'WEEK', label: 'Week View', desc: '7-day weekly breakdown' },
-              { id: 'DAY', label: 'Day View', desc: 'Single day transaction focus' },
             ].map(item => {
               const isActive = viewMode === item.id;
               return (
@@ -438,9 +590,12 @@ export const CalendarScreen: React.FC = () => {
                     >
                       {item.dayNum}
                     </span>
-                    {isHoliday && <span style={{ fontSize: '9px' }}>🇰🇭</span>}
-                    {isBuddhaDay && !isHoliday && <span style={{ fontSize: '9px' }}>🪷</span>}
-                    {isCultural && !isHoliday && !isBuddhaDay && <span style={{ fontSize: '8px', color: '#FDCB6E' }}>✨</span>}
+                    {isHoliday && <CambodiaFlagBadge size={11} />}
+                    {isBuddhaDay && !isHoliday && <BuddhaIcon size={12} color="#F39C12" />}
+                    {isCultural && !isHoliday && !isBuddhaDay && <BenOfferingIcon size={11} color="#2980B9" />}
+                    {item.dateDetails.worldDay && !isHoliday && !isBuddhaDay && !isCultural && (
+                      <span style={{ fontSize: '9px', lineHeight: 1 }}>{item.dateDetails.worldDay.emoji || '💖'}</span>
+                    )}
                   </div>
 
                   {/* Net Cashflow Amount Display (> 0 Green, < 0 Red) */}

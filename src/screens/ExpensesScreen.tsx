@@ -3,6 +3,7 @@ import { useExpenses } from '../context/ExpenseContext';
 import { useTheme, hexToRgba, getPresetColor } from '../context/ThemeContext';
 import { ExpenseCard } from '../components/ExpenseCard';
 import { FilterControlBar } from '../components/FilterControlBar';
+import { TripFolderBar } from '../components/TripFolderBar';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { EXPENSE_QUICK_PRESETS } from '../constants/presets';
 import { formatCurrency, StorageService } from '../services/storageService';
@@ -32,12 +33,14 @@ export const ExpensesScreen: React.FC = () => {
     addExpense,
     setIsAddExpenseOpen,
     setSelectedExpenseForEdit,
+    selectedTripId,
+    trips,
   } = useExpenses();
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [presetsList, setPresetsList] = useState<QuickPreset[]>([]);
   const [activePreset, setActivePreset] = useState<QuickPreset | null>(null);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('Card');
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('Cash');
   const [presetAmount, setPresetAmount] = useState<string>('');
   const [presetCurrency, setPresetCurrency] = useState<'USD' | 'KHR'>('USD');
   const [presetDate, setPresetDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -82,7 +85,7 @@ export const ExpensesScreen: React.FC = () => {
     setPresetAmount(preset.amount.toString());
     setPresetCurrency(preset.currency || 'USD');
     setPresetDate(new Date().toISOString().split('T')[0]);
-    setSelectedPayment('Card');
+    setSelectedPayment('Cash');
   };
 
   const handleConfirmPreset = async () => {
@@ -102,6 +105,14 @@ export const ExpensesScreen: React.FC = () => {
 
     const amountUSD = presetCurrency === 'KHR' ? num / 4000 : num;
 
+    const matchingTrip = selectedTripId
+      ? trips.find(t => t.id === selectedTripId)
+      : trips.find(t =>
+          t.name.toLowerCase() === activePreset.title.toLowerCase() ||
+          t.category.toLowerCase() === activePreset.title.toLowerCase() ||
+          activePreset.categoryId.includes(t.category.toLowerCase())
+        );
+
     await addExpense({
       title: activePreset.title,
       amount: amountUSD,
@@ -114,6 +125,7 @@ export const ExpensesScreen: React.FC = () => {
       date: presetDate,
       paymentMethod: selectedPayment,
       notes: `Quick log via ${selectedPayment}`,
+      tripId: matchingTrip?.id,
     });
 
     setToastMsg(`Logged "${activePreset.title}" (${formatCurrency(amountUSD, currency)})!`);
@@ -471,6 +483,9 @@ export const ExpensesScreen: React.FC = () => {
           </form>
         </div>
       )}
+
+      {/* Trip Folder Travel & Event Organizer Bar */}
+      <TripFolderBar />
 
       {/* Grid 1-Tap Quick Presets Section with Vibrant Colorful Icons */}
       <div style={{ marginBottom: '18px' }}>
@@ -858,19 +873,33 @@ export const ExpensesScreen: React.FC = () => {
                     outline: 'none',
                   }}
                 />
-                <div style={{ display: 'flex', gap: '4px', width: '120px' }}>
+                {/* Modern Liquid Glass Toggle Switch for Currency */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '3px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid var(--border-glass)',
+                    width: '130px',
+                  }}
+                >
                   <button
                     type="button"
                     onClick={() => setPresetCurrency('USD')}
                     style={{
                       flex: 1,
+                      padding: '6px 0',
                       borderRadius: '8px',
-                      border: presetCurrency === 'USD' ? `1px solid ${pageAccent}` : '1px solid var(--border-glass)',
-                      backgroundColor: presetCurrency === 'USD' ? pageAccent : 'rgba(255, 255, 255, 0.05)',
-                      color: '#FFF',
+                      border: 'none',
+                      backgroundColor: presetCurrency === 'USD' ? pageAccent : 'transparent',
+                      color: presetCurrency === 'USD' ? '#FFFFFF' : 'var(--text-secondary)',
                       fontSize: '11px',
-                      fontWeight: 800,
+                      fontWeight: presetCurrency === 'USD' ? 800 : 600,
                       cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: presetCurrency === 'USD' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
                     }}
                   >
                     $ USD
@@ -880,13 +909,16 @@ export const ExpensesScreen: React.FC = () => {
                     onClick={() => setPresetCurrency('KHR')}
                     style={{
                       flex: 1,
+                      padding: '6px 0',
                       borderRadius: '8px',
-                      border: presetCurrency === 'KHR' ? `1px solid ${pageAccent}` : '1px solid var(--border-glass)',
-                      backgroundColor: presetCurrency === 'KHR' ? pageAccent : 'rgba(255, 255, 255, 0.05)',
-                      color: '#FFF',
+                      border: 'none',
+                      backgroundColor: presetCurrency === 'KHR' ? pageAccent : 'transparent',
+                      color: presetCurrency === 'KHR' ? '#FFFFFF' : 'var(--text-secondary)',
                       fontSize: '11px',
-                      fontWeight: 800,
+                      fontWeight: presetCurrency === 'KHR' ? 800 : 600,
                       cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: presetCurrency === 'KHR' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
                     }}
                   >
                     ៛ KHR
@@ -901,7 +933,7 @@ export const ExpensesScreen: React.FC = () => {
                 Payment
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '6px' }}>
-                {(['Card', 'Cash', 'Bank', 'Pay'] as const).map(pm => {
+                {(['Cash', 'Bank'] as const).map(pm => {
                   const isActive = selectedPayment === pm;
                   return (
                     <button
@@ -915,6 +947,7 @@ export const ExpensesScreen: React.FC = () => {
                         borderColor: isActive ? pageAccent : 'var(--border-glass)',
                         color: isActive ? '#FFF' : 'var(--text-primary)',
                         fontSize: '12px',
+                        fontWeight: isActive ? 800 : 600,
                       }}
                     >
                       {pm}

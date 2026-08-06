@@ -33,24 +33,19 @@ export const Header: React.FC = () => {
     >
       {/* Left Brand Identifier */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div
+        <img
+          src="/logo.jpg"
+          alt="PiTrack App Icon"
           style={{
             width: '36px',
             height: '36px',
-            borderRadius: '11px',
-            border: `1px solid ${hexToRgba(accentColor, 0.35)}`,
-            backgroundColor: hexToRgba(accentColor, 0.14),
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: accentColor,
-            boxShadow: `0 2px 10px ${hexToRgba(accentColor, 0.25)}`,
+            borderRadius: '10px',
+            objectFit: 'cover',
+            boxShadow: '0 2px 10px rgba(17, 181, 198, 0.3)',
           }}
-        >
-          <ShieldCheck size={20} />
-        </div>
-        <h1 style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.4px', lineHeight: 1.1 }}>
-          Vault
+        />
+        <h1 style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '-0.4px', lineHeight: 1.1, color: 'var(--text-primary)' }}>
+          PiTrack
         </h1>
       </div>
 
@@ -83,10 +78,12 @@ export const Header: React.FC = () => {
             padding: 0,
             justifyContent: 'center',
           }}
-          title="Toggle Theme"
+          title="Toggle Dark/Light Theme"
         >
           {isDark ? <Sun size={15} color="var(--accent)" /> : <Moon size={15} color="var(--accent)" />}
         </button>
+
+
 
         {/* Agent Button Pill */}
         <button

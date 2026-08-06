@@ -5,25 +5,28 @@ import { PaymentMethod } from '../types';
 import { X, Plus, PiggyBank } from 'lucide-react';
 
 export const AddSavingModal: React.FC = () => {
-  const { isAddSavingOpen, setIsAddSavingOpen, addExpense, categories, currency } = useExpenses();
+  const { isAddSavingOpen, setIsAddSavingOpen, addExpense, categories, currency, trips, selectedTripId } = useExpenses();
 
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Bank');
   const [dateStr, setDateStr] = useState(new Date().toISOString().split('T')[0]);
+  const [tripId, setTripId] = useState<string | undefined>(selectedTripId || undefined);
   const [notes, setNotes] = useState('');
 
   // Pure Savings Vault categories list
   const savingCategories = categories.filter(c => c.type === 'SAVING' || c.id.startsWith('cat-saving'));
+  const savingFolders = trips.filter(t => t.type === 'SAVING' || ['vault', 'emergency', 'goal', 'gold', 'stocks'].includes(t.category.toLowerCase()));
 
   useEffect(() => {
     if (isAddSavingOpen) {
       setCategoryId(savingCategories[0]?.id || 'cat-saving-vault');
       setPaymentMethod('Bank');
       setDateStr(new Date().toISOString().split('T')[0]);
+      setTripId(selectedTripId || undefined);
     }
-  }, [isAddSavingOpen]);
+  }, [isAddSavingOpen, selectedTripId]);
 
   if (!isAddSavingOpen) return null;
 
@@ -49,6 +52,7 @@ export const AddSavingModal: React.FC = () => {
       date: dateStr,
       paymentMethod,
       notes: notes.trim(),
+      tripId: tripId,
     });
 
     setTitle('');
@@ -209,7 +213,7 @@ export const AddSavingModal: React.FC = () => {
             Source
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-            {(['Bank', 'Pay', 'Cash', 'Card'] as const).map(pm => {
+            {(['Cash', 'Bank'] as const).map(pm => {
               const isActive = paymentMethod === pm;
               return (
                 <button
@@ -254,6 +258,49 @@ export const AddSavingModal: React.FC = () => {
             }}
           />
         </div>
+
+        {/* Optional Saving Folder Selector */}
+        {savingFolders.length > 0 && (
+          <div>
+            <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+              Folder
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+              <button
+                type="button"
+                className="glass-pill"
+                onClick={() => setTripId(undefined)}
+                style={{
+                  backgroundColor: !tripId ? 'var(--accent-success)' : 'rgba(255, 255, 255, 0.06)',
+                  borderColor: !tripId ? 'var(--accent-success)' : 'var(--border-glass)',
+                  color: !tripId ? '#FFF' : 'var(--text-primary)',
+                  fontSize: '11px',
+                }}
+              >
+                None
+              </button>
+              {savingFolders.map(t => {
+                const isActive = tripId === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className="glass-pill"
+                    onClick={() => setTripId(t.id)}
+                    style={{
+                      backgroundColor: isActive ? 'var(--accent-success)' : 'rgba(255, 255, 255, 0.06)',
+                      borderColor: isActive ? 'var(--accent-success)' : 'var(--border-glass)',
+                      color: isActive ? '#FFF' : 'var(--text-primary)',
+                      fontSize: '11px',
+                    }}
+                  >
+                    {t.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Memo Input */}
         <div>

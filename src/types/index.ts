@@ -1,6 +1,6 @@
 export type CurrencyCode = 'USD' | 'KHR';
 
-export type PaymentMethod = 'Card' | 'Cash' | 'Bank' | 'Pay';
+export type PaymentMethod = 'Cash' | 'Bank';
 
 export type TransactionType = 'EXPENSE' | 'SAVING' | 'INCOME';
 
@@ -28,6 +28,7 @@ export interface ExpenseItem {
   paymentMethod: PaymentMethod;
   notes?: string;
   createdAt: number;
+  tripId?: string;
 }
 
 export interface QuickPreset {
@@ -37,5 +38,18 @@ export interface QuickPreset {
   currency: CurrencyCode;
   categoryId: string;
   icon: string;
+  type?: TransactionType;
+}
+
+export interface TripFolder {
+  id: string;
+  name: string;
+  category: string;
+  budget: number;
+  currency: CurrencyCode;
+  startDate: string;
+  endDate: string;
+  createdAt: number;
+  status: 'Active' | 'Closed';
   type?: TransactionType;
 }

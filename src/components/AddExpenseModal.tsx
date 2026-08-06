@@ -5,13 +5,14 @@ import { PaymentMethod } from '../types';
 import { X, Plus, ArrowDownRight } from 'lucide-react';
 
 export const AddExpenseModal: React.FC = () => {
-  const { isAddExpenseOpen, setIsAddExpenseOpen, addExpense, categories, currency } = useExpenses();
+  const { isAddExpenseOpen, setIsAddExpenseOpen, addExpense, categories, currency, trips, selectedTripId } = useExpenses();
 
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Card');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
   const [dateStr, setDateStr] = useState(new Date().toISOString().split('T')[0]);
+  const [tripId, setTripId] = useState<string | undefined>(selectedTripId || undefined);
   const [notes, setNotes] = useState('');
 
   // Pure Expense categories list
@@ -20,10 +21,11 @@ export const AddExpenseModal: React.FC = () => {
   useEffect(() => {
     if (isAddExpenseOpen) {
       setCategoryId(expenseCategories[0]?.id || 'cat-food');
-      setPaymentMethod('Card');
+      setPaymentMethod('Cash');
       setDateStr(new Date().toISOString().split('T')[0]);
+      setTripId(selectedTripId || undefined);
     }
-  }, [isAddExpenseOpen]);
+  }, [isAddExpenseOpen, selectedTripId]);
 
   if (!isAddExpenseOpen) return null;
 
@@ -49,6 +51,7 @@ export const AddExpenseModal: React.FC = () => {
       date: dateStr,
       paymentMethod,
       notes: notes.trim(),
+      tripId: tripId,
     });
 
     setTitle('');
@@ -208,7 +211,7 @@ export const AddExpenseModal: React.FC = () => {
             Payment
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-            {(['Card', 'Cash', 'Bank', 'Pay'] as const).map(pm => {
+            {(['Cash', 'Bank'] as const).map(pm => {
               const isActive = paymentMethod === pm;
               return (
                 <button
@@ -252,6 +255,49 @@ export const AddExpenseModal: React.FC = () => {
             }}
           />
         </div>
+
+        {/* Optional Trip Folder Selector */}
+        {trips.length > 0 && (
+          <div>
+            <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+              Folder
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+              <button
+                type="button"
+                className="glass-pill"
+                onClick={() => setTripId(undefined)}
+                style={{
+                  backgroundColor: !tripId ? 'var(--accent)' : 'rgba(255, 255, 255, 0.06)',
+                  borderColor: !tripId ? 'var(--accent)' : 'var(--border-glass)',
+                  color: !tripId ? '#FFF' : 'var(--text-primary)',
+                  fontSize: '11px',
+                }}
+              >
+                None
+              </button>
+              {trips.map(t => {
+                const isActive = tripId === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className="glass-pill"
+                    onClick={() => setTripId(t.id)}
+                    style={{
+                      backgroundColor: isActive ? 'var(--accent)' : 'rgba(255, 255, 255, 0.06)',
+                      borderColor: isActive ? 'var(--accent)' : 'var(--border-glass)',
+                      color: isActive ? '#FFF' : 'var(--text-primary)',
+                      fontSize: '11px',
+                    }}
+                  >
+                    {t.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Notes Input */}
         <div>

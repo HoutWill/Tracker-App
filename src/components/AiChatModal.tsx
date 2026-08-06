@@ -78,7 +78,7 @@ export const AiChatModal: React.FC = () => {
           categoryIcon: result.categoryIcon || categories[0].icon,
           categoryColor: result.categoryColor || categories[0].color,
           date: new Date().toISOString().split('T')[0],
-          paymentMethod: 'Card',
+          paymentMethod: 'Cash',
           notes: 'Added via Agent Assistant',
         });
       }

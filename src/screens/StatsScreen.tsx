@@ -455,7 +455,7 @@ export const StatsScreen: React.FC = () => {
                             >
                               <div>
                                 <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>{item.title}</div>
-                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.date} • {item.paymentMethod || 'Card'}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.date} • {item.paymentMethod || 'Cash'}</div>
                               </div>
                               <span className="tabular-nums" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)' }}>
                                 {hideBalances ? '••' : formatCurrency(item.amount, currency)}
@@ -1014,7 +1014,7 @@ export const StatsScreen: React.FC = () => {
                             >
                               <div>
                                 <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>{item.title}</div>
-                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.date} • {item.paymentMethod || 'Card'}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.date} • {item.paymentMethod || 'Cash'}</div>
                               </div>
                               <span className="tabular-nums" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)' }}>
                                 {hideBalances ? '••' : formatCurrency(item.amount, currency)}
