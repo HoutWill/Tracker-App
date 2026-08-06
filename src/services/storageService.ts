@@ -112,6 +112,26 @@ const DEFAULT_DEMO_EXPENSES: ExpenseItem[] = [
   },
 ];
 
+const fetchWithTimeout = (url: string, options: RequestInit = {}) => {
+  if (typeof window === 'undefined') return Promise.resolve(null);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 1200);
+
+  return fetch(url, { ...options, signal: controller.signal })
+    .then(res => {
+      clearTimeout(timer);
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        return res.json();
+      }
+      return null;
+    })
+    .catch(() => {
+      clearTimeout(timer);
+      return null;
+    });
+};
+
 export const StorageService = {
   getCachedExpenses(): ExpenseItem[] {
     const guestId = getGuestId();
@@ -144,30 +164,21 @@ export const StorageService = {
     const guestId = getGuestId();
     const cached = this.getCachedExpenses();
 
-    // Fire non-blocking background fetch to sync server data without delaying UI
-    fetch('/api/expenses', {
+    // Fast non-blocking background fetch with 1.2s timeout
+    fetchWithTimeout('/api/expenses', {
       headers: { 'x-guest-id': guestId },
-    })
-      .then(res => {
-        const contentType = res.headers.get('content-type') || '';
-        if (res.ok && contentType.includes('application/json')) {
-          return res.json();
-        }
-        return null;
-      })
-      .then(serverData => {
-        if (Array.isArray(serverData) && serverData.length > 0) {
-          const mergedMap = new Map<string, ExpenseItem>();
-          serverData.forEach(item => mergedMap.set(item.id, item));
-          cached.forEach(item => mergedMap.set(item.id, item));
-          const merged = Array.from(mergedMap.values()).sort((a, b) => b.createdAt - a.createdAt);
-          try {
-            localStorage.setItem('pitrack_expenses_data', JSON.stringify(merged));
-            localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(merged));
-          } catch (e) {}
-        }
-      })
-      .catch(() => {});
+    }).then(serverData => {
+      if (Array.isArray(serverData) && serverData.length > 0) {
+        const mergedMap = new Map<string, ExpenseItem>();
+        serverData.forEach(item => mergedMap.set(item.id, item));
+        cached.forEach(item => mergedMap.set(item.id, item));
+        const merged = Array.from(mergedMap.values()).sort((a, b) => b.createdAt - a.createdAt);
+        try {
+          localStorage.setItem('pitrack_expenses_data', JSON.stringify(merged));
+          localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(merged));
+        } catch (e) {}
+      }
+    });
 
     // Return instant local cached data immediately (0ms UI lag)
     return cached;
@@ -189,16 +200,14 @@ export const StorageService = {
       localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
-    // 2. Sync to API in background without blocking UI or fetching full list again
-    fetch('/api/expenses', {
+    // 2. Fast non-blocking sync to API
+    fetchWithTimeout('/api/expenses', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-guest-id': guestId,
       },
       body: JSON.stringify(newItem),
-    }).catch(e => {
-      console.warn('API sync warn, kept locally:', e);
     });
 
     return newItem;
@@ -215,15 +224,15 @@ export const StorageService = {
       localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
-    // 2. Sync PUT in background
-    fetch(`/api/expenses/${id}`, {
+    // 2. Fast non-blocking sync PUT
+    fetchWithTimeout(`/api/expenses/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'x-guest-id': guestId,
       },
       body: JSON.stringify(updatedFields),
-    }).catch(e => {});
+    });
   },
 
   async deleteExpense(id: string): Promise<void> {
@@ -237,11 +246,11 @@ export const StorageService = {
       localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
-    // 2. Sync DELETE in background
-    fetch(`/api/expenses/${id}`, {
+    // 2. Fast non-blocking sync DELETE
+    fetchWithTimeout(`/api/expenses/${id}`, {
       method: 'DELETE',
       headers: { 'x-guest-id': guestId },
-    }).catch(e => {});
+    });
   },
 
   async clearAll(): Promise<void> {
@@ -253,10 +262,10 @@ export const StorageService = {
       localStorage.removeItem('expenses');
     } catch (e) {}
 
-    fetch('/api/expenses/reset', {
+    fetchWithTimeout('/api/expenses/reset', {
       method: 'POST',
       headers: { 'x-guest-id': guestId },
-    }).catch(e => {});
+    });
   },
 
   getCustomPresetAmounts(): Record<string, number> {
