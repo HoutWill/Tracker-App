@@ -69,26 +69,6 @@ export const Header: React.FC = () => {
 
       {/* Right Control Action Pills */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        {/* Account Link / Login Pill */}
-        <button
-          className="glass-pill"
-          onClick={() => setIsAuthModalOpen(true)}
-          style={{
-            height: '34px',
-            padding: '0 10px',
-            fontSize: '11px',
-            fontWeight: 800,
-            gap: '4px',
-            borderColor: userAccount ? 'rgba(0, 230, 118, 0.4)' : 'var(--border-glass)',
-            backgroundColor: userAccount ? 'rgba(0, 230, 118, 0.12)' : 'var(--pill-bg)',
-            color: userAccount ? 'var(--accent-success)' : 'var(--text-primary)',
-          }}
-          title={userAccount ? `Logged in as ${userAccount.name}` : 'Login / Link Account'}
-        >
-          {userAccount ? <ShieldCheck size={14} /> : <User size={14} />}
-          <span>{userAccount ? userAccount.name.split(' ')[0] : 'Account'}</span>
-        </button>
-
         {/* Currency Switcher Pill */}
         <button
           className="glass-pill"
@@ -140,15 +120,36 @@ export const Header: React.FC = () => {
           <Sparkles size={14} />
           <span>Agent</span>
         </button>
+
+        {/* Account Link / Login Pill (Positioned at Far Right) */}
+        <button
+          className="glass-pill"
+          onClick={() => setIsAuthModalOpen(!isAuthModalOpen)}
+          style={{
+            height: '34px',
+            padding: '0 10px',
+            fontSize: '11px',
+            fontWeight: 800,
+            gap: '4px',
+            borderColor: userAccount ? 'rgba(0, 230, 118, 0.4)' : 'var(--border-glass)',
+            backgroundColor: userAccount ? 'rgba(0, 230, 118, 0.12)' : 'var(--pill-bg)',
+            color: userAccount ? 'var(--accent-success)' : 'var(--text-primary)',
+          }}
+          title={userAccount ? `Logged in as ${userAccount.name}` : 'Login / Link Account'}
+        >
+          {userAccount ? <ShieldCheck size={14} /> : <User size={14} />}
+          <span>{userAccount ? userAccount.name.split(' ')[0] : 'Account'}</span>
+        </button>
       </div>
 
-      {/* Account Authentication & Sync Modal */}
+      {/* Account Top-Right Dropdown Popover */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         currentUser={userAccount}
         onAuthSuccess={u => setUserAccount(u)}
         onLogout={handleLogout}
+        isPopover={true}
       />
     </header>
   );

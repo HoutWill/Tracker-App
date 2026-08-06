@@ -14,6 +14,7 @@ interface AuthModalProps {
   currentUser: UserAccount | null;
   onAuthSuccess: (user: UserAccount) => void;
   onLogout: () => void;
+  isPopover?: boolean;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -22,6 +23,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   currentUser,
   onAuthSuccess,
   onLogout,
+  isPopover = false,
 }) => {
   const [tab, setTab] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
   const [email, setEmail] = useState('');
@@ -91,31 +93,56 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 110,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-      }}
+      style={
+        isPopover
+          ? {
+              position: 'fixed',
+              inset: 0,
+              zIndex: 100,
+              pointerEvents: 'auto',
+            }
+          : {
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+              backdropFilter: 'blur(12px)',
+              zIndex: 110,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px',
+            }
+      }
       onClick={onClose}
     >
       <div
         className="glass-panel"
         onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: '400px',
-          padding: '22px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          borderColor: 'rgba(46, 170, 220, 0.4)',
-        }}
+        style={
+          isPopover
+            ? {
+                position: 'absolute',
+                top: '56px',
+                right: '12px',
+                width: '320px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                borderColor: 'rgba(46, 170, 220, 0.4)',
+                boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4)',
+                animation: 'popIn 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+              }
+            : {
+                width: '100%',
+                maxWidth: '400px',
+                padding: '22px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+                borderColor: 'rgba(46, 170, 220, 0.4)',
+              }
+        }
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
