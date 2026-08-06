@@ -18,6 +18,7 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
     presetPalette,
     setPresetColorItem,
     randomizePresetPalette,
+    resetPresetPaletteToDefault,
     resetDefaultColors,
   } = useTheme();
 
@@ -223,19 +224,32 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h4 style={{ fontSize: '13px', fontWeight: 800 }}>Preset Tiles Spectrum</h4>
-                  <p style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Full color range & randomizer</p>
+                  <p style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Normal white & custom color range</p>
                 </div>
 
-                {/* Randomize Palette Button */}
-                <button
-                  type="button"
-                  className="glass-pill"
-                  onClick={randomizePresetPalette}
-                  style={{ fontSize: '11px', padding: '4px 10px', color: 'var(--accent)', borderColor: 'rgba(46, 170, 220, 0.4)' }}
-                  title="Generate Random Colors Across Spectrum"
-                >
-                  <Sparkles size={12} /> Random
-                </button>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {/* Normal White / Default Button */}
+                  <button
+                    type="button"
+                    className="glass-pill"
+                    onClick={resetPresetPaletteToDefault}
+                    style={{ fontSize: '11px', padding: '4px 10px', color: 'var(--text-primary)', borderColor: 'var(--border-glass)' }}
+                    title="Reset to Normal White Default"
+                  >
+                    Default
+                  </button>
+
+                  {/* Randomize Palette Button */}
+                  <button
+                    type="button"
+                    className="glass-pill"
+                    onClick={randomizePresetPalette}
+                    style={{ fontSize: '11px', padding: '4px 10px', color: 'var(--accent)', borderColor: 'rgba(46, 170, 220, 0.4)' }}
+                    title="Generate Random Colors Across Spectrum"
+                  >
+                    <Sparkles size={12} /> Random
+                  </button>
+                </div>
               </div>
 
               {/* Preset Slot Color Dots with Native Full Color Picker */}

@@ -98,8 +98,8 @@ export const COLOR_PALETTE_OPTIONS = [
 ];
 
 export const DEFAULT_PRESET_PALETTE = [
-  '#11B5C6', '#0E4F88', '#C88A58', '#00FF9D', '#6C5CE7',
-  '#00B894', '#FDCB6E', '#FF7675', '#FD79A8', '#00CEC9'
+  '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF',
+  '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF'
 ];
 
 export const hexToRgba = (hex: string, alpha: number): string => {
@@ -143,6 +143,7 @@ interface ThemeContextType {
   presetPalette: string[];
   setPresetColorItem: (index: number, colorHex: string) => void;
   randomizePresetPalette: () => void;
+  resetPresetPaletteToDefault: () => void;
   resetDefaultColors: () => void;
 }
 
@@ -247,6 +248,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('custom_preset_palette', JSON.stringify(randomColors));
   };
 
+  const resetPresetPaletteToDefault = () => {
+    setPresetPalette(DEFAULT_PRESET_PALETTE);
+    localStorage.removeItem('custom_preset_palette');
+  };
+
   const resetDefaultColors = () => {
     setHolidayTheme('DEFAULT');
     setColorPack('MODERN');
@@ -267,6 +273,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       presetPalette,
       setPresetColorItem,
       randomizePresetPalette,
+      resetPresetPaletteToDefault,
       resetDefaultColors
     }}>
       {children}
