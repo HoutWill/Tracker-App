@@ -213,7 +213,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div>
               <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Account</h3>
               <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                {currentUser ? 'Logged In Profile' : 'Cloud Sync & Data Protection'}
+                {currentUser ? 'Logged In Profile' : 'User Account & Session'}
               </span>
             </div>
           </div>
@@ -436,7 +436,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               }}
             >
               {tab === 'LOGIN' ? <LogIn size={16} /> : <UserPlus size={16} />}
-              {loading ? 'Processing...' : tab === 'LOGIN' ? 'Login' : 'Sync'}
+              {loading ? 'Processing...' : tab === 'LOGIN' ? 'Login' : 'Register'}
             </button>
           </form>
         )}
