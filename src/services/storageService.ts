@@ -102,10 +102,15 @@ export const StorageService = {
   getCachedExpenses(): ExpenseItem[] {
     const guestId = getGuestId();
     try {
-      const local = localStorage.getItem(`expenses_${guestId}`) || localStorage.getItem('expenses');
+      const local =
+        localStorage.getItem('pitrack_expenses_data') ||
+        localStorage.getItem(`expenses_${guestId}`) ||
+        localStorage.getItem('expenses');
       if (local) {
         return JSON.parse(local);
       }
+      // First time initialization ONLY
+      localStorage.setItem('pitrack_expenses_data', JSON.stringify(DEFAULT_DEMO_EXPENSES));
       localStorage.setItem(`expenses_${guestId}`, JSON.stringify(DEFAULT_DEMO_EXPENSES));
       return DEFAULT_DEMO_EXPENSES;
     } catch (e) {
@@ -130,6 +135,7 @@ export const StorageService = {
         cached.forEach(item => mergedMap.set(item.id, item));
         const merged = Array.from(mergedMap.values()).sort((a, b) => b.createdAt - a.createdAt);
         try {
+          localStorage.setItem('pitrack_expenses_data', JSON.stringify(merged));
           localStorage.setItem(`expenses_${guestId}`, JSON.stringify(merged));
         } catch (e) {}
         return merged;
@@ -149,10 +155,11 @@ export const StorageService = {
       createdAt: ('createdAt' in item && item.createdAt) ? item.createdAt : Date.now(),
     };
 
-    // 1. Immediately update local cache synchronously
+    // 1. Immediately update local master cache synchronously
     try {
       const current = this.getCachedExpenses();
       const updated = [newItem, ...current.filter(e => e.id !== newItem.id)];
+      localStorage.setItem('pitrack_expenses_data', JSON.stringify(updated));
       localStorage.setItem(`expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
@@ -178,6 +185,7 @@ export const StorageService = {
     try {
       const current = this.getCachedExpenses();
       const updated = current.map(e => (e.id === id ? { ...e, ...updatedFields } : e));
+      localStorage.setItem('pitrack_expenses_data', JSON.stringify(updated));
       localStorage.setItem(`expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
@@ -199,6 +207,7 @@ export const StorageService = {
     try {
       const current = this.getCachedExpenses();
       const updated = current.filter(e => e.id !== id);
+      localStorage.setItem('pitrack_expenses_data', JSON.stringify(updated));
       localStorage.setItem(`expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
@@ -212,7 +221,8 @@ export const StorageService = {
   async clearAll(): Promise<void> {
     const guestId = getGuestId();
     try {
-      localStorage.removeItem(`expenses_${guestId}`);
+      localStorage.setItem('pitrack_expenses_data', JSON.stringify([]));
+      localStorage.setItem(`expenses_${guestId}`, JSON.stringify([]));
       localStorage.removeItem('expenses');
     } catch (e) {}
 
