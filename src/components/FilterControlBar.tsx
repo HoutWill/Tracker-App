@@ -135,29 +135,38 @@ export const FilterControlBar: React.FC<FilterControlBarProps> = ({ screenType =
           className="glass-pill"
           onClick={() => setCategoryFilter(null)}
           style={{
-            backgroundColor: categoryFilter === null ? screenAccent : 'rgba(255, 255, 255, 0.06)',
-            borderColor: categoryFilter === null ? screenAccent : 'var(--border-glass)',
+            backgroundColor: categoryFilter === null ? '#4A99E9' : 'rgba(255, 255, 255, 0.08)',
+            border: categoryFilter === null ? 'none' : '1px solid var(--border-glass)',
             color: categoryFilter === null ? '#FFF' : 'var(--text-primary)',
+            borderRadius: '16px',
+            fontWeight: 800,
+            boxShadow: categoryFilter === null ? '0 4px 12px rgba(74, 153, 233, 0.35)' : 'none',
           }}
         >
           All ({screenItems.length})
         </button>
 
-        {visibleCategories.map(cat => {
+        {visibleCategories.map((cat, idx) => {
           const isActive = categoryFilter === cat.id;
           const count = screenItems.filter(e => e.categoryId === cat.id).length;
+          const folderColors = ['#ED6C6C', '#34D399', '#F3A85B', '#EC668C', '#8B5CF6', '#38BDF8'];
+          const catColor = folderColors[idx % folderColors.length];
+
           return (
             <button
               key={cat.id}
               className="glass-pill"
               onClick={() => setCategoryFilter(isActive ? null : cat.id)}
               style={{
-                backgroundColor: isActive ? screenAccent : 'rgba(255, 255, 255, 0.06)',
-                borderColor: isActive ? screenAccent : 'var(--border-glass)',
+                backgroundColor: isActive ? catColor : 'rgba(255, 255, 255, 0.08)',
+                border: isActive ? 'none' : '1px solid var(--border-glass)',
                 color: isActive ? '#FFF' : 'var(--text-primary)',
+                borderRadius: '16px',
+                fontWeight: isActive ? 800 : 600,
+                boxShadow: isActive ? `0 4px 12px ${catColor}55` : 'none',
               }}
             >
-              <CategoryIconRenderer icon={cat.icon} size={12} color={isActive ? '#FFF' : screenAccent} />
+              <CategoryIconRenderer icon={cat.icon} size={12} color={isActive ? '#FFF' : catColor} />
               <span>
                 {cat.name} ({count})
               </span>

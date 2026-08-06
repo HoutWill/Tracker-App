@@ -78,18 +78,18 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '8px 12px',
-            borderRadius: '12px',
-            border: `1px solid ${borderAccent}`,
-            backgroundColor: bgAccent,
-            color: accentColor,
+            padding: '7px 12px',
+            borderRadius: '16px',
+            border: '1px solid rgba(74, 153, 233, 0.4)',
+            backgroundColor: 'rgba(74, 153, 233, 0.15)',
+            color: '#4A99E9',
             fontSize: '12px',
             fontWeight: 800,
             cursor: 'pointer',
             flexShrink: 0,
           }}
         >
-          <FolderPlus size={14} />
+          <FolderPlus size={14} color="#4A99E9" />
           Folder
         </button>
 
@@ -100,24 +100,28 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '8px 12px',
-            borderRadius: '12px',
-            border: selectedTripId === null ? `1px solid ${accentColor}` : '1px solid var(--border-glass)',
-            backgroundColor: selectedTripId === null ? accentColor : 'rgba(255, 255, 255, 0.05)',
-            color: selectedTripId === null ? '#FFF' : 'var(--text-secondary)',
+            padding: '7px 14px',
+            borderRadius: '16px',
+            border: selectedTripId === null ? 'none' : '1px solid var(--border-glass)',
+            backgroundColor: selectedTripId === null ? '#4A99E9' : 'rgba(255, 255, 255, 0.08)',
+            color: selectedTripId === null ? '#FFF' : 'var(--text-primary)',
             fontSize: '12px',
             fontWeight: selectedTripId === null ? 800 : 600,
             cursor: 'pointer',
             flexShrink: 0,
+            boxShadow: selectedTripId === null ? '0 4px 12px rgba(74, 153, 233, 0.35)' : 'none',
           }}
         >
-          <Folder size={14} />
+          <Folder size={14} color={selectedTripId === null ? '#FFF' : 'var(--text-secondary)'} />
           All
         </button>
 
         {/* Dynamic Trip Folder Pills */}
-        {visibleTrips.map(t => {
+        {visibleTrips.map((t, idx) => {
           const isSelected = selectedTripId === t.id;
+          const folderColors = ['#ED6C6C', '#34D399', '#F3A85B', '#EC668C', '#8B5CF6', '#38BDF8'];
+          const pillColor = folderColors[idx % folderColors.length];
+
           return (
             <button
               key={t.id}
@@ -126,18 +130,19 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '8px 12px',
-                borderRadius: '12px',
-                border: isSelected ? `1px solid ${accentColor}` : '1px solid var(--border-glass)',
-                backgroundColor: isSelected ? (isSaving ? 'rgba(126, 231, 135, 0.22)' : 'rgba(46, 170, 220, 0.22)') : 'rgba(255, 255, 255, 0.05)',
-                color: isSelected ? accentColor : 'var(--text-primary)',
+                padding: '7px 14px',
+                borderRadius: '16px',
+                border: isSelected ? 'none' : '1px solid var(--border-glass)',
+                backgroundColor: isSelected ? pillColor : 'rgba(255, 255, 255, 0.08)',
+                color: isSelected ? '#FFF' : 'var(--text-primary)',
                 fontSize: '12px',
                 fontWeight: isSelected ? 800 : 600,
                 cursor: 'pointer',
                 flexShrink: 0,
+                boxShadow: isSelected ? `0 4px 12px ${pillColor}55` : 'none',
               }}
             >
-              <CategoryIconRenderer icon={t.category.toLowerCase()} size={14} />
+              <CategoryIconRenderer icon={t.category.toLowerCase()} size={14} color={isSelected ? '#FFF' : pillColor} />
               {t.name}
             </button>
           );
