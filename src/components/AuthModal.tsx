@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { getGuestId, setGuestId } from '../services/storageService';
-import { X, User, Lock, Mail, LogIn, UserPlus, LogOut, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { X, User, Lock, Mail, LogIn, UserPlus, LogOut, CheckCircle2, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 export interface UserAccount {
   accountId: string;
@@ -31,6 +31,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (!isOpen) return null;
 
@@ -173,54 +174,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 top: '56px',
                 right: '12px',
                 width: '320px',
-                padding: '16px',
+                padding: '20px 16px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '12px',
+                gap: '14px',
+                borderRadius: '24px',
                 borderColor: 'rgba(46, 170, 220, 0.4)',
                 boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4)',
                 animation: 'popIn 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
               }
             : {
                 width: '100%',
-                maxWidth: '400px',
-                padding: '22px',
+                maxWidth: '380px',
+                padding: '28px 22px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '16px',
+                borderRadius: '28px',
                 borderColor: 'rgba(46, 170, 220, 0.4)',
               }
         }
       >
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '12px',
-                backgroundColor: 'rgba(46, 170, 220, 0.15)',
-                border: '1px solid rgba(46, 170, 220, 0.35)',
-                color: 'var(--accent)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <ShieldCheck size={20} />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Account</h3>
-              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                {currentUser ? 'Logged In Profile' : 'User Account & Session'}
-              </span>
-            </div>
-          </div>
+        {/* Header Close Button */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '-8px' }}>
           <button
             type="button"
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px' }}
           >
             <X size={20} />
           </button>
@@ -232,7 +212,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div
               style={{
                 padding: '14px',
-                borderRadius: '14px',
+                borderRadius: '18px',
                 backgroundColor: 'rgba(46, 170, 220, 0.1)',
                 border: '1px solid rgba(46, 170, 220, 0.3)',
                 display: 'flex',
@@ -278,7 +258,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 justifyContent: 'center',
                 gap: '8px',
                 padding: '12px',
-                borderRadius: '12px',
+                borderRadius: '24px',
                 border: '1px solid rgba(255, 82, 82, 0.3)',
                 backgroundColor: 'rgba(255, 82, 82, 0.12)',
                 color: 'var(--accent-danger)',
@@ -291,53 +271,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </button>
           </div>
         ) : (
-          /* Login / Register Form */
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {/* Segmented Tab Nav */}
-            <div
-              style={{
-                display: 'flex',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '10px',
-                padding: '3px',
-                border: '1px solid var(--border-glass)',
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => { setTab('LOGIN'); setError(null); }}
-                style={{
-                  flex: 1,
-                  padding: '7px 0',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: tab === 'LOGIN' ? 'var(--accent)' : 'transparent',
-                  color: tab === 'LOGIN' ? '#FFF' : 'var(--text-secondary)',
-                  fontSize: '12px',
-                  fontWeight: tab === 'LOGIN' ? 800 : 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Login
-              </button>
-              <button
-                type="button"
-                onClick={() => { setTab('REGISTER'); setError(null); }}
-                style={{
-                  flex: 1,
-                  padding: '7px 0',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: tab === 'REGISTER' ? 'var(--accent)' : 'transparent',
-                  color: tab === 'REGISTER' ? '#FFF' : 'var(--text-secondary)',
-                  fontSize: '12px',
-                  fontWeight: tab === 'REGISTER' ? 800 : 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Register
-              </button>
-            </div>
+          /* Clean Mobile Pill Login / Sign Up Form */
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* Bold Centered Title */}
+            <h2 style={{ fontSize: '22px', fontWeight: 900, textAlign: 'center', margin: '4px 0 8px 0', color: 'var(--text-primary)' }}>
+              {tab === 'LOGIN' ? 'Login' : 'Sign Up'}
+            </h2>
 
             {error && (
               <div style={{ fontSize: '12px', color: 'var(--accent-danger)', fontWeight: 700, textAlign: 'center' }}>
@@ -345,76 +284,91 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             )}
 
+            {/* Name Input Pill (Register Tab Only) */}
             {tab === 'REGISTER' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Name</label>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <User size={15} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    placeholder="Your Name"
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px 10px 36px',
-                      borderRadius: '10px',
-                      border: '1px solid var(--border-glass)',
-                      backgroundColor: 'rgba(0, 0, 0, 0.25)',
-                      color: 'var(--text-primary)',
-                      fontSize: '13px',
-                    }}
-                  />
-                </div>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <User size={16} style={{ position: 'absolute', left: '16px', color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Name"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px 12px 42px',
+                    borderRadius: '24px',
+                    border: '1px solid var(--border-glass)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px',
+                    outline: 'none',
+                  }}
+                />
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Email</label>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <Mail size={15} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px 10px 36px',
-                    borderRadius: '10px',
-                    border: '1px solid var(--border-glass)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-                    color: 'var(--text-primary)',
-                    fontSize: '13px',
-                  }}
-                />
-              </div>
+            {/* Email Input Pill */}
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Mail size={16} style={{ position: 'absolute', left: '16px', color: 'var(--text-muted)' }} />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="Email"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px 12px 42px',
+                  borderRadius: '24px',
+                  border: '1px solid var(--border-glass)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  color: 'var(--text-primary)',
+                  fontSize: '14px',
+                  outline: 'none',
+                }}
+              />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Password</label>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <Lock size={15} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px 10px 36px',
-                    borderRadius: '10px',
-                    border: '1px solid var(--border-glass)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-                    color: 'var(--text-primary)',
-                    fontSize: '13px',
-                  }}
-                />
-              </div>
+            {/* Password Input Pill with Toggle Eye */}
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Lock size={16} style={{ position: 'absolute', left: '16px', color: 'var(--text-muted)' }} />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Password"
+                style={{
+                  width: '100%',
+                  padding: '12px 42px 12px 42px',
+                  borderRadius: '24px',
+                  border: '1px solid var(--border-glass)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  color: 'var(--text-primary)',
+                  fontSize: '14px',
+                  outline: 'none',
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '16px',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
 
+            {/* Full-Width Pill Action Button */}
             <button
               type="submit"
               disabled={loading}
@@ -424,20 +378,47 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                padding: '12px',
-                borderRadius: '10px',
+                padding: '13px',
+                borderRadius: '28px',
                 border: 'none',
                 backgroundColor: 'var(--accent)',
                 color: '#FFF',
                 fontWeight: 800,
-                fontSize: '13px',
+                fontSize: '14px',
                 cursor: 'pointer',
                 marginTop: '6px',
+                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.25)',
               }}
             >
-              {tab === 'LOGIN' ? <LogIn size={16} /> : <UserPlus size={16} />}
-              {loading ? 'Processing...' : tab === 'LOGIN' ? 'Login' : 'Register'}
+              {loading ? 'Processing...' : tab === 'LOGIN' ? 'Login' : 'Sign Up'}
             </button>
+
+            {/* Bottom Account Switcher Link */}
+            <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+              {tab === 'LOGIN' ? (
+                <>
+                  Need an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setTab('REGISTER'); setError(null); }}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent)', fontWeight: 800, cursor: 'pointer', padding: 0 }}
+                  >
+                    Sign up
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setTab('LOGIN'); setError(null); }}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent)', fontWeight: 800, cursor: 'pointer', padding: 0 }}
+                  >
+                    Login
+                  </button>
+                </>
+              )}
+            </div>
           </form>
         )}
       </div>
