@@ -512,7 +512,22 @@ export const StorageService = {
         localStorage.setItem(`reminders_${guestId}`, JSON.stringify(defaultDemoReminders));
         return defaultDemoReminders;
       }
-      return JSON.parse(local);
+      const existing: ReminderItem[] = JSON.parse(local);
+      const map = new Map<string, ReminderItem>();
+      if (Array.isArray(existing)) {
+        existing.forEach(r => map.set(r.id, r));
+      }
+      defaultDemoReminders.forEach(d => {
+        if (!map.has(d.id)) {
+          map.set(d.id, d);
+        }
+      });
+      const merged = Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
+      try {
+        localStorage.setItem('pitrack_reminders_data', JSON.stringify(merged));
+        localStorage.setItem(`reminders_${guestId}`, JSON.stringify(merged));
+      } catch (e) {}
+      return merged;
     } catch (e) {
       return defaultDemoReminders;
     }
