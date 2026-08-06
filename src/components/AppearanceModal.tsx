@@ -252,9 +252,9 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
                 </div>
               </div>
 
-              {/* Preset Slot Color Dots with Native Full Color Picker */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
-                {presetPalette.map((hexColor, idx) => (
+              {/* Preset Slot Color Dots with Native Full Color Picker (Strictly 9 Bars) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                {presetPalette.slice(0, 9).map((hexColor, idx) => (
                   <div
                     key={idx}
                     style={{

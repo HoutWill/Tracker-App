@@ -98,8 +98,9 @@ export const COLOR_PALETTE_OPTIONS = [
 ];
 
 export const DEFAULT_PRESET_PALETTE = [
-  '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF',
-  '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF'
+  '#FFFFFF', '#FFFFFF', '#FFFFFF',
+  '#FFFFFF', '#FFFFFF', '#FFFFFF',
+  '#FFFFFF', '#FFFFFF', '#FFFFFF'
 ];
 
 export const hexToRgba = (hex: string, alpha: number): string => {

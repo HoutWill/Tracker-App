@@ -42,9 +42,9 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
         </button>
       </div>
 
-      {/* Dynamic Customizable Full-Spectrum Preset Grid */}
+      {/* Dynamic 9-Bar Quick Presets Grid (Strictly 3x3) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-        {presetsList.map((preset, idx) => {
+        {presetsList.slice(0, 9).map((preset, idx) => {
           const customHex = presetPalette[(idx + colorOffset) % presetPalette.length];
           const isWhiteDefault = !customHex || customHex === '#FFFFFF';
           const tileHex = isWhiteDefault ? pageAccent : customHex;
