@@ -229,6 +229,66 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
         </div>
       )}
 
+      {/* Top Segmented Group Bar: Expenses vs Saving */}
+      <div
+        className="glass-panel"
+        style={{
+          display: 'flex',
+          padding: '4px',
+          borderRadius: '16px',
+          marginBottom: '14px',
+          backgroundColor: 'var(--bg-card)',
+          borderColor: 'var(--border-glass)',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => onSwitchTab?.('EXPENSES')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '10px 12px',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: pageAccent,
+            color: '#FFF',
+            fontWeight: 800,
+            fontSize: '13px',
+            cursor: 'pointer',
+            boxShadow: `0 4px 12px ${hexToRgba(pageAccent, 0.35)}`,
+          }}
+        >
+          <CreditCard size={16} />
+          <span>Expenses</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSwitchTab?.('SAVINGS')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '10px 12px',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: 'transparent',
+            color: 'var(--text-secondary)',
+            fontWeight: 600,
+            fontSize: '13px',
+            cursor: 'pointer',
+          }}
+        >
+          <PiggyBank size={16} />
+          <span>Saving</span>
+        </button>
+      </div>
+
       {/* Unified All-in-One Hero Expenses Card with Explicit Budget Target */}
       <div
         className="glass-panel"
