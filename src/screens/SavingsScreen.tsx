@@ -7,7 +7,7 @@ import { TripFolderBar } from '../components/TripFolderBar';
 import { ArtPresetGrid } from '../components/ArtPresetGrid';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { SAVING_QUICK_PRESETS } from '../constants/presets';
-import { formatCurrency, StorageService } from '../services/storageService';
+import { formatCurrency, StorageService, getTodayDateString } from '../services/storageService';
 import { PaymentMethod, QuickPreset } from '../types';
 import { Plus, Zap, CheckCircle2, Layers, SearchX, X, Check, PiggyBank, Target, TrendingUp, Trash2 } from 'lucide-react';
 
@@ -42,7 +42,7 @@ export const SavingsScreen: React.FC = () => {
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('Bank');
   const [presetAmount, setPresetAmount] = useState<string>('');
   const [presetCurrency, setPresetCurrency] = useState<'USD' | 'KHR'>('USD');
-  const [presetDate, setPresetDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [presetDate, setPresetDate] = useState<string>(getTodayDateString());
 
   // Edit Savings Goal Target state
   const [isEditingGoal, setIsEditingGoal] = useState<boolean>(false);
@@ -81,7 +81,7 @@ export const SavingsScreen: React.FC = () => {
     setActivePreset(preset);
     setPresetAmount(preset.amount.toString());
     setPresetCurrency(preset.currency || 'USD');
-    setPresetDate(new Date().toISOString().split('T')[0]);
+    setPresetDate(getTodayDateString());
     setSelectedPayment('Bank');
   };
 

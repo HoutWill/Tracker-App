@@ -7,7 +7,7 @@ import { TripFolderBar } from '../components/TripFolderBar';
 import { ArtPresetGrid } from '../components/ArtPresetGrid';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { EXPENSE_QUICK_PRESETS } from '../constants/presets';
-import { formatCurrency, StorageService } from '../services/storageService';
+import { formatCurrency, StorageService, getTodayDateString } from '../services/storageService';
 import { PaymentMethod, QuickPreset } from '../types';
 import { Plus, Zap, TrendingUp, Filter, CheckCircle2, Layers, SearchX, X, Check, ArrowDownRight, Trash2, Target, Edit3 } from 'lucide-react';
 
@@ -44,7 +44,7 @@ export const ExpensesScreen: React.FC = () => {
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('Cash');
   const [presetAmount, setPresetAmount] = useState<string>('');
   const [presetCurrency, setPresetCurrency] = useState<'USD' | 'KHR'>('USD');
-  const [presetDate, setPresetDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [presetDate, setPresetDate] = useState<string>(getTodayDateString());
 
   // Edit Budget Target state
   const [isEditingBudget, setIsEditingBudget] = useState<boolean>(false);
@@ -85,7 +85,7 @@ export const ExpensesScreen: React.FC = () => {
     setActivePreset(preset);
     setPresetAmount(preset.amount.toString());
     setPresetCurrency(preset.currency || 'USD');
-    setPresetDate(new Date().toISOString().split('T')[0]);
+    setPresetDate(getTodayDateString());
     setSelectedPayment('Cash');
   };
 

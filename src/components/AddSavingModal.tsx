@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
+import { getTodayDateString } from '../services/storageService';
 import { PaymentMethod } from '../types';
 import { X, Plus, PiggyBank } from 'lucide-react';
 
@@ -11,7 +12,7 @@ export const AddSavingModal: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Bank');
-  const [dateStr, setDateStr] = useState(new Date().toISOString().split('T')[0]);
+  const [dateStr, setDateStr] = useState(getTodayDateString());
   const [tripId, setTripId] = useState<string | undefined>(selectedTripId || undefined);
   const [notes, setNotes] = useState('');
 
@@ -23,7 +24,7 @@ export const AddSavingModal: React.FC = () => {
     if (isAddSavingOpen) {
       setCategoryId(savingCategories[0]?.id || 'cat-saving-vault');
       setPaymentMethod('Bank');
-      setDateStr(new Date().toISOString().split('T')[0]);
+      setDateStr(getTodayDateString());
       setTripId(selectedTripId || undefined);
     }
   }, [isAddSavingOpen, selectedTripId]);

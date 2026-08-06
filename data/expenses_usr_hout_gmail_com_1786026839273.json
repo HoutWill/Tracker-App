@@ -1,0 +1,17 @@
+[
+  {
+    "title": "Drink",
+    "amount": 2.5,
+    "currency": "USD",
+    "type": "EXPENSE",
+    "categoryId": "cat-drink",
+    "categoryName": "Drink",
+    "categoryIcon": "coffee",
+    "categoryColor": "brown",
+    "date": "2026-08-06",
+    "paymentMethod": "Cash",
+    "notes": "Quick log via Cash",
+    "id": "exp-1786026996835-540",
+    "createdAt": 1786026996835
+  }
+]

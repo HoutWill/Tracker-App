@@ -10,6 +10,13 @@ export const formatCurrency = (amountUSD: number, currency: CurrencyCode): strin
   return `$${amountUSD.toFixed(2)}`;
 };
 
+export const getTodayDateString = (d: Date = new Date()): string => {
+  const year = d.getFullYear();
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const getGuestId = (): string => {
   try {
     const userAcc = localStorage.getItem('user_account');

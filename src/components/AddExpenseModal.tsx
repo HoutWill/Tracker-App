@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
+import { getTodayDateString } from '../services/storageService';
 import { PaymentMethod } from '../types';
 import { X, Plus, ArrowDownRight } from 'lucide-react';
 
@@ -11,7 +12,7 @@ export const AddExpenseModal: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
-  const [dateStr, setDateStr] = useState(new Date().toISOString().split('T')[0]);
+  const [dateStr, setDateStr] = useState(getTodayDateString());
   const [tripId, setTripId] = useState<string | undefined>(selectedTripId || undefined);
   const [notes, setNotes] = useState('');
 
@@ -22,7 +23,7 @@ export const AddExpenseModal: React.FC = () => {
     if (isAddExpenseOpen) {
       setCategoryId(expenseCategories[0]?.id || 'cat-food');
       setPaymentMethod('Cash');
-      setDateStr(new Date().toISOString().split('T')[0]);
+      setDateStr(getTodayDateString());
       setTripId(selectedTripId || undefined);
     }
   }, [isAddExpenseOpen, selectedTripId]);
