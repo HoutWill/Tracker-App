@@ -84,7 +84,7 @@ export const SavingsScreen: React.FC = () => {
     setSelectedPayment('Bank');
   };
 
-  const handleConfirmPreset = async () => {
+  const handleConfirmPreset = () => {
     if (!activePreset) return;
 
     const num = parseFloat(presetAmount);
@@ -109,8 +109,14 @@ export const SavingsScreen: React.FC = () => {
           activePreset.categoryId.includes(t.category.toLowerCase())
         );
 
-    await addExpense({
-      title: activePreset.title,
+    // Reset preset popover & set toast INSTANTLY for 0ms UI lag
+    const presetTitle = activePreset.title;
+    setActivePreset(null);
+    setToastMsg(`Saved "${presetTitle}" (${formatCurrency(amountUSD, currency)})!`);
+    setTimeout(() => setToastMsg(null), 3000);
+
+    addExpense({
+      title: presetTitle,
       amount: amountUSD,
       currency: presetCurrency,
       type: 'SAVING',
@@ -123,10 +129,6 @@ export const SavingsScreen: React.FC = () => {
       notes: `Vault deposit via ${selectedPayment}`,
       tripId: matchingTrip?.id,
     });
-
-    setToastMsg(`Saved "${activePreset.title}" (${formatCurrency(amountUSD, currency)})!`);
-    setActivePreset(null);
-    setTimeout(() => setToastMsg(null), 3000);
   };
 
   const handleDeletePreset = (presetId: string) => {

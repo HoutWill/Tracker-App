@@ -30,7 +30,7 @@ export const AddSavingModal: React.FC = () => {
 
   if (!isAddSavingOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const num = parseFloat(amount);
     if (!title.trim() || isNaN(num) || num <= 0) {
@@ -40,7 +40,13 @@ export const AddSavingModal: React.FC = () => {
 
     const cat = categories.find(c => c.id === categoryId) || savingCategories[0];
 
-    await addExpense({
+    // Close modal and reset inputs INSTANTLY for 0ms UI lag
+    setTitle('');
+    setAmount('');
+    setNotes('');
+    setIsAddSavingOpen(false);
+
+    addExpense({
       title: title.trim(),
       amount: num,
       currency: currency,
@@ -54,11 +60,6 @@ export const AddSavingModal: React.FC = () => {
       notes: notes.trim(),
       tripId: tripId,
     });
-
-    setTitle('');
-    setAmount('');
-    setNotes('');
-    setIsAddSavingOpen(false);
   };
 
   return (

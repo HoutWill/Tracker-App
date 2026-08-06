@@ -88,7 +88,7 @@ export const ExpensesScreen: React.FC = () => {
     setSelectedPayment('Cash');
   };
 
-  const handleConfirmPreset = async () => {
+  const handleConfirmPreset = () => {
     if (!activePreset) return;
 
     const num = parseFloat(presetAmount);
@@ -113,8 +113,14 @@ export const ExpensesScreen: React.FC = () => {
           activePreset.categoryId.includes(t.category.toLowerCase())
         );
 
-    await addExpense({
-      title: activePreset.title,
+    // Reset preset popover & set toast INSTANTLY for 0ms UI lag
+    const presetTitle = activePreset.title;
+    setActivePreset(null);
+    setToastMsg(`Logged "${presetTitle}" (${formatCurrency(amountUSD, currency)})!`);
+    setTimeout(() => setToastMsg(null), 3000);
+
+    addExpense({
+      title: presetTitle,
       amount: amountUSD,
       currency: presetCurrency,
       type: 'EXPENSE',
@@ -127,10 +133,6 @@ export const ExpensesScreen: React.FC = () => {
       notes: `Quick log via ${selectedPayment}`,
       tripId: matchingTrip?.id,
     });
-
-    setToastMsg(`Logged "${activePreset.title}" (${formatCurrency(amountUSD, currency)})!`);
-    setActivePreset(null);
-    setTimeout(() => setToastMsg(null), 3000);
   };
 
   const handleDeletePreset = (presetId: string) => {

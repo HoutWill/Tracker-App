@@ -40,9 +40,9 @@ interface ExpenseContextType {
   setIsCreateTripOpen: (open: boolean) => void;
   setIsCreateExpenseFolderOpen: (open: boolean) => void;
   setIsCreateSavingFolderOpen: (open: boolean) => void;
-  addExpense: (expense: Omit<ExpenseItem, 'id' | 'createdAt'>) => Promise<void>;
-  updateExpense: (id: string, updated: Partial<ExpenseItem>) => Promise<void>;
-  deleteExpense: (id: string) => Promise<void>;
+  addExpense: (expense: Omit<ExpenseItem, 'id' | 'createdAt'>) => void;
+  updateExpense: (id: string, updated: Partial<ExpenseItem>) => void;
+  deleteExpense: (id: string) => void;
   setCurrency: (c: CurrencyCode) => void;
   setSelectedDate: (d: string | null) => void;
   setSearchQuery: (q: string) => void;
@@ -186,24 +186,24 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // 1. Instant Optimistic State Update for 0ms UI lag
     setExpenses(prev => [newItem, ...prev.filter(e => e.id !== newItem.id)]);
 
-    // 2. Async background sync to storage and API
-    await StorageService.addExpense(newItem);
+    // 2. Non-blocking background sync to storage and API
+    StorageService.addExpense(newItem);
   };
 
-  const updateExpense = async (id: string, updated: Partial<ExpenseItem>) => {
+  const updateExpense = (id: string, updated: Partial<ExpenseItem>) => {
     // 1. Instant Optimistic State Update
     setExpenses(prev => prev.map(e => (e.id === id ? { ...e, ...updated } : e)));
 
-    // 2. Async background sync
-    await StorageService.updateExpense(id, updated);
+    // 2. Non-blocking background sync
+    StorageService.updateExpense(id, updated);
   };
 
-  const deleteExpense = async (id: string) => {
+  const deleteExpense = (id: string) => {
     // 1. Instant Optimistic State Update
     setExpenses(prev => prev.filter(e => e.id !== id));
 
-    // 2. Async background sync
-    await StorageService.deleteExpense(id);
+    // 2. Non-blocking background sync
+    StorageService.deleteExpense(id);
   };
 
   const clearAllData = async () => {
