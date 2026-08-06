@@ -243,17 +243,29 @@ export const ExpensesScreen: React.FC = () => {
             <span style={{ fontSize: '15px', fontWeight: 800 }}>Expenses</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
             <button
+              type="button"
               className="glass-pill"
               onClick={() => {
                 setCustomBudgetInput(currentBudget.toString());
                 setIsEditingBudget(true);
               }}
-              style={{ fontSize: '11px', padding: '3px 8px', color: pageAccent, borderColor: hexToRgba(pageAccent, 0.4) }}
+              style={{
+                fontSize: '11px',
+                padding: '3px 8px',
+                color: pageAccent,
+                borderColor: hexToRgba(pageAccent, 0.4),
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
               title="Set Target Budget"
             >
-              <Target size={12} /> Budget: {formatCurrency(currentBudget, currency)}
+              <Target size={12} style={{ flexShrink: 0 }} />
+              <span>Goal: {formatCurrency(currentBudget, currency)}</span>
             </button>
             <span
               style={{
@@ -264,6 +276,8 @@ export const ExpensesScreen: React.FC = () => {
                 backgroundColor: hexToRgba(pageAccent, 0.2),
                 color: pageAccent,
                 border: `1px solid ${hexToRgba(pageAccent, 0.35)}`,
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
               }}
             >
               {expenseItems.length}

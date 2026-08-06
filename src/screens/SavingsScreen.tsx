@@ -239,17 +239,29 @@ export const SavingsScreen: React.FC = () => {
             <span style={{ fontSize: '15px', fontWeight: 800 }}>Vault</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
             <button
+              type="button"
               className="glass-pill"
               onClick={() => {
                 setCustomGoalInput(currentGoal.toString());
                 setIsEditingGoal(true);
               }}
-              style={{ fontSize: '11px', padding: '3px 8px', color: pageAccent, borderColor: hexToRgba(pageAccent, 0.4) }}
+              style={{
+                fontSize: '11px',
+                padding: '3px 8px',
+                color: pageAccent,
+                borderColor: hexToRgba(pageAccent, 0.4),
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
               title="Set Saving Goal Target"
             >
-              <Target size={12} /> Goal: {formatCurrency(currentGoal, currency)}
+              <Target size={12} style={{ flexShrink: 0 }} />
+              <span>Goal: {formatCurrency(currentGoal, currency)}</span>
             </button>
 
             <span
@@ -261,6 +273,8 @@ export const SavingsScreen: React.FC = () => {
                 backgroundColor: hexToRgba(pageAccent, 0.2),
                 color: pageAccent,
                 border: `1px solid ${hexToRgba(pageAccent, 0.35)}`,
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
               }}
             >
               {savingItems.length}
