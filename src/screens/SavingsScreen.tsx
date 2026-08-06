@@ -1042,31 +1042,6 @@ export const SavingsScreen: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Floating Action Button (FAB) for Savings Add */}
-      <button
-        onClick={() => setIsAddSavingOpen(true)}
-        style={{
-          position: 'fixed',
-          bottom: '76px',
-          right: '20px',
-          width: '56px',
-          height: '56px',
-          borderRadius: '20px',
-          border: 'none',
-          backgroundColor: pageAccent,
-          color: '#FFF',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: `0 8px 24px ${hexToRgba(pageAccent, 0.4)}`,
-          cursor: 'pointer',
-          zIndex: 40,
-        }}
-        title="Deposit"
-      >
-        <Plus size={26} />
-      </button>
     </div>
   );
 };

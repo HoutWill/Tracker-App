@@ -678,31 +678,6 @@ export const PlannerScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Floating Action Button (FAB) to Add Reminder */}
-      <button
-        onClick={() => setIsAddReminderOpen(true)}
-        style={{
-          position: 'fixed',
-          bottom: '76px',
-          right: '20px',
-          width: '56px',
-          height: '56px',
-          borderRadius: '20px',
-          border: 'none',
-          backgroundColor: pageAccent,
-          color: '#FFF',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: `0 8px 24px ${hexToRgba(pageAccent, 0.45)}`,
-          cursor: 'pointer',
-          zIndex: 40,
-        }}
-        title="Add Reminder"
-      >
-        <Plus size={26} />
-      </button>
-
       {/* Reminder Detail Modal */}
       <ReminderDetailModal
         reminder={selectedReminderForDetail}

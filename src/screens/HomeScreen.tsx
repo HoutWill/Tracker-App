@@ -580,31 +580,6 @@ export const HomeScreen: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Floating Action Button (FAB) for Quick Add */}
-      <button
-        onClick={() => setIsAddExpenseOpen(true)}
-        style={{
-          position: 'fixed',
-          bottom: '76px',
-          right: '20px',
-          width: '56px',
-          height: '56px',
-          borderRadius: '20px',
-          border: 'none',
-          backgroundColor: activeTypeTab === 'SAVING' ? 'var(--accent-success)' : 'var(--accent)',
-          color: activeTypeTab === 'SAVING' ? '#141416' : '#FFF',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 8px 24px rgba(46, 170, 220, 0.4)',
-          cursor: 'pointer',
-          zIndex: 40,
-        }}
-        title="Record New Entry"
-      >
-        <Plus size={26} />
-      </button>
     </div>
   );
 };

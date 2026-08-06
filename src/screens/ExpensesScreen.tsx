@@ -1014,31 +1014,6 @@ export const ExpensesScreen: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Floating Action Button (FAB) for Add */}
-      <button
-        onClick={() => setIsAddExpenseOpen(true)}
-        style={{
-          position: 'fixed',
-          bottom: '76px',
-          right: '20px',
-          width: '56px',
-          height: '56px',
-          borderRadius: '20px',
-          border: 'none',
-          backgroundColor: pageAccent,
-          color: '#FFF',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: `0 8px 24px ${hexToRgba(pageAccent, 0.45)}`,
-          cursor: 'pointer',
-          zIndex: 40,
-        }}
-        title="Add"
-      >
-        <Plus size={26} />
-      </button>
     </div>
   );
 };
