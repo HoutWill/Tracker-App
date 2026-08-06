@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -11,15 +12,51 @@ const app = express();
 let PORT = parseInt(process.env.PORT || '3000', 10);
 const DATA_DIR = path.join(__dirname, 'data');
 
+// Security: Enforce JSON Payload Body Size Limits (Prevent DoS memory flood)
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '500kb' }));
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-// Helper to get sanitized guest DB filepath
+// Security: In-Memory IP Rate Limiter & Anti-Spam Middleware
+const rateLimitMap = new Map();
+
+const rateLimiter = (maxRequests, windowMs, errorMessage) => (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown_ip';
+  const now = Date.now();
+  const record = rateLimitMap.get(ip) || { count: 0, resetTime: now + windowMs };
+
+  if (now > record.resetTime) {
+    record.count = 1;
+    record.resetTime = now + windowMs;
+  } else {
+    record.count += 1;
+  }
+
+  rateLimitMap.set(ip, record);
+
+  if (record.count > maxRequests) {
+    return res.status(429).json({ error: errorMessage || 'Too many requests. Please wait a moment.' });
+  }
+
+  next();
+};
+
+// Security: Apply General API Rate Limiting (120 req/min) & Auth Anti-Spam (6 req/min)
+const generalRateLimit = rateLimiter(120, 60000, 'Rate limit exceeded. Please slow down.');
+const authRateLimit = rateLimiter(6, 60000, 'Too many login/register attempts. Please wait 60 seconds.');
+
+app.use('/api', generalRateLimit);
+
+// Helper to hash password with SHA-256 + Pepper
+const hashPassword = (pwd) => {
+  return crypto.createHash('sha256').update(pwd + 'PITRACK_SECURE_PEPPER_2026').digest('hex');
+};
+
+// Helper to get sanitized guest DB filepath (Prevent Path Traversal Attack)
 const getDbFilePath = (req) => {
   const rawId = req.headers['x-guest-id'] || 'default_guest';
   const cleanId = String(rawId).replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -98,25 +135,36 @@ const writeUsers = (users) => {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 };
 
-// Auth API: Register / Link Guest Account
-app.post('/api/auth/register', (req, res) => {
+// Security: Email Regex Validator
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Auth API: Register / Link Guest Account (Rate Limited: 6 req/min)
+app.post('/api/auth/register', authRateLimit, (req, res) => {
   const { email, password, name, guestId } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
+  const cleanEmail = (email || '').trim().toLowerCase();
+
+  // Strict Validation
+  if (!cleanEmail || !EMAIL_REGEX.test(cleanEmail)) {
+    return res.status(400).json({ error: 'Please enter a valid email address' });
+  }
+
+  if (!password || typeof password !== 'string' || password.length < 6 || password.length > 64) {
+    return res.status(400).json({ error: 'Password must be between 6 and 64 characters' });
   }
 
   const users = readUsers();
-  const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  const existing = users.find(u => u.email === cleanEmail);
   if (existing) {
-    return res.status(400).json({ error: 'Account already exists. Please log in.' });
+    // Generic non-disclosing error response to prevent account enumeration
+    return res.status(400).json({ error: 'Unable to process registration with these credentials' });
   }
 
   const accountId = 'usr_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
   const newUser = {
     accountId,
-    email: email.toLowerCase(),
-    password, // demo simple hash/string
-    name: name || email.split('@')[0],
+    email: cleanEmail,
+    passwordHash: hashPassword(password),
+    name: (name || cleanEmail.split('@')[0]).trim(),
     createdAt: Date.now(),
   };
 
@@ -138,14 +186,22 @@ app.post('/api/auth/register', (req, res) => {
   });
 });
 
-// Auth API: Login
-app.post('/api/auth/login', (req, res) => {
+// Auth API: Login (Rate Limited: 6 req/min & Non-Disclosing Security Error)
+app.post('/api/auth/login', authRateLimit, (req, res) => {
   const { email, password } = req.body;
-  const users = readUsers();
-  const user = users.find(u => u.email.toLowerCase() === (email || '').toLowerCase() && u.password === password);
+  const cleanEmail = (email || '').trim().toLowerCase();
 
+  if (!cleanEmail || !password) {
+    return res.status(400).json({ error: 'Invalid credentials' });
+  }
+
+  const users = readUsers();
+  const pwdHash = hashPassword(password);
+  const user = users.find(u => u.email === cleanEmail && (u.passwordHash === pwdHash || u.password === password));
+
+  // Non-disclosing generic error response
   if (!user) {
-    return res.status(401).json({ error: 'Invalid email or password' });
+    return res.status(401).json({ error: 'Invalid credentials' });
   }
 
   res.json({

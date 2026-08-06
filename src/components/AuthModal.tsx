@@ -37,8 +37,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!email.trim() || !password.trim()) {
-      setError('Email and password required');
+
+    const cleanEmail = email.trim().toLowerCase();
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!cleanEmail || !EMAIL_REGEX.test(cleanEmail)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      setError('Password must be at least 6 characters');
       return;
     }
 
