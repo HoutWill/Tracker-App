@@ -1,11 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useExpenses } from '../context/ExpenseContext';
-import { ShieldCheck, Sun, Moon, Sparkles, DollarSign } from 'lucide-react';
+import { AuthModal, UserAccount } from './AuthModal';
+import { ShieldCheck, Sun, Moon, Sparkles, DollarSign, User } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { isDark, toggleTheme, pageColors } = useTheme();
   const { currency, setCurrency, setIsAiChatOpen } = useExpenses();
+
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [userAccount, setUserAccount] = useState<UserAccount | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('user_account');
+      if (saved) setUserAccount(JSON.parse(saved));
+    } catch (e) {}
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user_account');
+    localStorage.removeItem('guest_device_id');
+    setUserAccount(null);
+    window.location.reload();
+  };
 
   const accentColor = pageColors?.EXPENSES || '#6C5CE7';
 
@@ -51,6 +69,26 @@ export const Header: React.FC = () => {
 
       {/* Right Control Action Pills */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {/* Account Link / Login Pill */}
+        <button
+          className="glass-pill"
+          onClick={() => setIsAuthModalOpen(true)}
+          style={{
+            height: '34px',
+            padding: '0 10px',
+            fontSize: '11px',
+            fontWeight: 800,
+            gap: '4px',
+            borderColor: userAccount ? 'rgba(0, 230, 118, 0.4)' : 'var(--border-glass)',
+            backgroundColor: userAccount ? 'rgba(0, 230, 118, 0.12)' : 'var(--pill-bg)',
+            color: userAccount ? 'var(--accent-success)' : 'var(--text-primary)',
+          }}
+          title={userAccount ? `Logged in as ${userAccount.name}` : 'Login / Link Account'}
+        >
+          {userAccount ? <ShieldCheck size={14} /> : <User size={14} />}
+          <span>{userAccount ? userAccount.name.split(' ')[0] : 'Account'}</span>
+        </button>
+
         {/* Currency Switcher Pill */}
         <button
           className="glass-pill"
@@ -83,8 +121,6 @@ export const Header: React.FC = () => {
           {isDark ? <Sun size={15} color="var(--accent)" /> : <Moon size={15} color="var(--accent)" />}
         </button>
 
-
-
         {/* Agent Button Pill */}
         <button
           className="glass-pill"
@@ -105,6 +141,15 @@ export const Header: React.FC = () => {
           <span>Agent</span>
         </button>
       </div>
+
+      {/* Account Authentication & Sync Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        currentUser={userAccount}
+        onAuthSuccess={u => setUserAccount(u)}
+        onLogout={handleLogout}
+      />
     </header>
   );
 };

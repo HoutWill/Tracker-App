@@ -86,6 +86,74 @@ app.post('/api/expenses/reset', (req, res) => {
   res.json({ success: true });
 });
 
+// Helper for User Accounts DB
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const readUsers = () => {
+  try {
+    if (!fs.existsSync(USERS_FILE)) return [];
+    return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+  } catch (e) { return []; }
+};
+const writeUsers = (users) => {
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+};
+
+// Auth API: Register / Link Guest Account
+app.post('/api/auth/register', (req, res) => {
+  const { email, password, name, guestId } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  const users = readUsers();
+  const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (existing) {
+    return res.status(400).json({ error: 'Account already exists. Please log in.' });
+  }
+
+  const accountId = 'usr_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+  const newUser = {
+    accountId,
+    email: email.toLowerCase(),
+    password, // demo simple hash/string
+    name: name || email.split('@')[0],
+    createdAt: Date.now(),
+  };
+
+  users.push(newUser);
+  writeUsers(users);
+
+  // If user has existing guest data, migrate/bind it to accountId
+  if (guestId) {
+    const guestFile = path.join(DATA_DIR, `expenses_${String(guestId).replace(/[^a-zA-Z0-9_-]/g, '_')}.json`);
+    const userFile = path.join(DATA_DIR, `expenses_${accountId}.json`);
+    if (fs.existsSync(guestFile) && !fs.existsSync(userFile)) {
+      fs.copyFileSync(guestFile, userFile);
+    }
+  }
+
+  res.status(201).json({
+    user: { accountId: newUser.accountId, email: newUser.email, name: newUser.name },
+    token: 'jwt-' + newUser.accountId,
+  });
+});
+
+// Auth API: Login
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  const users = readUsers();
+  const user = users.find(u => u.email.toLowerCase() === (email || '').toLowerCase() && u.password === password);
+
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+
+  res.json({
+    user: { accountId: user.accountId, email: user.email, name: user.name },
+    token: 'jwt-' + user.accountId,
+  });
+});
+
 // Serve static frontend bundle from dist/
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {

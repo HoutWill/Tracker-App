@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
 import { useTheme } from '../context/ThemeContext';
 import { ExportModal } from '../components/ExportModal';
 import { AppearanceModal } from '../components/AppearanceModal';
+import { AuthModal, UserAccount } from '../components/AuthModal';
 import { getGuestId, setGuestId } from '../services/storageService';
-import { Settings, Shield, Eye, EyeOff, Download, Trash2, Palette, CheckCircle2, Sparkles, Key, Copy, RefreshCw } from 'lucide-react';
+import { Settings, Shield, Eye, EyeOff, Download, Trash2, Palette, CheckCircle2, Sparkles, Key, Copy, RefreshCw, User, ShieldCheck, LogIn } from 'lucide-react';
 
 export const SettingsScreen: React.FC = () => {
   const {
@@ -16,7 +17,23 @@ export const SettingsScreen: React.FC = () => {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isAppearanceModalOpen, setIsAppearanceModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [userAccount, setUserAccount] = useState<UserAccount | null>(null);
   const [currentSyncKey, setCurrentSyncKey] = useState(getGuestId());
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('user_account');
+      if (saved) setUserAccount(JSON.parse(saved));
+    } catch (e) {}
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user_account');
+    localStorage.removeItem('guest_device_id');
+    setUserAccount(null);
+    window.location.reload();
+  };
 
   const handleCopySyncKey = () => {
     navigator.clipboard.writeText(currentSyncKey);
@@ -71,6 +88,58 @@ export const SettingsScreen: React.FC = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
         <Settings size={20} color="var(--accent)" />
         <h2 style={{ fontSize: '18px', fontWeight: 800 }}>Settings</h2>
+      </div>
+
+      {/* Account Cloud Sync & User Profile Card */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                backgroundColor: userAccount ? 'rgba(0, 230, 118, 0.15)' : 'rgba(46, 170, 220, 0.15)',
+                border: userAccount ? '1px solid rgba(0, 230, 118, 0.35)' : '1px solid rgba(46, 170, 220, 0.35)',
+                color: userAccount ? 'var(--accent-success)' : 'var(--accent)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {userAccount ? <ShieldCheck size={18} /> : <User size={18} />}
+            </div>
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 800 }}>
+                {userAccount ? userAccount.name : 'Account'}
+              </h4>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                {userAccount ? userAccount.email : 'Protect & sync data'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsAuthModalOpen(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              borderRadius: '10px',
+              border: 'none',
+              backgroundColor: userAccount ? 'rgba(255, 255, 255, 0.08)' : 'var(--accent)',
+              color: '#FFF',
+              fontWeight: 800,
+              fontSize: '12px',
+              cursor: 'pointer',
+              boxShadow: userAccount ? 'none' : '0 4px 14px rgba(46, 170, 220, 0.25)',
+            }}
+          >
+            {userAccount ? <User size={14} /> : <LogIn size={14} />}
+            {userAccount ? 'Profile' : 'Login'}
+          </button>
+        </div>
       </div>
 
       {/* Unified Appearance Customizer Card (Themes, Colors & Presets) */}
@@ -249,6 +318,15 @@ export const SettingsScreen: React.FC = () => {
       <AppearanceModal
         isOpen={isAppearanceModalOpen}
         onClose={() => setIsAppearanceModalOpen(false)}
+      />
+
+      {/* Dedicated Account Authentication & Cloud Sync Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        currentUser={userAccount}
+        onAuthSuccess={u => setUserAccount(u)}
+        onLogout={handleLogout}
       />
     </div>
   );
