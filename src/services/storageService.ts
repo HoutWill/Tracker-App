@@ -324,8 +324,14 @@ export const StorageService = {
       },
     ];
     try {
-      const local = localStorage.getItem(`trip_folders_${guestId}`);
-      if (!local) return defaultDemoTrips;
+      const local =
+        localStorage.getItem('pitrack_trips_data') ||
+        localStorage.getItem(`trip_folders_${guestId}`);
+      if (!local) {
+        localStorage.setItem('pitrack_trips_data', JSON.stringify(defaultDemoTrips));
+        localStorage.setItem(`trip_folders_${guestId}`, JSON.stringify(defaultDemoTrips));
+        return defaultDemoTrips;
+      }
       return JSON.parse(local);
     } catch (e) {
       return defaultDemoTrips;
@@ -335,6 +341,7 @@ export const StorageService = {
   saveTrips(trips: TripFolder[]): void {
     const guestId = getGuestId();
     try {
+      localStorage.setItem('pitrack_trips_data', JSON.stringify(trips));
       localStorage.setItem(`trip_folders_${guestId}`, JSON.stringify(trips));
     } catch (e) {}
   },
