@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ExpenseItem, CurrencyCode, Category, PaymentMethod, TransactionType, TripFolder } from '../types';
-import { StorageService } from '../services/storageService';
+import { StorageService, getTodayDateString } from '../services/storageService';
 import { DEFAULT_CATEGORIES } from '../constants/categories';
 
 export type DateRangeOption = 'ALL' | 'THIS_MONTH' | 'THIS_WEEK' | 'TODAY';
@@ -281,10 +281,10 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   } else if (dateRangeFilter !== 'ALL') {
     const now = new Date();
     if (dateRangeFilter === 'TODAY') {
-      const todayStr = now.toISOString().split('T')[0];
+      const todayStr = getTodayDateString(now);
       filtered = filtered.filter(e => e.date === todayStr);
     } else if (dateRangeFilter === 'THIS_MONTH') {
-      const monthPrefix = now.toISOString().slice(0, 7);
+      const monthPrefix = getTodayDateString(now).slice(0, 7);
       filtered = filtered.filter(e => e.date.startsWith(monthPrefix));
     }
   }
