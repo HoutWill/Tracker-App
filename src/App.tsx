@@ -15,7 +15,7 @@ import { CalendarScreen } from './screens/CalendarScreen';
 import { PlannerScreen } from './screens/PlannerScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { AtmosphericBackground } from './components/AtmosphericBackground';
-import { CreditCard, PiggyBank, BarChart3, Calendar, Settings, Bell } from 'lucide-react';
+import { CreditCard, PiggyBank, BarChart3, Calendar, Settings, Bell, Wallet } from 'lucide-react';
 
 import { requestPersistentStorage } from './services/storageService';
 import { CreateTripModal } from './components/CreateTripModal';
@@ -111,8 +111,7 @@ export const AppContent: React.FC = () => {
         }}
       >
         {[
-          { id: 'EXPENSES', label: 'Expenses', icon: CreditCard },
-          { id: 'SAVINGS', label: 'Saving', icon: PiggyBank },
+          { id: 'EXPENSES', label: 'Wallet', icon: Wallet },
           { id: 'STATS', label: 'Stats', icon: BarChart3 },
           { id: 'PLANNER', label: 'Planner', icon: Bell },
           { id: 'CALENDAR', label: 'Calendar', icon: Calendar },
