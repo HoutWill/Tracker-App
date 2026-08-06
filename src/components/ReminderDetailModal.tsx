@@ -29,9 +29,9 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.78)',
-        backdropFilter: 'blur(14px)',
-        zIndex: 110,
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(16px)',
+        zIndex: 140,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

@@ -42,9 +42,9 @@ export const AddReminderModal: React.FC = () => {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 110,
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(16px)',
+        zIndex: 150,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
