@@ -1,7 +1,6 @@
 import React from 'react';
 import { QuickPreset, CurrencyCode } from '../types';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
-import { getPresetColor, hexToRgba } from '../context/ThemeContext';
 import { formatCurrency } from '../services/storageService';
 import { Plus, Zap } from 'lucide-react';
 
@@ -13,6 +12,16 @@ interface ArtPresetGridProps {
   onAddPreset: () => void;
   colorOffset?: number;
 }
+
+// Warm Organic Palette (Espresso, Terracotta, Sage Green, Ochre Gold, Royal Indigo, Warm Rose)
+const ORGANIC_PALETTE = [
+  { bg: '#2C221E', accent: '#E8A87C', border: '#4A3B35' }, // Warm Espresso
+  { bg: '#261F24', accent: '#E27D60', border: '#42333D' }, // Terracotta
+  { bg: '#1C2621', accent: '#85DCB', border: '#2D3D35' }, // Sage Mint
+  { bg: '#2B261D', accent: '#C38D9E', border: '#453C2D' }, // Ochre Gold
+  { bg: '#1E222A', accent: '#41B3A3', border: '#303744' }, // Slate Blue
+  { bg: '#2A1E24', accent: '#FF6F59', border: '#45303B' }, // Coral Berry
+];
 
 export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
   presetsList,
@@ -34,94 +43,64 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
           type="button"
           className="glass-pill"
           onClick={onAddPreset}
-          style={{ fontSize: '11px', padding: '4px 10px', color: pageAccent, borderColor: hexToRgba(pageAccent, 0.4) }}
+          style={{ fontSize: '11px', padding: '4px 10px', color: pageAccent, borderColor: 'rgba(255, 255, 255, 0.15)' }}
         >
           <Plus size={12} /> Add
         </button>
       </div>
 
-      {/* 3D Neo-Glass Art Grid */}
+      {/* Warm Tactile Clay & Paper Cards Grid (No Glass, No Robotic Look) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
         {presetsList.map((preset, idx) => {
-          const tileColor = getPresetColor(idx + colorOffset);
+          const theme = ORGANIC_PALETTE[(idx + colorOffset) % ORGANIC_PALETTE.length];
           return (
             <button
               key={preset.id}
               type="button"
               onClick={() => onSelectPreset(preset)}
               style={{
-                position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '14px 10px 10px 10px',
+                padding: '14px 8px 10px 8px',
                 borderRadius: '16px',
-                border: `1px solid ${hexToRgba(tileColor, 0.35)}`,
-                backgroundColor: hexToRgba(tileColor, 0.09),
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
+                border: `1px solid ${theme.border}`,
+                backgroundColor: theme.bg,
                 textAlign: 'center',
                 cursor: 'pointer',
-                overflow: 'hidden',
-                boxShadow: `0 6px 20px ${hexToRgba(tileColor, 0.18)}`,
-                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                boxShadow: '0 6px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                transition: 'all 0.15s ease-in-out',
                 minHeight: '110px',
               }}
             >
-              {/* Futuristic Glowing Top Light Bar */}
+              {/* Tactile Icon Badge */}
               <div
                 style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '3px',
-                  backgroundColor: tileColor,
-                  boxShadow: `0 0 10px ${tileColor}`,
-                }}
-              />
-
-              {/* Holographic Subtle Glass Gloss Reflection */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '-50%',
-                  right: '-50%',
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 60%)',
-                  pointerEvents: 'none',
-                }}
-              />
-
-              {/* Glowing Icon Sphere */}
-              <div
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  border: `1px solid ${hexToRgba(tileColor, 0.5)}`,
-                  backgroundColor: hexToRgba(tileColor, 0.22),
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                  border: `1px solid ${theme.border}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: tileColor,
-                  boxShadow: `0 0 16px ${hexToRgba(tileColor, 0.3)}`,
+                  color: theme.accent,
+                  boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.4)',
                   marginBottom: '6px',
                 }}
               >
-                <CategoryIconRenderer icon={preset.icon} size={20} color={tileColor} />
+                <CategoryIconRenderer icon={preset.icon} size={20} color={theme.accent} />
               </div>
 
-              {/* Title & Floating Price Pill */}
+              {/* Title & Solid Price Tag */}
               <div style={{ width: '100%' }}>
                 <div
                   style={{
                     fontSize: '12px',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     lineHeight: '1.2',
-                    color: 'var(--text-primary)',
+                    color: '#F0EAD6',
                     marginBottom: '6px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
@@ -131,18 +110,18 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                   {preset.title}
                 </div>
 
-                {/* Price Pill Tag */}
+                {/* Solid Price Pill */}
                 <div
                   className="tabular-nums"
                   style={{
-                    display: 'inline-block',
-                    padding: '2px 8px',
+                    display: 'block',
+                    padding: '3px 6px',
                     borderRadius: '8px',
-                    backgroundColor: hexToRgba(tileColor, 0.2),
-                    border: `1px solid ${hexToRgba(tileColor, 0.4)}`,
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                    border: `1px solid ${theme.border}`,
                     fontSize: '11px',
-                    fontWeight: 900,
-                    color: tileColor,
+                    fontWeight: 800,
+                    color: theme.accent,
                     width: '100%',
                   }}
                 >
