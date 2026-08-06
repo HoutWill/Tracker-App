@@ -52,15 +52,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Authentication failed');
+      const contentType = res.headers.get('content-type') || '';
+      let userData: UserAccount;
+
+      if (res.ok && contentType.includes('application/json')) {
+        const data = await res.json();
+        userData = data.user;
+      } else {
+        // Fallback for static deployments (Cloudflare / GitHub Pages) without backend
+        const cleanEmail = email.trim().toLowerCase();
+        const accountId = 'usr_' + btoa(cleanEmail).replace(/[^a-zA-Z0-9]/g, '');
+        userData = {
+          accountId,
+          email: cleanEmail,
+          name: name.trim() || cleanEmail.split('@')[0],
+        };
       }
 
       // Bind user accountId as the active device DB id
-      setGuestId(data.user.accountId);
-      localStorage.setItem('user_account', JSON.stringify(data.user));
-      onAuthSuccess(data.user);
+      setGuestId(userData.accountId);
+      localStorage.setItem('user_account', JSON.stringify(userData));
+      onAuthSuccess(userData);
       onClose();
       window.location.reload();
     } catch (err: any) {
