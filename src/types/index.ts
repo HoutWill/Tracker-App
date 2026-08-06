@@ -53,3 +53,15 @@ export interface TripFolder {
   status: 'Active' | 'Closed';
   type?: TransactionType;
 }
+
+export interface ReminderItem {
+  id: string;
+  title: string;
+  dueDate: string; // YYYY-MM-DD
+  dueTime?: string; // HH:mm
+  category: 'BILLS' | 'SAVINGS' | 'TASK';
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  completed: boolean;
+  alertEnabled: boolean;
+  createdAt: number;
+}

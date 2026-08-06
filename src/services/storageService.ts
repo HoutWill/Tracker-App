@@ -1,4 +1,4 @@
-import { ExpenseItem, CurrencyCode, QuickPreset, TripFolder } from '../types';
+import { ExpenseItem, CurrencyCode, QuickPreset, TripFolder, ReminderItem } from '../types';
 
 export const KHR_PER_USD = 4000;
 
@@ -388,6 +388,66 @@ export const StorageService = {
     try {
       localStorage.setItem('pitrack_trips_data', JSON.stringify(trips));
       localStorage.setItem(`trip_folders_${guestId}`, JSON.stringify(trips));
+    } catch (e) {}
+  },
+
+  getReminders(): ReminderItem[] {
+    const guestId = getGuestId();
+    const defaultDemoReminders: ReminderItem[] = [
+      {
+        id: 'rem-bills-1',
+        title: 'Bills',
+        dueDate: getTodayDateString(),
+        dueTime: '18:00',
+        category: 'BILLS',
+        priority: 'HIGH',
+        completed: false,
+        alertEnabled: true,
+        createdAt: Date.now(),
+      },
+      {
+        id: 'rem-saving-1',
+        title: 'Vault',
+        dueDate: getTodayDateString(),
+        dueTime: '20:00',
+        category: 'SAVINGS',
+        priority: 'MEDIUM',
+        completed: false,
+        alertEnabled: true,
+        createdAt: Date.now() - 1000,
+      },
+      {
+        id: 'rem-task-1',
+        title: 'Groceries',
+        dueDate: getTodayDateString(),
+        dueTime: '10:00',
+        category: 'TASK',
+        priority: 'LOW',
+        completed: true,
+        alertEnabled: false,
+        createdAt: Date.now() - 2000,
+      },
+    ];
+    try {
+      const local =
+        localStorage.getItem('pitrack_reminders_data') ||
+        localStorage.getItem(`reminders_${guestId}`);
+      if (!local) {
+        localStorage.setItem('pitrack_reminders_data', JSON.stringify(defaultDemoReminders));
+        localStorage.setItem(`reminders_${guestId}`, JSON.stringify(defaultDemoReminders));
+        return defaultDemoReminders;
+      }
+      return JSON.parse(local);
+    } catch (e) {
+      return defaultDemoReminders;
+    }
+  },
+
+  saveReminders(reminders: ReminderItem[]): void {
+    const guestId = getGuestId();
+    try {
+      localStorage.setItem('pitrack_reminders_data', JSON.stringify(reminders));
+      localStorage.setItem(`reminders_${guestId}`, JSON.stringify(reminders));
     } catch (e) {}
   },
 };

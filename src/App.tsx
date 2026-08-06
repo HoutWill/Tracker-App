@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from './context/ThemeContext';
+import { ReminderProvider } from './context/ReminderContext';
 import { Header } from './components/Header';
 import { AddExpenseModal } from './components/AddExpenseModal';
 import { AddSavingModal } from './components/AddSavingModal';
+import { AddReminderModal } from './components/AddReminderModal';
 import { EditExpenseModal } from './components/EditExpenseModal';
 import { EditSavingModal } from './components/EditSavingModal';
 import { AiChatModal } from './components/AiChatModal';
@@ -10,9 +12,10 @@ import { ExpensesScreen } from './screens/ExpensesScreen';
 import { SavingsScreen } from './screens/SavingsScreen';
 import { StatsScreen } from './screens/StatsScreen';
 import { CalendarScreen } from './screens/CalendarScreen';
+import { PlannerScreen } from './screens/PlannerScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { AtmosphericBackground } from './components/AtmosphericBackground';
-import { CreditCard, PiggyBank, BarChart3, Calendar, Settings } from 'lucide-react';
+import { CreditCard, PiggyBank, BarChart3, Calendar, Settings, Bell } from 'lucide-react';
 
 import { requestPersistentStorage } from './services/storageService';
 import { CreateTripModal } from './components/CreateTripModal';
@@ -20,9 +23,9 @@ import { CreateExpenseFolderModal } from './components/CreateExpenseFolderModal'
 import { CreateSavingFolderModal } from './components/CreateSavingFolderModal';
 import { EditTripModal } from './components/EditTripModal';
 
-export type TabName = 'EXPENSES' | 'SAVINGS' | 'STATS' | 'CALENDAR' | 'SETTINGS';
+export type TabName = 'EXPENSES' | 'SAVINGS' | 'STATS' | 'PLANNER' | 'CALENDAR' | 'SETTINGS';
 
-export const App: React.FC = () => {
+export const AppContent: React.FC = () => {
   const { pageColors } = useTheme();
   const [activeTab, setActiveTab] = useState<TabName>('EXPENSES');
 
@@ -67,6 +70,7 @@ export const App: React.FC = () => {
         {activeTab === 'EXPENSES' && <ExpensesScreen />}
         {activeTab === 'SAVINGS' && <SavingsScreen />}
         {activeTab === 'STATS' && <StatsScreen />}
+        {activeTab === 'PLANNER' && <PlannerScreen />}
         {activeTab === 'CALENDAR' && <CalendarScreen />}
         {activeTab === 'SETTINGS' && <SettingsScreen />}
       </main>
@@ -74,6 +78,7 @@ export const App: React.FC = () => {
       {/* Dedicated Modals */}
       <AddExpenseModal />
       <AddSavingModal />
+      <AddReminderModal />
       <EditExpenseModal />
       <EditSavingModal />
       <AiChatModal />
@@ -101,14 +106,14 @@ export const App: React.FC = () => {
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'center',
-          padding: '0 8px',
+          padding: '0 4px',
           zIndex: 40,
         }}
       >
         {[
           { id: 'EXPENSES', label: 'Expenses', icon: CreditCard },
           { id: 'SAVINGS', label: 'Saving', icon: PiggyBank },
-          { id: 'STATS', label: 'Stats', icon: BarChart3 },
+          { id: 'PLANNER', label: 'Planner', icon: Bell },
           { id: 'CALENDAR', label: 'Calendar', icon: Calendar },
           { id: 'SETTINGS', label: 'Settings', icon: Settings },
         ].map(tab => {
@@ -124,18 +129,18 @@ export const App: React.FC = () => {
                 background: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
                 border: isActive ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
                 borderRadius: '16px',
-                padding: '6px 10px',
+                padding: '5px 8px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '3px',
+                gap: '2px',
                 color: isActive ? tabColor : 'var(--text-muted)',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
             >
-              <Icon size={19} />
-              <span style={{ fontSize: '10px', fontWeight: isActive ? 800 : 600 }}>{tab.label}</span>
+              <Icon size={18} />
+              <span style={{ fontSize: '9px', fontWeight: isActive ? 800 : 600 }}>{tab.label}</span>
             </button>
           );
         })}
@@ -143,5 +148,11 @@ export const App: React.FC = () => {
     </div>
   );
 };
+
+export const App: React.FC = () => (
+  <ReminderProvider>
+    <AppContent />
+  </ReminderProvider>
+);
 
 export default App;
