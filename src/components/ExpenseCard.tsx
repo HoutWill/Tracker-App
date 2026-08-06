@@ -56,9 +56,9 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
         cursor: 'pointer',
         transition: 'transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease',
         borderColor: 'var(--border-glass)',
-        backgroundColor: 'rgba(30, 30, 38, 0.85)',
+        backgroundColor: 'var(--bg-card)',
         backdropFilter: 'blur(16px)',
-        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
