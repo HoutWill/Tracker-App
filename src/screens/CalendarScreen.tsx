@@ -4,6 +4,7 @@ import { useReminders } from '../context/ReminderContext';
 import { formatCurrency } from '../services/storageService';
 import { getDateDetails, CAMBODIA_NATIONAL_HOLIDAYS, WORLD_CELEBRATION_DAYS } from '../services/khmerCalendarService';
 import { ExpenseCard } from '../components/ExpenseCard';
+import { DayAgendaModal } from '../components/DayAgendaModal';
 import { BuddhaIcon, BenOfferingIcon, CambodiaFlagBadge } from '../components/CalendarCustomIcons';
 import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Flag, Sparkles, Sun, Heart, Globe, Users, Bell, CheckSquare, Square, Trash2 } from 'lucide-react';
 
@@ -26,6 +27,7 @@ export const CalendarScreen: React.FC = () => {
   const [viewMode, setViewMode] = useState<CalendarViewMode>('MONTH');
   const [viewDate, setViewDate] = useState<Date>(new Date());
   const [selectedDay, setSelectedDay] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [isDayModalOpen, setIsDayModalOpen] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isHolidaysOpen, setIsHolidaysOpen] = useState(false);
 
@@ -541,7 +543,10 @@ export const CalendarScreen: React.FC = () => {
               return (
                 <div
                   key={item.dateStr}
-                  onClick={() => setSelectedDay(item.dateStr)}
+                  onClick={() => {
+                    setSelectedDay(item.dateStr);
+                    setIsDayModalOpen(true);
+                  }}
                   style={{
                     position: 'relative',
                     height: '52px',
@@ -770,6 +775,7 @@ export const CalendarScreen: React.FC = () => {
           const todayStr = new Date().toISOString().split('T')[0];
           setSelectedDay(todayStr);
           setViewDate(new Date());
+          setIsDayModalOpen(true);
         }}
         style={{
           position: 'fixed',
@@ -790,6 +796,12 @@ export const CalendarScreen: React.FC = () => {
       >
         Today
       </button>
+
+      {/* Date Agenda Pop-up Modal */}
+      <DayAgendaModal
+        selectedDay={isDayModalOpen ? selectedDay : null}
+        onClose={() => setIsDayModalOpen(false)}
+      />
     </div>
   );
 };
