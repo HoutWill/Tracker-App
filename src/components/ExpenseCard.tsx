@@ -16,10 +16,23 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
   const isSaving = item.type === 'SAVING' || item.categoryId.startsWith('cat-saving');
   const isIncome = item.type === 'INCOME' || item.categoryId === 'cat-income';
 
-  // Strict Color Directives: Expense = RED, Saving = GREEN, Income = GREEN
-  const itemColor = isSaving || isIncome ? 'var(--accent-success)' : 'var(--accent-danger)';
-  const itemBg = isSaving || isIncome ? 'rgba(0, 230, 118, 0.12)' : 'rgba(255, 82, 82, 0.12)';
-  const itemBorder = isSaving || isIncome ? 'rgba(0, 230, 118, 0.3)' : 'rgba(255, 82, 82, 0.3)';
+  // Category Color Map (Soft Muted iOS Pastels)
+  const getCategoryTheme = () => {
+    if (isSaving) return { color: '#34D399', bg: 'rgba(52, 211, 153, 0.18)', border: 'rgba(52, 211, 153, 0.35)' };
+    if (isIncome) return { color: '#4A99E9', bg: 'rgba(74, 153, 233, 0.18)', border: 'rgba(74, 153, 233, 0.35)' };
+    switch (item.categoryName.toLowerCase()) {
+      case 'food': return { color: '#F3A85B', bg: 'rgba(243, 168, 91, 0.18)', border: 'rgba(243, 168, 91, 0.35)' };
+      case 'drink': case 'coffee': return { color: '#C88A58', bg: 'rgba(200, 138, 88, 0.18)', border: 'rgba(200, 138, 88, 0.35)' };
+      case 'transport': return { color: '#38BDF8', bg: 'rgba(56, 189, 248, 0.18)', border: 'rgba(56, 189, 248, 0.35)' };
+      case 'groceries': return { color: '#34D399', bg: 'rgba(52, 211, 153, 0.18)', border: 'rgba(52, 211, 153, 0.35)' };
+      case 'bills': return { color: '#ED6C6C', bg: 'rgba(237, 108, 108, 0.18)', border: 'rgba(237, 108, 108, 0.35)' };
+      case 'shopping': case 'party': return { color: '#EC668C', bg: 'rgba(236, 102, 140, 0.18)', border: 'rgba(236, 102, 140, 0.35)' };
+      case 'fun': case 'team': return { color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.18)', border: 'rgba(139, 92, 246, 0.35)' };
+      default: return { color: '#ED6C6C', bg: 'rgba(237, 108, 108, 0.18)', border: 'rgba(237, 108, 108, 0.35)' };
+    }
+  };
+
+  const theme = getCategoryTheme();
 
   const formattedMain = hideBalances
     ? currency === 'USD'
@@ -39,38 +52,43 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
         justifyContent: 'space-between',
         padding: '12px 14px',
         marginBottom: '10px',
+        borderRadius: '16px',
         cursor: 'pointer',
-        transition: 'transform 0.15s ease, border-color 0.15s ease',
+        transition: 'transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease',
         borderColor: 'var(--border-glass)',
+        backgroundColor: 'rgba(30, 30, 38, 0.85)',
+        backdropFilter: 'blur(16px)',
+        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
-        {/* Category Icon Container (Clean Neutral Glass Container) */}
+        {/* Category Icon Badge Circle */}
         <div
           style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '12px',
-            border: '1px solid var(--border-glass)',
-            backgroundColor: 'var(--pill-bg)',
+            width: '42px',
+            height: '42px',
+            borderRadius: '50%',
+            backgroundColor: theme.bg,
+            border: `1px solid ${theme.border}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--text-primary)',
+            color: theme.color,
             flexShrink: 0,
+            boxShadow: `0 2px 8px ${theme.color}33`,
           }}
         >
-          {isSaving ? <PiggyBank size={18} /> : <CategoryIconRenderer icon={item.categoryIcon || 'receipt-outline'} size={18} color="var(--text-primary)" />}
+          {isSaving ? <PiggyBank size={20} color={theme.color} /> : <CategoryIconRenderer icon={item.categoryIcon || 'receipt-outline'} size={20} color={theme.color} />}
         </div>
 
-        {/* Info Column (Standard Text Primary Color) */}
+        {/* Info Column */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <h4
             style={{
               fontSize: '14px',
-              fontWeight: 700,
+              fontWeight: 800,
               letterSpacing: '-0.2px',
-              marginBottom: '4px',
+              marginBottom: '3px',
               color: 'var(--text-primary)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -80,7 +98,7 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
             {item.title}
           </h4>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            {/* Category Name Badge */}
+            {/* Category Name Pill */}
             <span
               style={{
                 display: 'inline-flex',
@@ -95,40 +113,10 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
                 border: '1px solid var(--border-glass)',
               }}
             >
-              <CategoryIconRenderer icon={item.categoryIcon || 'receipt'} size={11} color="var(--text-secondary)" />
               {item.categoryName}
             </span>
 
-            {/* Type Badge: Expense = Red, Saving = Green */}
-            <span
-              style={{
-                fontSize: '10px',
-                fontWeight: 700,
-                padding: '2px 6px',
-                borderRadius: '6px',
-                backgroundColor: itemBg,
-                color: itemColor,
-                border: `1px solid ${itemBorder}`,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '3px',
-              }}
-            >
-              {isSaving ? (
-                <>
-                  <PiggyBank size={10} /> Saving
-                </>
-              ) : isIncome ? (
-                <>
-                  <ArrowUpRight size={10} /> Income
-                </>
-              ) : (
-                <>
-                  <ArrowDownRight size={10} /> Expense
-                </>
-              )}
-            </span>
-
+            {/* Payment Method Badge */}
             <span
               style={{
                 fontSize: '10px',
@@ -137,7 +125,7 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
                 borderRadius: '6px',
                 border: '1px solid var(--border-glass)',
                 backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                color: 'var(--text-secondary)',
+                color: 'var(--text-muted)',
               }}
             >
               {item.paymentMethod}
@@ -147,20 +135,20 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
       </div>
 
       {/* Right Price Column */}
-      <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, paddingLeft: '8px' }}>
         <div style={{ textAlign: 'right' }}>
           <div
             className="tabular-nums"
             style={{
-              fontSize: '14px',
-              fontWeight: 800,
+              fontSize: '15px',
+              fontWeight: 900,
               letterSpacing: '-0.3px',
-              color: itemColor,
+              color: isSaving || isIncome ? '#34D399' : '#ED6C6C',
             }}
           >
-            {isSaving ? `+${formattedMain}` : isIncome ? `+${formattedMain}` : formattedMain}
+            {isSaving ? `+${formattedMain}` : isIncome ? `+${formattedMain}` : `-${formattedMain}`}
           </div>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 600 }}>
             {secondaryVal} • {item.date}
           </div>
         </div>
