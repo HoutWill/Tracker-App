@@ -116,13 +116,40 @@ export const StorageService = {
   getCachedExpenses(): ExpenseItem[] {
     const guestId = getGuestId();
     try {
-      const local =
-        localStorage.getItem('pitrack_expenses_data') ||
-        localStorage.getItem(`expenses_${guestId}`) ||
-        localStorage.getItem('expenses');
-      if (local) {
-        return JSON.parse(local);
+      const keys = ['pitrack_expenses_data', `expenses_${guestId}`, 'expenses'];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('expenses_')) {
+          keys.push(k);
+        }
       }
+
+      const mergedMap = new Map<string, ExpenseItem>();
+      for (const key of keys) {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          try {
+            const parsed: ExpenseItem[] = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              parsed.forEach(item => {
+                if (item && item.id && !mergedMap.has(item.id)) {
+                  mergedMap.set(item.id, item);
+                }
+              });
+            }
+          } catch (e) {}
+        }
+      }
+
+      if (mergedMap.size > 0) {
+        const merged = Array.from(mergedMap.values()).sort((a, b) => b.createdAt - a.createdAt);
+        try {
+          localStorage.setItem('pitrack_expenses_data', JSON.stringify(merged));
+          localStorage.setItem(`expenses_${guestId}`, JSON.stringify(merged));
+        } catch (e) {}
+        return merged;
+      }
+
       // First time initialization ONLY
       localStorage.setItem('pitrack_expenses_data', JSON.stringify(DEFAULT_DEMO_EXPENSES));
       localStorage.setItem(`expenses_${guestId}`, JSON.stringify(DEFAULT_DEMO_EXPENSES));

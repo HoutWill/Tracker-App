@@ -95,7 +95,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           }
           const safeId = cleanEmail.replace(/[^a-z0-9]/g, '_') || 'user_1';
           const newRegUser = {
-            accountId: `usr_${safeId}_${Date.now()}`,
+            accountId: `usr_${safeId}`,
             email: cleanEmail,
             passwordHash: password,
             name: name.trim() || cleanEmail.split('@')[0],
