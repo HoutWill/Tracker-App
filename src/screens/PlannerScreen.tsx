@@ -19,7 +19,7 @@ import {
   CalendarDays,
 } from 'lucide-react';
 
-type FilterTab = 'TODAY' | 'SCHEDULED' | 'ALL' | 'FLAGGED';
+type FilterTab = 'TODAY' | 'SCHEDULED' | 'ALL' | 'FLAGGED' | 'URGENT' | 'COMPLETED';
 
 export const PlannerScreen: React.FC = () => {
   const { pageColors } = useTheme();
@@ -38,15 +38,18 @@ export const PlannerScreen: React.FC = () => {
 
   const today = getTodayDateString();
 
-  const todayReminders = reminders.filter(r => r.dueDate === today);
-  const scheduledReminders = reminders.filter(r => r.dueDate > today);
-  const flaggedReminders = reminders.filter(r => r.priority === 'HIGH');
+  const todayReminders = reminders.filter(r => r.dueDate === today && !r.completed);
+  const scheduledReminders = reminders.filter(r => r.dueDate > today && !r.completed);
+  const flaggedReminders = reminders.filter(r => r.priority === 'HIGH' && !r.completed);
+  const urgentReminders = reminders.filter(r => r.level === 'URGENT' && !r.completed);
   const completedReminders = reminders.filter(r => r.completed);
 
   const displayedReminders = reminders.filter(r => {
-    if (activeFilter === 'TODAY') return r.dueDate === today;
-    if (activeFilter === 'SCHEDULED') return r.dueDate > today;
-    if (activeFilter === 'FLAGGED') return r.priority === 'HIGH';
+    if (activeFilter === 'TODAY') return r.dueDate === today && !r.completed;
+    if (activeFilter === 'SCHEDULED') return r.dueDate > today && !r.completed;
+    if (activeFilter === 'FLAGGED') return r.priority === 'HIGH' && !r.completed;
+    if (activeFilter === 'URGENT') return r.level === 'URGENT' && !r.completed;
+    if (activeFilter === 'COMPLETED') return r.completed;
     return true; // ALL
   });
 
@@ -83,152 +86,175 @@ export const PlannerScreen: React.FC = () => {
         </button>
       </div>
 
-      {/* Hero iPhone Reminders Glass Widget Card */}
-      <div
-        className="glass-panel"
-        style={{
-          padding: '18px',
-          borderRadius: '24px',
-          borderColor: hexToRgba(pageAccent, 0.35),
-          backgroundColor: hexToRgba(pageAccent, 0.1),
-          marginBottom: '16px',
-        }}
-      >
-        {/* Widget Top Progress Ring Row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '10px',
-                backgroundColor: hexToRgba(pageAccent, 0.25),
-                color: pageAccent,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Sparkles size={16} />
+      {/* 6 iOS Reminders Category Tiles Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '18px' }}>
+        {/* Today Tile (Blue) */}
+        <button
+          type="button"
+          onClick={() => setActiveFilter('TODAY')}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '14px',
+            borderRadius: '20px',
+            border: activeFilter === 'TODAY' ? '2px solid #FFF' : 'none',
+            backgroundColor: '#1E88E5',
+            color: '#FFF',
+            textAlign: 'left',
+            cursor: 'pointer',
+            minHeight: '80px',
+            boxShadow: '0 8px 20px rgba(30, 136, 229, 0.35)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CalendarDays size={16} color="#FFF" />
             </div>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 800 }}>Widget</div>
-              <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{completedReminders.length} of {reminders.length} Done</div>
-            </div>
+            <span style={{ fontSize: '24px', fontWeight: 900 }}>{todayReminders.length}</span>
           </div>
+          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px' }}>Today</span>
+        </button>
 
-          <div
-            style={{
-              padding: '4px 10px',
-              borderRadius: '12px',
-              backgroundColor: hexToRgba(pageAccent, 0.2),
-              color: pageAccent,
-              fontSize: '12px',
-              fontWeight: 800,
-            }}
-          >
-            {completionPct}%
+        {/* Scheduled Tile (Red/Coral) */}
+        <button
+          type="button"
+          onClick={() => setActiveFilter('SCHEDULED')}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '14px',
+            borderRadius: '20px',
+            border: activeFilter === 'SCHEDULED' ? '2px solid #FFF' : 'none',
+            backgroundColor: '#E53935',
+            color: '#FFF',
+            textAlign: 'left',
+            cursor: 'pointer',
+            minHeight: '80px',
+            boxShadow: '0 8px 20px rgba(229, 57, 53, 0.35)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Calendar size={16} color="#FFF" />
+            </div>
+            <span style={{ fontSize: '24px', fontWeight: 900 }}>{scheduledReminders.length}</span>
           </div>
-        </div>
+          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px' }}>Scheduled</span>
+        </button>
 
-        {/* 4 iOS Reminders Category Tiles (2x2 Grid) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          {/* Today Tile */}
-          <button
-            type="button"
-            onClick={() => setActiveFilter('TODAY')}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              padding: '12px',
-              borderRadius: '16px',
-              border: activeFilter === 'TODAY' ? `2px solid ${pageAccent}` : '1px solid var(--border-glass)',
-              backgroundColor: activeFilter === 'TODAY' ? hexToRgba(pageAccent, 0.2) : 'rgba(255, 255, 255, 0.05)',
-              textAlign: 'left',
-              cursor: 'pointer',
-              minHeight: '70px',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <CalendarDays size={18} color="var(--accent-success)" />
-              <span style={{ fontSize: '18px', fontWeight: 900 }}>{todayReminders.length}</span>
+        {/* All Tile (Dark Grey) */}
+        <button
+          type="button"
+          onClick={() => setActiveFilter('ALL')}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '14px',
+            borderRadius: '20px',
+            border: activeFilter === 'ALL' ? '2px solid #FFF' : 'none',
+            backgroundColor: '#2A2A2E',
+            color: '#FFF',
+            textAlign: 'left',
+            cursor: 'pointer',
+            minHeight: '80px',
+            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.4)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Inbox size={16} color="#FFF" />
             </div>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', marginTop: '6px' }}>Today</span>
-          </button>
+            <span style={{ fontSize: '24px', fontWeight: 900 }}>{reminders.length}</span>
+          </div>
+          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px' }}>All</span>
+        </button>
 
-          {/* Scheduled Tile */}
-          <button
-            type="button"
-            onClick={() => setActiveFilter('SCHEDULED')}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              padding: '12px',
-              borderRadius: '16px',
-              border: activeFilter === 'SCHEDULED' ? `2px solid ${pageAccent}` : '1px solid var(--border-glass)',
-              backgroundColor: activeFilter === 'SCHEDULED' ? hexToRgba(pageAccent, 0.2) : 'rgba(255, 255, 255, 0.05)',
-              textAlign: 'left',
-              cursor: 'pointer',
-              minHeight: '70px',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Clock size={18} color="var(--accent)" />
-              <span style={{ fontSize: '18px', fontWeight: 900 }}>{scheduledReminders.length}</span>
+        {/* Flagged Tile (Amber/Orange) */}
+        <button
+          type="button"
+          onClick={() => setActiveFilter('FLAGGED')}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '14px',
+            borderRadius: '20px',
+            border: activeFilter === 'FLAGGED' ? '2px solid #FFF' : 'none',
+            backgroundColor: '#FB8C00',
+            color: '#FFF',
+            textAlign: 'left',
+            cursor: 'pointer',
+            minHeight: '80px',
+            boxShadow: '0 8px 20px rgba(251, 140, 0, 0.35)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Flag size={16} color="#FFF" />
             </div>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', marginTop: '6px' }}>Scheduled</span>
-          </button>
+            <span style={{ fontSize: '24px', fontWeight: 900 }}>{flaggedReminders.length}</span>
+          </div>
+          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px' }}>Flagged</span>
+        </button>
 
-          {/* All Tile */}
-          <button
-            type="button"
-            onClick={() => setActiveFilter('ALL')}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              padding: '12px',
-              borderRadius: '16px',
-              border: activeFilter === 'ALL' ? `2px solid ${pageAccent}` : '1px solid var(--border-glass)',
-              backgroundColor: activeFilter === 'ALL' ? hexToRgba(pageAccent, 0.2) : 'rgba(255, 255, 255, 0.05)',
-              textAlign: 'left',
-              cursor: 'pointer',
-              minHeight: '70px',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Inbox size={18} color="var(--text-primary)" />
-              <span style={{ fontSize: '18px', fontWeight: 900 }}>{reminders.length}</span>
+        {/* Urgent Tile (Pink/Magenta) */}
+        <button
+          type="button"
+          onClick={() => setActiveFilter('URGENT')}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '14px',
+            borderRadius: '20px',
+            border: activeFilter === 'URGENT' ? '2px solid #FFF' : 'none',
+            backgroundColor: '#FF4081',
+            color: '#FFF',
+            textAlign: 'left',
+            cursor: 'pointer',
+            minHeight: '80px',
+            boxShadow: '0 8px 20px rgba(255, 64, 129, 0.35)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Clock size={16} color="#FFF" />
             </div>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', marginTop: '6px' }}>All</span>
-          </button>
+            <span style={{ fontSize: '24px', fontWeight: 900 }}>{urgentReminders.length}</span>
+          </div>
+          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px' }}>Urgent</span>
+        </button>
 
-          {/* Flagged Tile */}
-          <button
-            type="button"
-            onClick={() => setActiveFilter('FLAGGED')}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              padding: '12px',
-              borderRadius: '16px',
-              border: activeFilter === 'FLAGGED' ? `2px solid ${pageAccent}` : '1px solid var(--border-glass)',
-              backgroundColor: activeFilter === 'FLAGGED' ? hexToRgba(pageAccent, 0.2) : 'rgba(255, 255, 255, 0.05)',
-              textAlign: 'left',
-              cursor: 'pointer',
-              minHeight: '70px',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Flag size={18} color="var(--accent-warning)" />
-              <span style={{ fontSize: '18px', fontWeight: 900 }}>{flaggedReminders.length}</span>
+        {/* Completed Tile (Slate Grey) */}
+        <button
+          type="button"
+          onClick={() => setActiveFilter('COMPLETED')}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '14px',
+            borderRadius: '20px',
+            border: activeFilter === 'COMPLETED' ? '2px solid #FFF' : 'none',
+            backgroundColor: '#546E7A',
+            color: '#FFF',
+            textAlign: 'left',
+            cursor: 'pointer',
+            minHeight: '80px',
+            boxShadow: '0 8px 20px rgba(84, 110, 122, 0.35)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Check size={16} color="#FFF" />
             </div>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', marginTop: '6px' }}>Flagged</span>
-          </button>
-        </div>
+            <span style={{ fontSize: '24px', fontWeight: 900 }}>{completedReminders.length}</span>
+          </div>
+          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px' }}>Completed</span>
+        </button>
       </div>
 
       {/* Reminders & Todo Checklist Header */}
@@ -278,17 +304,38 @@ export const PlannerScreen: React.FC = () => {
                 </button>
 
                 <div style={{ flex: 1, overflow: 'hidden' }}>
-                  <div
-                    style={{
-                      fontSize: '14px',
-                      fontWeight: 800,
-                      textDecoration: r.completed ? 'line-through' : 'none',
-                      color: r.completed ? 'var(--text-muted)' : 'var(--text-primary)',
-                    }}
-                  >
-                    {r.title}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: 800,
+                        textDecoration: r.completed ? 'line-through' : 'none',
+                        color: r.completed ? 'var(--text-muted)' : 'var(--text-primary)',
+                      }}
+                    >
+                      {r.title}
+                    </span>
+                    {r.level === 'URGENT' && (
+                      <span
+                        style={{
+                          fontSize: '9px',
+                          fontWeight: 800,
+                          padding: '1px 6px',
+                          borderRadius: '6px',
+                          backgroundColor: 'rgba(255, 64, 129, 0.2)',
+                          color: '#FF4081',
+                        }}
+                      >
+                        Urgent
+                      </span>
+                    )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                  {r.notes && (
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', fontWeight: 500 }}>
+                      {r.notes}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                     <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
                       <Calendar size={11} /> {r.dueDate} {r.dueTime ? `@ ${r.dueTime}` : ''}
                     </span>

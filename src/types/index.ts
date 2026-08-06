@@ -57,10 +57,12 @@ export interface TripFolder {
 export interface ReminderItem {
   id: string;
   title: string;
+  notes?: string;
   dueDate: string; // YYYY-MM-DD
   dueTime?: string; // HH:mm
   category: 'BILLS' | 'SAVINGS' | 'TASK';
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  level: 'URGENT' | 'SIMPLE';
   completed: boolean;
   alertEnabled: boolean;
   createdAt: number;

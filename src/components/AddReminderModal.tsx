@@ -7,8 +7,9 @@ export const AddReminderModal: React.FC = () => {
   const { isAddReminderOpen, setIsAddReminderOpen, addReminder } = useReminders();
 
   const [title, setTitle] = useState('');
+  const [notes, setNotes] = useState('');
+  const [level, setLevel] = useState<'URGENT' | 'SIMPLE'>('SIMPLE');
   const [category, setCategory] = useState<'BILLS' | 'SAVINGS' | 'TASK'>('BILLS');
-  const [priority, setPriority] = useState<'HIGH' | 'MEDIUM' | 'LOW'>('MEDIUM');
   const [dueDate, setDueDate] = useState(getTodayDateString());
   const [dueTime, setDueTime] = useState('12:00');
   const [alertEnabled, setAlertEnabled] = useState(true);
@@ -21,14 +22,17 @@ export const AddReminderModal: React.FC = () => {
 
     addReminder({
       title: title.trim(),
+      notes: notes.trim(),
       category,
-      priority,
+      priority: level === 'URGENT' ? 'HIGH' : 'MEDIUM',
+      level,
       dueDate,
       dueTime,
       alertEnabled,
     });
 
     setTitle('');
+    setNotes('');
     setIsAddReminderOpen(false);
   };
 
@@ -99,6 +103,68 @@ export const AddReminderModal: React.FC = () => {
           />
         </div>
 
+        {/* Notes Input Pill */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Notes</label>
+          <input
+            type="text"
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="Details"
+            style={{
+              width: '100%',
+              padding: '10px 16px',
+              borderRadius: '20px',
+              border: '1px solid var(--border-glass)',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              color: 'var(--text-primary)',
+              fontSize: '13px',
+              outline: 'none',
+            }}
+          />
+        </div>
+
+        {/* Level Switcher (Urgent vs Simple) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Type</label>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={() => setLevel('URGENT')}
+              style={{
+                flex: 1,
+                padding: '8px 0',
+                borderRadius: '16px',
+                border: level === 'URGENT' ? '1px solid #FF4081' : '1px solid var(--border-glass)',
+                backgroundColor: level === 'URGENT' ? 'rgba(255, 64, 129, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                color: level === 'URGENT' ? '#FF4081' : 'var(--text-secondary)',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              Urgent
+            </button>
+            <button
+              type="button"
+              onClick={() => setLevel('SIMPLE')}
+              style={{
+                flex: 1,
+                padding: '8px 0',
+                borderRadius: '16px',
+                border: level === 'SIMPLE' ? '1px solid var(--accent)' : '1px solid var(--border-glass)',
+                backgroundColor: level === 'SIMPLE' ? 'var(--accent)' : 'rgba(255, 255, 255, 0.05)',
+                color: level === 'SIMPLE' ? '#FFF' : 'var(--text-secondary)',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              Simple
+            </button>
+          </div>
+        </div>
+
         {/* Category Pill Switcher */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Category</label>
@@ -121,33 +187,6 @@ export const AddReminderModal: React.FC = () => {
                 }}
               >
                 {cat === 'BILLS' ? 'Bills' : cat === 'SAVINGS' ? 'Savings' : 'Task'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Priority Selector */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Priority</label>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            {(['HIGH', 'MEDIUM', 'LOW'] as const).map(pri => (
-              <button
-                key={pri}
-                type="button"
-                onClick={() => setPriority(pri)}
-                style={{
-                  flex: 1,
-                  padding: '6px 0',
-                  borderRadius: '14px',
-                  border: '1px solid var(--border-glass)',
-                  backgroundColor: priority === pri ? 'rgba(46, 170, 220, 0.2)' : 'transparent',
-                  color: priority === pri ? 'var(--accent)' : 'var(--text-muted)',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                {pri === 'HIGH' ? 'High' : pri === 'MEDIUM' ? 'Medium' : 'Low'}
               </button>
             ))}
           </div>
