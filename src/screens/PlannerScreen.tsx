@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useReminders } from '../context/ReminderContext';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { getTodayDateString } from '../services/storageService';
+import { ReminderDetailModal } from '../components/ReminderDetailModal';
+import { ReminderItem } from '../types';
 import {
   Bell,
   CheckSquare,
@@ -17,6 +19,9 @@ import {
   Flag,
   Inbox,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Info,
 } from 'lucide-react';
 
 type FilterTab = 'TODAY' | 'SCHEDULED' | 'ALL' | 'FLAGGED' | 'URGENT' | 'COMPLETED';
@@ -34,7 +39,13 @@ export const PlannerScreen: React.FC = () => {
     requestNotificationPermission,
   } = useReminders();
 
+  const [plannerTab, setPlannerTab] = useState<'REMINDERS' | 'CALENDAR'>('REMINDERS');
   const [activeFilter, setActiveFilter] = useState<FilterTab>('TODAY');
+  const [selectedReminderForDetail, setSelectedReminderForDetail] = useState<ReminderItem | null>(null);
+
+  // Planner Calendar View State
+  const [calViewDate, setCalViewDate] = useState<Date>(new Date());
+  const [calSelectedDate, setCalSelectedDate] = useState<string>(getTodayDateString());
 
   const today = getTodayDateString();
 
@@ -55,10 +66,28 @@ export const PlannerScreen: React.FC = () => {
 
   const completionPct = reminders.length > 0 ? Math.round((completedReminders.length / reminders.length) * 100) : 0;
 
+  // Calendar Math inside Planner
+  const year = calViewDate.getFullYear();
+  const month = calViewDate.getMonth();
+  const firstDayOfWeek = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const emptyLeadingCells = Array.from({ length: firstDayOfWeek });
+
+  const calDays: Array<{ dateStr: string; dayNum: number; dayReminders: ReminderItem[] }> = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const monthStr = (month + 1).toString().padStart(2, '0');
+    const dayStr = d.toString().padStart(2, '0');
+    const dateStr = `${year}-${monthStr}-${dayStr}`;
+    const dayReminders = reminders.filter(r => r.dueDate === dateStr);
+    calDays.push({ dateStr, dayNum: d, dayReminders });
+  }
+
+  const selectedCalReminders = reminders.filter(r => r.dueDate === calSelectedDate);
+
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
       {/* Header Title Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
         <div>
           <h2 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--text-primary)' }}>Planner</h2>
           <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Reminders, Todos & Alerts</p>
@@ -85,6 +114,67 @@ export const PlannerScreen: React.FC = () => {
           <span>{isNotificationEnabled ? 'Alerts' : 'Enable'}</span>
         </button>
       </div>
+
+      {/* Top Segmented Tab Switcher (Reminders vs Calendar) */}
+      <div
+        className="glass-panel"
+        style={{
+          display: 'flex',
+          padding: '4px',
+          borderRadius: '18px',
+          marginBottom: '16px',
+          backgroundColor: 'rgba(255, 255, 255, 0.04)',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setPlannerTab('REMINDERS')}
+          style={{
+            flex: 1,
+            padding: '8px 0',
+            borderRadius: '14px',
+            border: plannerTab === 'REMINDERS' ? '1px solid var(--accent)' : 'none',
+            backgroundColor: plannerTab === 'REMINDERS' ? 'var(--accent)' : 'transparent',
+            color: plannerTab === 'REMINDERS' ? '#FFF' : 'var(--text-secondary)',
+            fontSize: '12px',
+            fontWeight: 800,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+          }}
+        >
+          <Bell size={14} />
+          <span>Reminders</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setPlannerTab('CALENDAR')}
+          style={{
+            flex: 1,
+            padding: '8px 0',
+            borderRadius: '14px',
+            border: plannerTab === 'CALENDAR' ? '1px solid var(--accent)' : 'none',
+            backgroundColor: plannerTab === 'CALENDAR' ? 'var(--accent)' : 'transparent',
+            color: plannerTab === 'CALENDAR' ? '#FFF' : 'var(--text-secondary)',
+            fontSize: '12px',
+            fontWeight: 800,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+          }}
+        >
+          <Calendar size={14} />
+          <span>Calendar</span>
+        </button>
+      </div>
+
+      {plannerTab === 'REMINDERS' ? (
+        <>
 
       {/* 6 iOS Reminders Category Tiles Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '18px' }}>
@@ -303,7 +393,10 @@ export const PlannerScreen: React.FC = () => {
                   {r.completed ? <CheckSquare size={22} /> : <Square size={22} />}
                 </button>
 
-                <div style={{ flex: 1, overflow: 'hidden' }}>
+                <div
+                  style={{ flex: 1, overflow: 'hidden', cursor: 'pointer' }}
+                  onClick={() => setSelectedReminderForDetail(r)}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span
                       style={{
@@ -381,6 +474,16 @@ export const PlannerScreen: React.FC = () => {
                 </div>
               </div>
 
+              {/* Info Detail Icon Button */}
+              <button
+                type="button"
+                onClick={() => setSelectedReminderForDetail(r)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+                title="Detail"
+              >
+                <Info size={16} />
+              </button>
+
               {/* Delete Button */}
               <button
                 type="button"
@@ -398,6 +501,177 @@ export const PlannerScreen: React.FC = () => {
           </div>
         )}
       </div>
+      </>
+      ) : (
+        /* PLANNER CALENDAR TAB VIEW */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Calendar Month Header Switcher */}
+          <div
+            className="glass-panel"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '12px 16px',
+              borderRadius: '20px',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setCalViewDate(new Date(year, month - 1, 1))}
+              style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}
+            >
+              <ChevronLeft size={20} />
+            </button>
+
+            <span style={{ fontSize: '16px', fontWeight: 800 }}>
+              {calViewDate.toLocaleString('default', { month: 'long' })} {year}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setCalViewDate(new Date(year, month + 1, 1))}
+              style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+
+          {/* Month Grid */}
+          <div className="glass-panel" style={{ padding: '14px', borderRadius: '20px' }}>
+            {/* Weekday headers */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '8px' }}>
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                <div key={d} style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)' }}>
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            {/* Grid cells */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+              {emptyLeadingCells.map((_, i) => (
+                <div key={'empty-' + i} style={{ height: '48px' }} />
+              ))}
+
+              {calDays.map(item => {
+                const isSel = calSelectedDate === item.dateStr;
+                const isToday = item.dateStr === today;
+                const count = item.dayReminders.length;
+                const hasUrgent = item.dayReminders.some(r => r.level === 'URGENT' && !r.completed);
+
+                return (
+                  <div
+                    key={item.dateStr}
+                    onClick={() => setCalSelectedDate(item.dateStr)}
+                    style={{
+                      height: '48px',
+                      borderRadius: '12px',
+                      border: isSel ? '2px solid var(--accent)' : '1px solid var(--border-glass)',
+                      backgroundColor: isSel
+                        ? 'rgba(46, 170, 220, 0.25)'
+                        : isToday
+                        ? 'rgba(255, 64, 129, 0.15)'
+                        : count > 0
+                        ? 'rgba(255, 255, 255, 0.06)'
+                        : 'transparent',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '2px',
+                      cursor: 'pointer',
+                      position: 'relative',
+                    }}
+                  >
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: isToday ? '#FF4081' : 'var(--text-primary)' }}>
+                      {item.dayNum}
+                    </span>
+
+                    {count > 0 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                        <span
+                          style={{
+                            fontSize: '8px',
+                            fontWeight: 800,
+                            padding: '0 4px',
+                            borderRadius: '4px',
+                            backgroundColor: hasUrgent ? '#FF4081' : 'var(--accent)',
+                            color: '#FFF',
+                          }}
+                        >
+                          {count}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Selected Date Tasks Agenda */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 4px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 800 }}>Tasks on {calSelectedDate}</h3>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>
+                {selectedCalReminders.length} Tasks
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {selectedCalReminders.length > 0 ? (
+                selectedCalReminders.map(r => (
+                  <div
+                    key={r.id}
+                    className="glass-panel"
+                    onClick={() => setSelectedReminderForDetail(r)}
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '12px',
+                      borderLeft: r.level === 'URGENT' ? '4px solid #FF4081' : '4px solid var(--accent)',
+                      cursor: 'pointer',
+                      opacity: r.completed ? 0.6 : 1,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          toggleReminder(r.id);
+                        }}
+                        style={{ background: 'none', border: 'none', color: r.completed ? 'var(--accent-success)' : 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
+                      >
+                        {r.completed ? <CheckSquare size={20} /> : <Square size={20} />}
+                      </button>
+                      <div>
+                        <div style={{ fontSize: '14px', fontWeight: 800, textDecoration: r.completed ? 'line-through' : 'none' }}>
+                          {r.title}
+                        </div>
+                        {r.notes && <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{r.notes}</div>}
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>{r.dueTime || 'Task'}</div>
+                      <div style={{ fontSize: '9px', fontWeight: 800, color: 'var(--accent)', marginTop: '2px' }}>{r.category}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+                  No tasks scheduled on {calSelectedDate}.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating Action Button (FAB) to Add Reminder */}
       <button
@@ -423,6 +697,12 @@ export const PlannerScreen: React.FC = () => {
       >
         <Plus size={26} />
       </button>
+
+      {/* Reminder Detail Modal */}
+      <ReminderDetailModal
+        reminder={selectedReminderForDetail}
+        onClose={() => setSelectedReminderForDetail(null)}
+      />
     </div>
   );
 };

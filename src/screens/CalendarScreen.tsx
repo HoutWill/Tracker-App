@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
-import { useReminders } from '../context/ReminderContext';
 import { formatCurrency } from '../services/storageService';
 import { getDateDetails, CAMBODIA_NATIONAL_HOLIDAYS, WORLD_CELEBRATION_DAYS } from '../services/khmerCalendarService';
 import { ExpenseCard } from '../components/ExpenseCard';
 import { BuddhaIcon, BenOfferingIcon, CambodiaFlagBadge } from '../components/CalendarCustomIcons';
-import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Flag, Sparkles, Sun, Heart, Globe, Users, Bell, CheckSquare, Square, Trash2 } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Flag, Sparkles, Sun, Heart, Globe, Users } from 'lucide-react';
 
 type CalendarViewMode = 'YEAR' | 'MONTH';
 
@@ -21,7 +20,6 @@ const SHORT_MONTH_NAMES = [
 
 export const CalendarScreen: React.FC = () => {
   const { expenses, currency, hideBalances, setSelectedExpenseForEdit } = useExpenses();
-  const { reminders, toggleReminder, deleteReminder } = useReminders();
 
   const [viewMode, setViewMode] = useState<CalendarViewMode>('MONTH');
   const [viewDate, setViewDate] = useState<Date>(new Date());
@@ -595,8 +593,8 @@ export const CalendarScreen: React.FC = () => {
                     {isHoliday && <CambodiaFlagBadge size={11} />}
                     {isBuddhaDay && !isHoliday && <BuddhaIcon size={12} color="#F39C12" />}
                     {isCultural && !isHoliday && !isBuddhaDay && <BenOfferingIcon size={11} color="#2980B9" />}
-                    {reminders.some(r => r.dueDate === item.dateStr && !r.completed) && (
-                      <Bell size={10} color="#FF4081" />
+                    {item.dateDetails.worldDay && !isHoliday && !isBuddhaDay && !isCultural && (
+                      <span style={{ fontSize: '9px', lineHeight: 1 }}>{item.dateDetails.worldDay.emoji || '💖'}</span>
                     )}
                   </div>
 
@@ -619,67 +617,6 @@ export const CalendarScreen: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Selected Day Reminders & Tasks Section */}
-      {(() => {
-        const dayReminders = reminders.filter(r => r.dueDate === selectedDay);
-        if (dayReminders.length === 0) return null;
-        return (
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Bell size={14} color="#FF4081" />
-                <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Reminders on {selectedDay}</h4>
-              </div>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>
-                {dayReminders.length} Tasks
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {dayReminders.map(r => (
-                <div
-                  key={r.id}
-                  className="glass-panel"
-                  style={{
-                    padding: '12px 14px',
-                    borderRadius: '16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '10px',
-                    opacity: r.completed ? 0.6 : 1,
-                    border: r.completed ? '1px solid var(--border-glass)' : '1px solid rgba(255, 64, 129, 0.4)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, overflow: 'hidden' }}>
-                    <button
-                      type="button"
-                      onClick={() => toggleReminder(r.id)}
-                      style={{ background: 'none', border: 'none', color: r.completed ? 'var(--accent-success)' : 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
-                    >
-                      {r.completed ? <CheckSquare size={20} /> : <Square size={20} />}
-                    </button>
-                    <div style={{ flex: 1, overflow: 'hidden' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 800, textDecoration: r.completed ? 'line-through' : 'none' }}>
-                          {r.title}
-                        </span>
-                        {r.level === 'URGENT' && (
-                          <span style={{ fontSize: '8px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: 'rgba(255, 64, 129, 0.2)', color: '#FF4081' }}>
-                            Urgent
-                          </span>
-                        )}
-                      </div>
-                      {r.notes && <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{r.notes}</div>}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Selected Day Details Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 4px' }}>
