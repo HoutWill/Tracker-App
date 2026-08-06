@@ -111,8 +111,7 @@ export const AppContent: React.FC = () => {
         }}
       >
         {[
-          { id: 'EXPENSES', label: 'Expenses', icon: CreditCard },
-          { id: 'SAVINGS', label: 'Saving', icon: PiggyBank },
+          { id: 'EXPENSES', label: 'Wallet', icon: CreditCard },
           { id: 'STATS', label: 'Stats', icon: BarChart3 },
           { id: 'PLANNER', label: 'Planner', icon: Bell },
           { id: 'CALENDAR', label: 'Calendar', icon: Calendar },
