@@ -64,7 +64,7 @@ export interface ReminderItem {
   dueTime?: string; // HH:mm
   category: ReminderCategory;
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
-  level: 'URGENT' | 'SIMPLE';
+  level: 'URGENT' | 'FLAGGED' | 'SIMPLE';
   completed: boolean;
   alertEnabled: boolean;
   createdAt: number;

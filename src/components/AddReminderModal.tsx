@@ -9,7 +9,7 @@ export const AddReminderModal: React.FC = () => {
 
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
-  const [level, setLevel] = useState<'URGENT' | 'SIMPLE'>('SIMPLE');
+  const [level, setLevel] = useState<'URGENT' | 'FLAGGED' | 'SIMPLE'>('SIMPLE');
   const [category, setCategory] = useState<ReminderCategory>('TASK');
   const [dueDate, setDueDate] = useState(getTodayDateString());
   const [dueTime, setDueTime] = useState('12:00');
@@ -25,7 +25,7 @@ export const AddReminderModal: React.FC = () => {
       title: title.trim(),
       notes: notes.trim(),
       category,
-      priority: level === 'URGENT' ? 'HIGH' : 'MEDIUM',
+      priority: level === 'SIMPLE' ? 'LOW' : 'HIGH',
       level,
       dueDate,
       dueTime,
@@ -125,27 +125,10 @@ export const AddReminderModal: React.FC = () => {
           />
         </div>
 
-        {/* Level Switcher (Urgent vs Simple) */}
+        {/* Level Switcher (Simple, Flagged, Urgent) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Type</label>
           <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              type="button"
-              onClick={() => setLevel('URGENT')}
-              style={{
-                flex: 1,
-                padding: '8px 0',
-                borderRadius: '16px',
-                border: level === 'URGENT' ? '1px solid #FF4081' : '1px solid var(--border-glass)',
-                backgroundColor: level === 'URGENT' ? 'rgba(255, 64, 129, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                color: level === 'URGENT' ? '#FF4081' : 'var(--text-secondary)',
-                fontSize: '12px',
-                fontWeight: 800,
-                cursor: 'pointer',
-              }}
-            >
-              Urgent
-            </button>
             <button
               type="button"
               onClick={() => setLevel('SIMPLE')}
@@ -162,6 +145,42 @@ export const AddReminderModal: React.FC = () => {
               }}
             >
               Simple
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setLevel('FLAGGED')}
+              style={{
+                flex: 1,
+                padding: '8px 0',
+                borderRadius: '16px',
+                border: level === 'FLAGGED' ? '1px solid #FB8C00' : '1px solid var(--border-glass)',
+                backgroundColor: level === 'FLAGGED' ? 'rgba(251, 140, 0, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                color: level === 'FLAGGED' ? '#FB8C00' : 'var(--text-secondary)',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              Flagged
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setLevel('URGENT')}
+              style={{
+                flex: 1,
+                padding: '8px 0',
+                borderRadius: '16px',
+                border: level === 'URGENT' ? '1px solid #FF4081' : '1px solid var(--border-glass)',
+                backgroundColor: level === 'URGENT' ? 'rgba(255, 64, 129, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                color: level === 'URGENT' ? '#FF4081' : 'var(--text-secondary)',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              Urgent
             </button>
           </div>
         </div>

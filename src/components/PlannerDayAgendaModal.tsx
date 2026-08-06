@@ -56,6 +56,7 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
 
   const getCategoryBarColor = (category: string, level?: string) => {
     if (level === 'URGENT') return '#FF4081';
+    if (level === 'FLAGGED') return '#FB8C00';
     switch (category) {
       case 'BILLS': return '#E53935';
       case 'SAVINGS': return '#00E676';
