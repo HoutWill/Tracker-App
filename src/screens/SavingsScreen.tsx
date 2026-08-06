@@ -4,6 +4,7 @@ import { useTheme, hexToRgba, getPresetColor } from '../context/ThemeContext';
 import { ExpenseCard } from '../components/ExpenseCard';
 import { FilterControlBar } from '../components/FilterControlBar';
 import { TripFolderBar } from '../components/TripFolderBar';
+import { ArtPresetGrid } from '../components/ArtPresetGrid';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { SAVING_QUICK_PRESETS } from '../constants/presets';
 import { formatCurrency, StorageService } from '../services/storageService';
@@ -516,69 +517,15 @@ export const SavingsScreen: React.FC = () => {
       {/* Saving Folder Vault & Target Organizer Bar */}
       <TripFolderBar type="SAVING" />
 
-      {/* Grid 1-Tap Savings Quick Log Section with Vibrant Colorful Icons */}
-      <div style={{ marginBottom: '18px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Zap size={16} color={pageAccent} />
-            <h3 style={{ fontSize: '15px', fontWeight: 800 }}>Presets</h3>
-          </div>
-          <button
-            className="glass-pill"
-            onClick={() => setIsCreatingPreset(true)}
-            style={{ fontSize: '11px', padding: '4px 10px', color: pageAccent, borderColor: hexToRgba(pageAccent, 0.4) }}
-          >
-            <Plus size={12} /> Add
-          </button>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-          {presetsList.map((preset, idx) => {
-            const tileColor = getPresetColor(idx + 1); // Offset by 1 for distinct colorful distribution
-            return (
-              <button
-                key={preset.id}
-                className="glass-panel"
-                onClick={() => handleOpenPresetModal(preset)}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '12px 8px',
-                  cursor: 'pointer',
-                  borderColor: hexToRgba(tileColor, 0.35),
-                  backgroundColor: hexToRgba(tileColor, 0.08),
-                  textAlign: 'center',
-                  gap: '6px',
-                }}
-              >
-                <div
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '11px',
-                    border: `1px solid ${hexToRgba(tileColor, 0.4)}`,
-                    backgroundColor: hexToRgba(tileColor, 0.2),
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: tileColor,
-                  }}
-                >
-                  <CategoryIconRenderer icon={preset.icon} size={18} color={tileColor} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '12px', fontWeight: 700, lineHeight: '1.2' }}>{preset.title}</div>
-                  <div className="tabular-nums" style={{ fontSize: '11px', fontWeight: 800, color: tileColor, marginTop: '2px' }}>
-                    +{formatCurrency(preset.amount, currency)}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* Futuristic 3D Neo-Glass Art Preset Grid */}
+      <ArtPresetGrid
+        presetsList={presetsList}
+        currency={currency}
+        pageAccent={pageAccent}
+        onSelectPreset={handleOpenPresetModal}
+        onAddPreset={() => setIsCreatingPreset(true)}
+        colorOffset={1}
+      />
 
       {/* Add New Savings Preset Modal */}
       {isCreatingPreset && (
