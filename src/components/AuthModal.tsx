@@ -273,8 +273,53 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         ) : (
           /* Clean Mobile Pill Login / Sign Up Form */
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* Character Laptop Illustration Decoration */}
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 -4px 0' }}>
+              <svg width="110" height="100" viewBox="0 0 160 145" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Headphones */}
+                <path d="M 46 45 C 46 16, 114 16, 114 45" stroke="var(--text-primary)" strokeWidth="3" fill="none" />
+                <rect x="42" y="42" width="7" height="18" rx="3.5" fill="var(--text-primary)" />
+                <rect x="111" y="42" width="7" height="18" rx="3.5" fill="var(--text-primary)" />
+                
+                {/* Hair */}
+                <path d="M 52 46 C 48 30, 62 20, 75 20 C 85 20, 95 18, 108 30 C 114 40, 108 50, 108 50" stroke="var(--text-primary)" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                <path d="M 58 35 Q 70 24 80 25 Q 92 24 102 35" stroke="var(--text-primary)" strokeWidth="2" strokeLinecap="round" fill="none" />
+                
+                {/* Head */}
+                <circle cx="80" cy="50" r="22" stroke="var(--text-primary)" strokeWidth="2.5" fill="none" />
+                
+                {/* Glasses */}
+                <circle cx="71" cy="50" r="7.5" stroke="var(--text-primary)" strokeWidth="2" fill="none" />
+                <circle cx="89" cy="50" r="7.5" stroke="var(--text-primary)" strokeWidth="2" fill="none" />
+                <line x1="78.5" y1="50" x2="81.5" y2="50" stroke="var(--text-primary)" strokeWidth="2" />
+                <line x1="49" y1="48" x2="63.5" y2="50" stroke="var(--text-primary)" strokeWidth="1.5" />
+                <line x1="96.5" y1="50" x2="111" y2="48" stroke="var(--text-primary)" strokeWidth="1.5" />
+
+                {/* Eyes dots & Smile */}
+                <circle cx="71" cy="50" r="2" fill="var(--text-primary)" />
+                <circle cx="89" cy="50" r="2" fill="var(--text-primary)" />
+                <path d="M 76 60 Q 80 64 84 60" stroke="var(--text-primary)" strokeWidth="2" strokeLinecap="round" fill="none" />
+
+                {/* Body / Shirt */}
+                <path d="M 58 72 C 58 72, 68 70, 80 70 C 92 70, 102 72, 102 72 L 112 102 L 48 102 Z" stroke="var(--text-primary)" strokeWidth="2.5" fill="none" strokeLinejoin="round" />
+                <path d="M 72 70 L 72 78 M 88 70 L 88 78" stroke="var(--text-primary)" strokeWidth="1.5" />
+
+                {/* Waving Arm */}
+                <path d="M 58 76 Q 38 68 32 52" stroke="var(--text-primary)" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                <path d="M 32 52 Q 28 46 32 42 Q 36 46 36 50" stroke="var(--text-primary)" strokeWidth="2" fill="none" />
+
+                {/* Laptop Base & Screen */}
+                <path d="M 52 98 L 108 98 L 102 120 L 58 120 Z" fill="var(--text-primary)" />
+                <circle cx="80" cy="109" r="3" fill="var(--bg-glass)" />
+                <path d="M 44 120 L 116 120 C 118 120, 118 123, 114 123 L 46 123 C 42 123, 42 120, 44 120 Z" fill="var(--text-primary)" />
+
+                {/* Crossed Legs */}
+                <path d="M 36 126 Q 80 142 124 126" stroke="var(--text-primary)" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+              </svg>
+            </div>
+
             {/* Bold Centered Title */}
-            <h2 style={{ fontSize: '22px', fontWeight: 900, textAlign: 'center', margin: '4px 0 8px 0', color: 'var(--text-primary)' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: 900, textAlign: 'center', margin: '0 0 4px 0', color: 'var(--text-primary)' }}>
               {tab === 'LOGIN' ? 'Login' : 'Sign Up'}
             </h2>
 
