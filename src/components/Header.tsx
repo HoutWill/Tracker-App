@@ -20,6 +20,7 @@ export const Header: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('user_account');
+    localStorage.removeItem('auth_token');
     localStorage.removeItem('guest_device_id');
     setUserAccount(null);
     window.location.reload();

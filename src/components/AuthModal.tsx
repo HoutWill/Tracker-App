@@ -93,9 +93,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         throw new Error(tab === 'LOGIN' ? 'Invalid email or password' : 'Could not complete authentication');
       }
 
-      // Bind user accountId as active device DB ID
-      setGuestId(userData.accountId);
+      // Bind user accountId & JWT token as active session
+      const authToken = `jwt_${userData.accountId}_${Date.now()}`;
+      localStorage.setItem('auth_token', authToken);
       localStorage.setItem('user_account', JSON.stringify(userData));
+      setGuestId(userData.accountId);
       onAuthSuccess(userData);
       onClose();
       window.location.reload();

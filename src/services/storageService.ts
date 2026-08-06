@@ -12,14 +12,21 @@ export const formatCurrency = (amountUSD: number, currency: CurrencyCode): strin
 
 export const getGuestId = (): string => {
   try {
+    const userAcc = localStorage.getItem('user_account');
+    if (userAcc) {
+      const parsed = JSON.parse(userAcc);
+      if (parsed && parsed.accountId) {
+        return parsed.accountId;
+      }
+    }
     let gid = localStorage.getItem('guest_device_id');
     if (!gid) {
-      gid = 'guest_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+      gid = 'usr_session_' + Math.random().toString(36).substring(2, 10);
       localStorage.setItem('guest_device_id', gid);
     }
     return gid;
   } catch (e) {
-    return 'guest_default';
+    return 'usr_default';
   }
 };
 
