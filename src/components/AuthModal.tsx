@@ -41,20 +41,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const cleanEmail = email.trim().toLowerCase();
     const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!cleanEmail || !EMAIL_REGEX.test(cleanEmail)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    if (!password || password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
+    // Security: Zero information leakage on Login form
+    if (tab === 'LOGIN') {
+      if (!cleanEmail || !password) {
+        setError('Invalid email or password');
+        return;
+      }
+    } else {
+      if (!cleanEmail || !EMAIL_REGEX.test(cleanEmail)) {
+        setError('Please enter a valid email address');
+        return;
+      }
+      if (!password || password.length < 6) {
+        setError('Password must be at least 6 characters');
+        return;
+      }
     }
 
     setLoading(true);
     const guestId = getGuestId();
     const endpoint = tab === 'REGISTER' ? '/api/auth/register' : '/api/auth/login';
-    const payload = tab === 'REGISTER' ? { email, password, name, guestId } : { email, password };
+    const payload = tab === 'REGISTER' ? { email: cleanEmail, password, name, guestId } : { email: cleanEmail, password };
 
     try {
       const res = await fetch(endpoint, {
@@ -69,12 +76,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       if (contentType.includes('application/json')) {
         const data = await res.json();
         if (!res.ok || data.error) {
-          throw new Error(data.error || 'Authentication failed');
+          throw new Error(tab === 'LOGIN' ? 'Invalid email or password' : (data.error || 'Authentication failed'));
         }
         userData = data.user;
       } else {
         // Fallback for static host environments without Node backend
-        const cleanEmail = email.trim().toLowerCase();
         const safeId = cleanEmail.replace(/[^a-z0-9]/g, '_') || 'user_1';
         userData = {
           accountId: `usr_${safeId}`,
@@ -84,7 +90,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
 
       if (!userData) {
-        throw new Error('Could not complete authentication');
+        throw new Error(tab === 'LOGIN' ? 'Invalid email or password' : 'Could not complete authentication');
       }
 
       // Bind user accountId as active device DB ID
@@ -94,7 +100,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onClose();
       window.location.reload();
     } catch (err: any) {
-      setError(err.message || 'Authentication error');
+      setError(tab === 'LOGIN' ? 'Invalid email or password' : (err.message || 'Authentication error'));
     } finally {
       setLoading(false);
     }
