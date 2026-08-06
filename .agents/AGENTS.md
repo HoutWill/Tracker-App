@@ -8,7 +8,7 @@
 
 2. **Design Aesthetic — iOS 18 Liquid Glass Bento Grid System**:
    - Implement premium iOS 18 glassmorphism (frosted translucent dark panels, 24px background blurs, multi-layered depth, sleek dark surfaces).
-   - **Color Rule**: DO NOT use bright/harsh solid background fills. Use dark translucent iOS bento cards (`rgba(30, 30, 38, 0.85)` background) paired with subtle colored translucent icon badges and borders.
+   - **Color Rule**: DO NOT use bright/harsh solid background fills. Use dark translucent iOS bento cards (`rgba(30, 30, 38, 0.85)` base) paired with **soft 18% translucent colored glass tints** (`rgba(color, 0.18)`), subtle colored icon badges, and 1px colored accent borders.
    - Use **iOS Bento Grid Layouts** (2x2 or 2x3 tile cards with soft drop shadows).
    - Use concentric rounded corners (`outer_radius = inner_radius + padding`, outer radius `20px-24px`, inner icon badges `10px-12px`).
    - Use refined gradient borders with translucent fills (`rgba(255, 255, 255, 0.08)` to `rgba(255, 255, 255, 0.12)`).
