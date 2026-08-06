@@ -117,8 +117,8 @@ export const hexToRgba = (hex: string, alpha: number): string => {
 
 export const generateRandomVibrantHex = (): string => {
   const hue = Math.floor(Math.random() * 360);
-  const saturation = 75 + Math.floor(Math.random() * 25);
-  const lightness = 50 + Math.floor(Math.random() * 15);
+  const saturation = 50 + Math.floor(Math.random() * 20);
+  const lightness = 45 + Math.floor(Math.random() * 15);
   
   // Convert HSL to Hex
   const l = lightness / 100;

@@ -204,52 +204,9 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
           </div>
         )}
 
-        {/* Section 3: Full Range Custom Preset & Page Color Customizer */}
+        {/* Section 3: Full Range Custom Preset Color Customizer */}
         {activeSection === 'PRESET' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Page Accent Custom Pickers */}
-            {pageNames.map(p => (
-              <div key={p.key} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 800 }}>{p.label} Accent</span>
-                  {/* Full Hex Color Picker */}
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                    <span>Custom</span>
-                    <input
-                      type="color"
-                      value={pageColors[p.key]}
-                      onChange={e => setPageColor(p.key, e.target.value)}
-                      style={{ width: '26px', height: '26px', borderRadius: '50%', border: 'none', cursor: 'pointer', backgroundColor: 'transparent' }}
-                    />
-                  </label>
-                </div>
-
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {COLOR_PALETTE_OPTIONS.map(c => {
-                    const isSelected = pageColors[p.key] === c.hex;
-                    return (
-                      <button
-                        key={c.hex}
-                        type="button"
-                        onClick={() => setPageColor(p.key, c.hex)}
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '50%',
-                          backgroundColor: c.hex,
-                          border: isSelected ? '3px solid #FFF' : '1px solid transparent',
-                          boxShadow: isSelected ? `0 0 12px ${c.hex}` : 'none',
-                          cursor: 'pointer',
-                          transform: isSelected ? 'scale(1.15)' : 'scale(1)',
-                          transition: 'transform 0.15s ease',
-                        }}
-                        title={c.name}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
 
             {/* Presets Color Spectrum & Randomizer Card */}
             <div
