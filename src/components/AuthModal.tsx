@@ -53,23 +53,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       });
 
       const contentType = res.headers.get('content-type') || '';
-      let userData: UserAccount;
+      let userData: UserAccount | null = null;
 
-      if (res.ok && contentType.includes('application/json')) {
+      if (contentType.includes('application/json')) {
         const data = await res.json();
+        if (!res.ok || data.error) {
+          throw new Error(data.error || 'Authentication failed');
+        }
         userData = data.user;
       } else {
-        // Fallback for static deployments (Cloudflare / GitHub Pages) without backend
+        // Fallback for static host environments without Node backend
         const cleanEmail = email.trim().toLowerCase();
-        const accountId = 'usr_' + btoa(cleanEmail).replace(/[^a-zA-Z0-9]/g, '');
+        const safeId = cleanEmail.replace(/[^a-z0-9]/g, '_') || 'user_1';
         userData = {
-          accountId,
+          accountId: `usr_${safeId}`,
           email: cleanEmail,
           name: name.trim() || cleanEmail.split('@')[0],
         };
       }
 
-      // Bind user accountId as the active device DB id
+      if (!userData) {
+        throw new Error('Could not complete authentication');
+      }
+
+      // Bind user accountId as active device DB ID
       setGuestId(userData.accountId);
       localStorage.setItem('user_account', JSON.stringify(userData));
       onAuthSuccess(userData);
