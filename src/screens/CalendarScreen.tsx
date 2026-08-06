@@ -4,7 +4,6 @@ import { useReminders } from '../context/ReminderContext';
 import { formatCurrency } from '../services/storageService';
 import { getDateDetails, CAMBODIA_NATIONAL_HOLIDAYS, WORLD_CELEBRATION_DAYS } from '../services/khmerCalendarService';
 import { ExpenseCard } from '../components/ExpenseCard';
-import { DayAgendaModal } from '../components/DayAgendaModal';
 import { BuddhaIcon, BenOfferingIcon, CambodiaFlagBadge } from '../components/CalendarCustomIcons';
 import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Flag, Sparkles, Sun, Heart, Globe, Users, Bell, CheckSquare, Square, Trash2 } from 'lucide-react';
 
@@ -27,7 +26,6 @@ export const CalendarScreen: React.FC = () => {
   const [viewMode, setViewMode] = useState<CalendarViewMode>('MONTH');
   const [viewDate, setViewDate] = useState<Date>(new Date());
   const [selectedDay, setSelectedDay] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [isDayModalOpen, setIsDayModalOpen] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isHolidaysOpen, setIsHolidaysOpen] = useState(false);
 
@@ -543,10 +541,7 @@ export const CalendarScreen: React.FC = () => {
               return (
                 <div
                   key={item.dateStr}
-                  onClick={() => {
-                    setSelectedDay(item.dateStr);
-                    setIsDayModalOpen(true);
-                  }}
+                  onClick={() => setSelectedDay(item.dateStr)}
                   style={{
                     position: 'relative',
                     height: '52px',
@@ -625,183 +620,107 @@ export const CalendarScreen: React.FC = () => {
         </div>
       )}
 
-      {/* iOS Agenda Selected Day Section */}
-      <div style={{ marginTop: '8px' }}>
-        {/* iOS Agenda Date Divider */}
-        {(() => {
-          const d = new Date(selectedDay + 'T00:00:00');
-          const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          const isToday = selectedDay === new Date().toISOString().split('T')[0];
-          const dateHeader = `${weekdays[d.getDay()]} – ${d.getDate()} ${months[d.getMonth()]}`;
-          const dayReminders = reminders.filter(r => r.dueDate === selectedDay);
-
-          return (
-            <div style={{ marginBottom: '16px' }}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  paddingBottom: '6px',
-                  marginBottom: '12px',
-                  borderBottom: '1px solid var(--border-glass)',
-                }}
-              >
-                <div style={{ fontSize: '15px', fontWeight: 800, color: isToday ? '#FF5252' : 'var(--text-primary)' }}>
-                  {dateHeader}
-                </div>
-
-                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>
-                  {selectedDayItems.length} Transactions | {dayReminders.length} Tasks
-                </div>
+      {/* Selected Day Reminders & Tasks Section */}
+      {(() => {
+        const dayReminders = reminders.filter(r => r.dueDate === selectedDay);
+        if (dayReminders.length === 0) return null;
+        return (
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Bell size={14} color="#FF4081" />
+                <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Reminders on {selectedDay}</h4>
               </div>
-
-              {/* Combined Agenda Cards (Tasks + Expenses + Savings) */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {/* 1. Reminders & Tasks Cards */}
-                {dayReminders.map(r => (
-                  <div
-                    key={r.id}
-                    className="glass-panel"
-                    style={{
-                      padding: '12px 16px',
-                      borderRadius: '16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '12px',
-                      borderLeft: r.level === 'URGENT' ? '4px solid #FF4081' : '4px solid #AB47BC',
-                      opacity: r.completed ? 0.6 : 1,
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, overflow: 'hidden' }}>
-                      <button
-                        type="button"
-                        onClick={() => toggleReminder(r.id)}
-                        style={{ background: 'none', border: 'none', color: r.completed ? 'var(--accent-success)' : 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
-                      >
-                        {r.completed ? <CheckSquare size={22} /> : <Square size={22} />}
-                      </button>
-                      <div style={{ flex: 1, overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: 800, textDecoration: r.completed ? 'line-through' : 'none' }}>
-                            {r.title}
-                          </span>
-                          {r.level === 'URGENT' && (
-                            <span style={{ fontSize: '8px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: 'rgba(255, 64, 129, 0.2)', color: '#FF4081' }}>
-                              Urgent
-                            </span>
-                          )}
-                        </div>
-                        {r.notes && <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{r.notes}</div>}
-                      </div>
-                    </div>
-
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>
-                        {r.dueTime || 'Task'}
-                      </div>
-                      <div style={{ fontSize: '9px', fontWeight: 800, color: '#AB47BC', marginTop: '2px' }}>
-                        {r.category}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {/* 2. Expense & Saving Transactions Cards */}
-                {selectedDayItems.map(item => {
-                  const isSaving = item.type === 'SAVING' || item.categoryId.startsWith('cat-saving');
-                  const barColor = isSaving ? '#00E676' : '#2EAADC';
-
-                  return (
-                    <div
-                      key={item.id}
-                      className="glass-panel"
-                      onClick={() => setSelectedExpenseForEdit(item)}
-                      style={{
-                        padding: '12px 16px',
-                        borderRadius: '16px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '12px',
-                        borderLeft: `4px solid ${barColor}`,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontSize: '14px', fontWeight: 800 }}>{item.title}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                          {item.categoryName} • {item.paymentMethod}
-                        </div>
-                      </div>
-
-                      <div style={{ textAlign: 'right' }}>
-                        <div
-                          className="tabular-nums"
-                          style={{
-                            fontSize: '14px',
-                            fontWeight: 800,
-                            color: isSaving ? 'var(--accent-success)' : 'var(--text-primary)',
-                          }}
-                        >
-                          {hideBalances ? '••••' : (isSaving ? '+' : '-') + formatCurrency(item.amount, currency)}
-                        </div>
-                        <div style={{ fontSize: '9px', fontWeight: 800, color: barColor, marginTop: '2px' }}>
-                          {isSaving ? 'Saving' : 'Expense'}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Empty State */}
-                {selectedDayItems.length === 0 && dayReminders.length === 0 && (
-                  <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
-                    No tasks or transactions on {dateHeader}.
-                  </div>
-                )}
-              </div>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>
+                {dayReminders.length} Tasks
+              </span>
             </div>
-          );
-        })()}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {dayReminders.map(r => (
+                <div
+                  key={r.id}
+                  className="glass-panel"
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '10px',
+                    opacity: r.completed ? 0.6 : 1,
+                    border: r.completed ? '1px solid var(--border-glass)' : '1px solid rgba(255, 64, 129, 0.4)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, overflow: 'hidden' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleReminder(r.id)}
+                      style={{ background: 'none', border: 'none', color: r.completed ? 'var(--accent-success)' : 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
+                    >
+                      {r.completed ? <CheckSquare size={20} /> : <Square size={20} />}
+                    </button>
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 800, textDecoration: r.completed ? 'line-through' : 'none' }}>
+                          {r.title}
+                        </span>
+                        {r.level === 'URGENT' && (
+                          <span style={{ fontSize: '8px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', backgroundColor: 'rgba(255, 64, 129, 0.2)', color: '#FF4081' }}>
+                            Urgent
+                          </span>
+                        )}
+                      </div>
+                      {r.notes && <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{r.notes}</div>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Selected Day Details Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 4px' }}>
+        <div>
+          <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Transactions on {selectedDay}</h4>
+          <div style={{ fontSize: '11px', color: 'var(--accent)', fontWeight: 700 }}>
+            {selectedDateDetails.formattedDateEn}
+          </div>
+        </div>
+
+        <div style={{ textAlign: 'right' }}>
+          <span
+            className="tabular-nums"
+            style={{
+              fontSize: '14px',
+              fontWeight: 800,
+              color: selectedDayNetUSD > 0 ? 'var(--accent-success)' : selectedDayNetUSD < 0 ? 'var(--accent-danger)' : 'var(--text-primary)',
+            }}
+          >
+            {hideBalances
+              ? '••••'
+              : (selectedDayNetUSD > 0 ? '+' : '') + formatCurrency(selectedDayNetUSD, currency)}
+          </span>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+            Exp: {formatCurrency(selectedDayExpSum, currency)} | Sav: {formatCurrency(selectedDaySavSum, currency)}
+          </div>
+        </div>
       </div>
 
-      {/* Floating iOS "Today" Jump Pill Button */}
-      <button
-        type="button"
-        onClick={() => {
-          const todayStr = new Date().toISOString().split('T')[0];
-          setSelectedDay(todayStr);
-          setViewDate(new Date());
-          setIsDayModalOpen(true);
-        }}
-        style={{
-          position: 'fixed',
-          bottom: '86px',
-          left: '20px',
-          padding: '8px 16px',
-          borderRadius: '20px',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          backgroundColor: 'rgba(30, 30, 35, 0.9)',
-          backdropFilter: 'blur(16px)',
-          color: 'var(--text-primary)',
-          fontSize: '12px',
-          fontWeight: 800,
-          cursor: 'pointer',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-          zIndex: 40,
-        }}
-      >
-        Today
-      </button>
-
-      {/* Date Agenda Pop-up Modal */}
-      <DayAgendaModal
-        selectedDay={isDayModalOpen ? selectedDay : null}
-        onClose={() => setIsDayModalOpen(false)}
-      />
+      {/* Day Transactions List */}
+      <div>
+        {selectedDayItems.length > 0 ? (
+          selectedDayItems.map(item => (
+            <ExpenseCard key={item.id} item={item} onPress={() => setSelectedExpenseForEdit(item)} />
+          ))
+        ) : (
+          <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+            No transactions recorded on {selectedDay}.
+          </div>
+        )}
+      </div>
     </div>
   );
 };
