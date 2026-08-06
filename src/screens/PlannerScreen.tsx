@@ -3,6 +3,7 @@ import { useReminders } from '../context/ReminderContext';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { getTodayDateString } from '../services/storageService';
 import { ReminderDetailModal } from '../components/ReminderDetailModal';
+import { PlannerDayAgendaModal } from '../components/PlannerDayAgendaModal';
 import { ReminderItem } from '../types';
 import {
   Bell,
@@ -46,6 +47,7 @@ export const PlannerScreen: React.FC = () => {
   // Planner Calendar View State
   const [calViewDate, setCalViewDate] = useState<Date>(new Date());
   const [calSelectedDate, setCalSelectedDate] = useState<string>(getTodayDateString());
+  const [isPlannerDayModalOpen, setIsPlannerDayModalOpen] = useState<boolean>(false);
 
   const today = getTodayDateString();
 
@@ -563,7 +565,10 @@ export const PlannerScreen: React.FC = () => {
                 return (
                   <div
                     key={item.dateStr}
-                    onClick={() => setCalSelectedDate(item.dateStr)}
+                    onClick={() => {
+                      setCalSelectedDate(item.dateStr);
+                      setIsPlannerDayModalOpen(true);
+                    }}
                     style={{
                       height: '48px',
                       borderRadius: '12px',
@@ -702,6 +707,13 @@ export const PlannerScreen: React.FC = () => {
       <ReminderDetailModal
         reminder={selectedReminderForDetail}
         onClose={() => setSelectedReminderForDetail(null)}
+      />
+
+      {/* Planner Date Click Agenda Pop-up Modal matching user iOS screenshot */}
+      <PlannerDayAgendaModal
+        selectedDay={isPlannerDayModalOpen ? calSelectedDate : null}
+        onClose={() => setIsPlannerDayModalOpen(false)}
+        onSelectReminderDetail={r => setSelectedReminderForDetail(r)}
       />
     </div>
   );
