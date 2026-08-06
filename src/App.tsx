@@ -113,6 +113,7 @@ export const AppContent: React.FC = () => {
         {[
           { id: 'EXPENSES', label: 'Expenses', icon: CreditCard },
           { id: 'SAVINGS', label: 'Saving', icon: PiggyBank },
+          { id: 'STATS', label: 'Stats', icon: BarChart3 },
           { id: 'PLANNER', label: 'Planner', icon: Bell },
           { id: 'CALENDAR', label: 'Calendar', icon: Calendar },
           { id: 'SETTINGS', label: 'Settings', icon: Settings },
@@ -128,8 +129,8 @@ export const AppContent: React.FC = () => {
               style={{
                 background: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
                 border: isActive ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
-                borderRadius: '16px',
-                padding: '5px 8px',
+                borderRadius: '14px',
+                padding: '4px 5px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -139,8 +140,8 @@ export const AppContent: React.FC = () => {
                 transition: 'all 0.2s ease',
               }}
             >
-              <Icon size={18} />
-              <span style={{ fontSize: '9px', fontWeight: isActive ? 800 : 600 }}>{tab.label}</span>
+              <Icon size={17} />
+              <span style={{ fontSize: '9px', fontWeight: isActive ? 800 : 600, whiteSpace: 'nowrap' }}>{tab.label}</span>
             </button>
           );
         })}
