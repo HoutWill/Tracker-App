@@ -98,13 +98,13 @@ export const COLOR_PALETTE_OPTIONS = [
 ];
 
 export const DEFAULT_PRESET_PALETTE = [
-  '#FFFFFF', '#FFFFFF', '#FFFFFF',
-  '#FFFFFF', '#FFFFFF', '#FFFFFF',
-  '#FFFFFF', '#FFFFFF', '#FFFFFF'
+  '#4A99E9', '#ED6C6C', '#F3A85B',
+  '#EC668C', '#6C7B8A', '#8B5CF6',
+  '#34D399', '#FBBF24', '#38BDF8'
 ];
 
 export const hexToRgba = (hex: string, alpha: number): string => {
-  if (!hex || !hex.startsWith('#')) return `rgba(17, 181, 198, ${alpha})`;
+  if (!hex || !hex.startsWith('#')) return `rgba(74, 153, 233, ${alpha})`;
   let c = hex.substring(1);
   if (c.length === 3) {
     c = c.split('').map(x => x + x).join('');
@@ -117,19 +117,12 @@ export const hexToRgba = (hex: string, alpha: number): string => {
 };
 
 export const generateRandomVibrantHex = (): string => {
-  const hue = Math.floor(Math.random() * 360);
-  const saturation = 50 + Math.floor(Math.random() * 20);
-  const lightness = 45 + Math.floor(Math.random() * 15);
-  
-  // Convert HSL to Hex
-  const l = lightness / 100;
-  const a = (saturation * Math.min(l, 1 - l)) / 100;
-  const f = (n: number) => {
-    const k = (n + hue / 30) % 12;
-    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-    return Math.round(255 * color).toString(16).padStart(2, '0');
-  };
-  return `#${f(0)}${f(8)}${f(4)}`;
+  const mutedPastelPalette = [
+    '#4A99E9', '#ED6C6C', '#F3A85B', '#EC668C',
+    '#6C7B8A', '#8B5CF6', '#34D399', '#FBBF24',
+    '#38BDF8', '#F472B6', '#A7F3D0', '#FDE047'
+  ];
+  return mutedPastelPalette[Math.floor(Math.random() * mutedPastelPalette.length)];
 };
 
 interface ThemeContextType {

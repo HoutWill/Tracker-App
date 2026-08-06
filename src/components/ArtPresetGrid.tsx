@@ -1,7 +1,7 @@
 import React from 'react';
 import { QuickPreset, CurrencyCode } from '../types';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
-import { useTheme, hexToRgba } from '../context/ThemeContext';
+import { useTheme, hexToRgba, DEFAULT_PRESET_PALETTE } from '../context/ThemeContext';
 import { formatCurrency } from '../services/storageService';
 import { Plus, Zap } from 'lucide-react';
 
@@ -45,9 +45,8 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
       {/* Dynamic 9-Bar Quick Presets Grid (Strictly 3x3) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
         {presetsList.slice(0, 9).map((preset, idx) => {
-          const customHex = presetPalette[(idx + colorOffset) % presetPalette.length];
-          const isWhiteDefault = !customHex || customHex === '#FFFFFF';
-          const tileHex = isWhiteDefault ? pageAccent : customHex;
+          const customHex = presetPalette[idx % presetPalette.length] || DEFAULT_PRESET_PALETTE[idx % DEFAULT_PRESET_PALETTE.length];
+          const tileHex = customHex;
 
           return (
             <button
@@ -60,32 +59,32 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '12px 8px 10px 8px',
-                borderRadius: '16px',
-                border: isWhiteDefault ? '1px solid var(--border-glass)' : `2px solid ${hexToRgba(tileHex, 0.4)}`,
-                backgroundColor: isWhiteDefault ? 'var(--pill-bg)' : hexToRgba(tileHex, 0.12),
+                borderRadius: '18px',
+                border: `1.5px solid ${hexToRgba(tileHex, 0.4)}`,
+                backgroundColor: hexToRgba(tileHex, 0.15),
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
                 textAlign: 'center',
                 cursor: 'pointer',
-                boxShadow: isWhiteDefault ? '0 4px 14px rgba(0, 0, 0, 0.1)' : `0 6px 16px ${hexToRgba(tileHex, 0.18)}`,
+                boxShadow: `0 4px 14px ${hexToRgba(tileHex, 0.2)}`,
                 transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
                 minHeight: '110px',
               }}
             >
-              {/* Vibrant Icon Badge */}
+              {/* Icon Badge */}
               <div
                 style={{
                   width: '42px',
                   height: '42px',
                   borderRadius: '12px',
-                  backgroundColor: hexToRgba(tileHex, 0.2),
-                  border: `1px solid ${hexToRgba(tileHex, 0.4)}`,
+                  backgroundColor: hexToRgba(tileHex, 0.25),
+                  border: `1px solid ${hexToRgba(tileHex, 0.45)}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: tileHex,
+                  color: '#FFF',
                   marginBottom: '6px',
-                  boxShadow: `0 2px 8px ${hexToRgba(tileHex, 0.2)}`,
+                  boxShadow: `0 2px 8px ${hexToRgba(tileHex, 0.25)}`,
                 }}
               >
                 <CategoryIconRenderer icon={preset.icon} size={22} color={tileHex} />
@@ -115,8 +114,8 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                     display: 'block',
                     padding: '3px 6px',
                     borderRadius: '8px',
-                    backgroundColor: hexToRgba(tileHex, 0.18),
-                    border: `1px solid ${hexToRgba(tileHex, 0.35)}`,
+                    backgroundColor: hexToRgba(tileHex, 0.2),
+                    border: `1px solid ${hexToRgba(tileHex, 0.4)}`,
                     fontSize: '11px',
                     fontWeight: 900,
                     color: tileHex,
