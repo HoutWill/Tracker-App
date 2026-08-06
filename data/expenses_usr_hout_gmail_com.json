@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "title": "Investment",
+    "amount": 50,
+    "currency": "USD",
+    "type": "EXPENSE",
+    "categoryId": "cat-investment",
+    "categoryName": "Investment",
+    "categoryIcon": "trending-up",
+    "categoryColor": "cyan",
+    "date": "2026-08-06",
+    "paymentMethod": "Cash",
+    "notes": "Quick log via Cash",
+    "id": "exp-1786024094826-934",
+    "createdAt": 1786024094826
+  },
+  {
+    "title": "Drink",
+    "amount": 3.5,
+    "currency": "USD",
+    "type": "EXPENSE",
+    "categoryId": "cat-drink",
+    "categoryName": "Drink",
+    "categoryIcon": "coffee",
+    "categoryColor": "brown",
+    "date": "2026-08-06",
+    "paymentMethod": "Cash",
+    "notes": "Quick log via Cash",
+    "id": "exp-1786024092932-876",
+    "createdAt": 1786024092932
+  }
+]

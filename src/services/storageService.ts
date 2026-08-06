@@ -115,23 +115,30 @@ export const StorageService = {
 
   async getExpenses(): Promise<ExpenseItem[]> {
     const guestId = getGuestId();
+    const cached = this.getCachedExpenses();
     try {
       const res = await fetch('/api/expenses', {
         headers: { 'x-guest-id': guestId },
       });
       const contentType = res.headers.get('content-type') || '';
       if (res.ok && contentType.includes('application/json')) {
-        const data: ExpenseItem[] = await res.json();
+        const serverData: ExpenseItem[] = await res.json();
+        const mergedMap = new Map<string, ExpenseItem>();
+        if (Array.isArray(serverData)) {
+          serverData.forEach(item => mergedMap.set(item.id, item));
+        }
+        cached.forEach(item => mergedMap.set(item.id, item));
+        const merged = Array.from(mergedMap.values()).sort((a, b) => b.createdAt - a.createdAt);
         try {
-          localStorage.setItem(`expenses_${guestId}`, JSON.stringify(data));
+          localStorage.setItem(`expenses_${guestId}`, JSON.stringify(merged));
         } catch (e) {}
-        return data;
+        return merged;
       }
     } catch (e) {
       console.warn('API unavailable, reading local fallback');
     }
 
-    return this.getCachedExpenses();
+    return cached;
   },
 
   async addExpense(item: ExpenseItem | Omit<ExpenseItem, 'id' | 'createdAt'>): Promise<ExpenseItem> {
