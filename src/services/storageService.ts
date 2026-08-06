@@ -135,29 +135,33 @@ export const StorageService = {
   async getExpenses(): Promise<ExpenseItem[]> {
     const guestId = getGuestId();
     const cached = this.getCachedExpenses();
-    try {
-      const res = await fetch('/api/expenses', {
-        headers: { 'x-guest-id': guestId },
-      });
-      const contentType = res.headers.get('content-type') || '';
-      if (res.ok && contentType.includes('application/json')) {
-        const serverData: ExpenseItem[] = await res.json();
-        const mergedMap = new Map<string, ExpenseItem>();
-        if (Array.isArray(serverData)) {
-          serverData.forEach(item => mergedMap.set(item.id, item));
-        }
-        cached.forEach(item => mergedMap.set(item.id, item));
-        const merged = Array.from(mergedMap.values()).sort((a, b) => b.createdAt - a.createdAt);
-        try {
-          localStorage.setItem('pitrack_expenses_data', JSON.stringify(merged));
-          localStorage.setItem(`expenses_${guestId}`, JSON.stringify(merged));
-        } catch (e) {}
-        return merged;
-      }
-    } catch (e) {
-      console.warn('API unavailable, reading local fallback');
-    }
 
+    // Fire non-blocking background fetch to sync server data without delaying UI
+    fetch('/api/expenses', {
+      headers: { 'x-guest-id': guestId },
+    })
+      .then(res => {
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          return res.json();
+        }
+        return null;
+      })
+      .then(serverData => {
+        if (Array.isArray(serverData)) {
+          const mergedMap = new Map<string, ExpenseItem>();
+          serverData.forEach(item => mergedMap.set(item.id, item));
+          cached.forEach(item => mergedMap.set(item.id, item));
+          const merged = Array.from(mergedMap.values()).sort((a, b) => b.createdAt - a.createdAt);
+          try {
+            localStorage.setItem('pitrack_expenses_data', JSON.stringify(merged));
+            localStorage.setItem(`expenses_${guestId}`, JSON.stringify(merged));
+          } catch (e) {}
+        }
+      })
+      .catch(() => {});
+
+    // Return instant local cached data immediately (0ms UI lag)
     return cached;
   },
 
