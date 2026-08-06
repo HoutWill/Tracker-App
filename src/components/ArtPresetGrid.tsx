@@ -105,17 +105,14 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                   {preset.title}
                 </div>
 
-                {/* Translucent Price Pill */}
+                {/* Price Text */}
                 <div
                   className="tabular-nums"
                   style={{
                     display: 'block',
-                    padding: '3px 6px',
-                    borderRadius: '8px',
-                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     fontWeight: 900,
-                    color: '#FFF',
+                    color: 'rgba(255, 255, 255, 0.95)',
                     width: '100%',
                   }}
                 >
