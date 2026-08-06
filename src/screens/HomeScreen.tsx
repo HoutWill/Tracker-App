@@ -57,7 +57,7 @@ export const HomeScreen: React.FC = () => {
     setSelectedType(preset.type || (preset.categoryId.startsWith('cat-saving') ? 'SAVING' : 'EXPENSE'));
   };
 
-  const handleConfirmPreset = async () => {
+  const handleConfirmPreset = () => {
     if (!activePreset) return;
 
     const num = parseFloat(presetAmount);
@@ -76,8 +76,14 @@ export const HomeScreen: React.FC = () => {
           activePreset.categoryId.includes(t.category.toLowerCase())
         );
 
-    await addExpense({
-      title: activePreset.title,
+    // Close modal and show toast feedback INSTANTLY for 0ms UI lag
+    const presetTitle = activePreset.title;
+    setActivePreset(null);
+    setToastMsg(`Logged ${selectedType} "${presetTitle}" (${formatCurrency(num, currency)})!`);
+    setTimeout(() => setToastMsg(null), 2500);
+
+    addExpense({
+      title: presetTitle,
       amount: num,
       currency: activePreset.currency,
       type: selectedType,
@@ -90,10 +96,6 @@ export const HomeScreen: React.FC = () => {
       notes: `Quick log (${selectedType}) via ${selectedPayment}`,
       tripId: matchingTrip?.id,
     });
-
-    setToastMsg(`Logged ${selectedType} "${activePreset.title}" (${formatCurrency(num, currency)})!`);
-    setActivePreset(null);
-    setTimeout(() => setToastMsg(null), 2500);
   };
 
   return (

@@ -42,7 +42,11 @@ export const EditExpenseModal: React.FC = () => {
 
     const cat = categories.find(c => c.id === categoryId) || expenseCategories[0];
 
-    await updateExpense(selectedExpenseForEdit.id, {
+    const editId = selectedExpenseForEdit.id;
+    // Close modal INSTANTLY for 0ms UI lag
+    setSelectedExpenseForEdit(null);
+
+    updateExpense(editId, {
       title: title.trim(),
       amount: num,
       type: 'EXPENSE',
@@ -54,14 +58,14 @@ export const EditExpenseModal: React.FC = () => {
       paymentMethod,
       notes: notes.trim(),
     });
-
-    setSelectedExpenseForEdit(null);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (window.confirm(`Delete expense "${selectedExpenseForEdit.title}"?`)) {
-      await deleteExpense(selectedExpenseForEdit.id);
+      const editId = selectedExpenseForEdit.id;
+      // Close modal INSTANTLY for 0ms UI lag
       setSelectedExpenseForEdit(null);
+      deleteExpense(editId);
     }
   };
 
