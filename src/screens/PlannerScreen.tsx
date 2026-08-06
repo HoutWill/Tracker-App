@@ -180,7 +180,7 @@ export const PlannerScreen: React.FC = () => {
 
       {/* 6 iOS Reminders Category Tiles Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '18px' }}>
-        {/* Today Tile */}
+        {/* Today Tile (Rich Muted Navy Blue) */}
         <button
           type="button"
           onClick={() => setActiveFilter('TODAY')}
@@ -190,26 +190,25 @@ export const PlannerScreen: React.FC = () => {
             justifyContent: 'space-between',
             padding: '14px',
             borderRadius: '20px',
-            border: activeFilter === 'TODAY' ? '1.5px solid #1E88E5' : '1px solid var(--border-glass)',
-            backgroundColor: activeFilter === 'TODAY' ? 'rgba(30, 136, 229, 0.15)' : 'rgba(30, 30, 38, 0.85)',
-            backdropFilter: 'blur(20px)',
+            border: activeFilter === 'TODAY' ? '2px solid #FFF' : '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: '#1565C0',
             color: '#FFF',
             textAlign: 'left',
             cursor: 'pointer',
             minHeight: '80px',
-            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3)',
+            boxShadow: '0 8px 20px rgba(21, 101, 192, 0.35)',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(30, 136, 229, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CalendarDays size={18} color="#1E88E5" />
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CalendarDays size={18} color="#FFF" />
             </div>
             <span style={{ fontSize: '24px', fontWeight: 900 }}>{todayReminders.length}</span>
           </div>
-          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px', color: 'var(--text-primary)' }}>Today</span>
+          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px', color: '#FFF' }}>Today</span>
         </button>
 
-        {/* Scheduled Tile */}
+        {/* Scheduled Tile (Rich Muted Crimson Red) */}
         <button
           type="button"
           onClick={() => setActiveFilter('SCHEDULED')}
@@ -219,26 +218,25 @@ export const PlannerScreen: React.FC = () => {
             justifyContent: 'space-between',
             padding: '14px',
             borderRadius: '20px',
-            border: activeFilter === 'SCHEDULED' ? '1.5px solid #E53935' : '1px solid var(--border-glass)',
-            backgroundColor: activeFilter === 'SCHEDULED' ? 'rgba(229, 57, 53, 0.15)' : 'rgba(30, 30, 38, 0.85)',
-            backdropFilter: 'blur(20px)',
+            border: activeFilter === 'SCHEDULED' ? '2px solid #FFF' : '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: '#C62828',
             color: '#FFF',
             textAlign: 'left',
             cursor: 'pointer',
             minHeight: '80px',
-            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3)',
+            boxShadow: '0 8px 20px rgba(198, 40, 40, 0.35)',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(229, 57, 53, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Calendar size={18} color="#E53935" />
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Calendar size={18} color="#FFF" />
             </div>
             <span style={{ fontSize: '24px', fontWeight: 900 }}>{scheduledReminders.length}</span>
           </div>
-          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px', color: 'var(--text-primary)' }}>Scheduled</span>
+          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px', color: '#FFF' }}>Scheduled</span>
         </button>
 
-        {/* All Tile */}
+        {/* All Tile (Sleek Dark Charcoal) */}
         <button
           type="button"
           onClick={() => setActiveFilter('ALL')}
@@ -248,26 +246,25 @@ export const PlannerScreen: React.FC = () => {
             justifyContent: 'space-between',
             padding: '14px',
             borderRadius: '20px',
-            border: activeFilter === 'ALL' ? '1.5px solid #546E7A' : '1px solid var(--border-glass)',
-            backgroundColor: activeFilter === 'ALL' ? 'rgba(84, 110, 122, 0.2)' : 'rgba(30, 30, 38, 0.85)',
-            backdropFilter: 'blur(20px)',
+            border: activeFilter === 'ALL' ? '2px solid #FFF' : '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: '#263238',
             color: '#FFF',
             textAlign: 'left',
             cursor: 'pointer',
             minHeight: '80px',
-            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3)',
+            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.4)',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(84, 110, 122, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Inbox size={18} color="#90A4AE" />
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Inbox size={18} color="#FFF" />
             </div>
             <span style={{ fontSize: '24px', fontWeight: 900 }}>{reminders.length}</span>
           </div>
-          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px', color: 'var(--text-primary)' }}>All</span>
+          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px', color: '#FFF' }}>All</span>
         </button>
 
-        {/* Flagged Tile */}
+        {/* Flagged Tile (Rich Muted Amber Orange) */}
         <button
           type="button"
           onClick={() => setActiveFilter('FLAGGED')}
@@ -277,26 +274,25 @@ export const PlannerScreen: React.FC = () => {
             justifyContent: 'space-between',
             padding: '14px',
             borderRadius: '20px',
-            border: activeFilter === 'FLAGGED' ? '1.5px solid #FB8C00' : '1px solid var(--border-glass)',
-            backgroundColor: activeFilter === 'FLAGGED' ? 'rgba(251, 140, 0, 0.15)' : 'rgba(30, 30, 38, 0.85)',
-            backdropFilter: 'blur(20px)',
+            border: activeFilter === 'FLAGGED' ? '2px solid #FFF' : '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: '#EF6C00',
             color: '#FFF',
             textAlign: 'left',
             cursor: 'pointer',
             minHeight: '80px',
-            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3)',
+            boxShadow: '0 8px 20px rgba(239, 108, 0, 0.35)',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(251, 140, 0, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Flag size={18} color="#FB8C00" />
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Flag size={18} color="#FFF" />
             </div>
             <span style={{ fontSize: '24px', fontWeight: 900 }}>{flaggedReminders.length}</span>
           </div>
-          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px', color: 'var(--text-primary)' }}>Flagged</span>
+          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px', color: '#FFF' }}>Flagged</span>
         </button>
 
-        {/* Urgent Tile */}
+        {/* Urgent Tile (Rich Muted Magenta Pink) */}
         <button
           type="button"
           onClick={() => setActiveFilter('URGENT')}
@@ -306,26 +302,25 @@ export const PlannerScreen: React.FC = () => {
             justifyContent: 'space-between',
             padding: '14px',
             borderRadius: '20px',
-            border: activeFilter === 'URGENT' ? '1.5px solid #FF4081' : '1px solid var(--border-glass)',
-            backgroundColor: activeFilter === 'URGENT' ? 'rgba(255, 64, 129, 0.15)' : 'rgba(30, 30, 38, 0.85)',
-            backdropFilter: 'blur(20px)',
+            border: activeFilter === 'URGENT' ? '2px solid #FFF' : '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: '#AD1457',
             color: '#FFF',
             textAlign: 'left',
             cursor: 'pointer',
             minHeight: '80px',
-            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3)',
+            boxShadow: '0 8px 20px rgba(173, 20, 87, 0.35)',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255, 64, 129, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Clock size={18} color="#FF4081" />
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Clock size={18} color="#FFF" />
             </div>
             <span style={{ fontSize: '24px', fontWeight: 900 }}>{urgentReminders.length}</span>
           </div>
-          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px', color: 'var(--text-primary)' }}>Urgent</span>
+          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px', color: '#FFF' }}>Urgent</span>
         </button>
 
-        {/* Completed Tile */}
+        {/* Completed Tile (Rich Muted Slate Grey) */}
         <button
           type="button"
           onClick={() => setActiveFilter('COMPLETED')}
@@ -335,23 +330,22 @@ export const PlannerScreen: React.FC = () => {
             justifyContent: 'space-between',
             padding: '14px',
             borderRadius: '20px',
-            border: activeFilter === 'COMPLETED' ? '1.5px solid #546E7A' : '1px solid var(--border-glass)',
-            backgroundColor: activeFilter === 'COMPLETED' ? 'rgba(84, 110, 122, 0.2)' : 'rgba(30, 30, 38, 0.85)',
-            backdropFilter: 'blur(20px)',
+            border: activeFilter === 'COMPLETED' ? '2px solid #FFF' : '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: '#37474F',
             color: '#FFF',
             textAlign: 'left',
             cursor: 'pointer',
             minHeight: '80px',
-            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3)',
+            boxShadow: '0 8px 20px rgba(55, 71, 79, 0.35)',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(84, 110, 122, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ShieldCheck size={18} color="#90A4AE" />
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ShieldCheck size={18} color="#FFF" />
             </div>
             <span style={{ fontSize: '24px', fontWeight: 900 }}>{completedReminders.length}</span>
           </div>
-          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px', color: 'var(--text-primary)' }}>Completed</span>
+          <span style={{ fontSize: '13px', fontWeight: 800, marginTop: '8px', color: '#FFF' }}>Completed</span>
         </button>
       </div>
 
