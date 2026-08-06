@@ -3,7 +3,8 @@ import { useExpenses } from '../context/ExpenseContext';
 import { useTheme } from '../context/ThemeContext';
 import { ExportModal } from '../components/ExportModal';
 import { AppearanceModal } from '../components/AppearanceModal';
-import { Settings, Shield, Eye, EyeOff, Download, Trash2, Palette, CheckCircle2, Sparkles } from 'lucide-react';
+import { getGuestId, setGuestId } from '../services/storageService';
+import { Settings, Shield, Eye, EyeOff, Download, Trash2, Palette, CheckCircle2, Sparkles, Key, Copy, RefreshCw } from 'lucide-react';
 
 export const SettingsScreen: React.FC = () => {
   const {
@@ -15,6 +16,25 @@ export const SettingsScreen: React.FC = () => {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isAppearanceModalOpen, setIsAppearanceModalOpen] = useState(false);
+  const [currentSyncKey, setCurrentSyncKey] = useState(getGuestId());
+
+  const handleCopySyncKey = () => {
+    navigator.clipboard.writeText(currentSyncKey);
+    setToastMsg('Sync Key Copied!');
+    setTimeout(() => setToastMsg(null), 2500);
+  };
+
+  const handleRestoreAccount = () => {
+    const key = prompt('Enter your saved Sync Key to restore your database:', currentSyncKey);
+    if (key && key.trim()) {
+      setGuestId(key.trim());
+      setCurrentSyncKey(key.trim());
+      setToastMsg('Account Sync Key Updated! Refreshing database...');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1200);
+    }
+  };
 
   const handleClearData = async () => {
     if (window.confirm('Are you sure you want to reset all expense data? This action cannot be undone.')) {
@@ -108,6 +128,54 @@ export const SettingsScreen: React.FC = () => {
           {hideBalances ? <EyeOff size={14} /> : <Eye size={14} />}
           <span>{hideBalances ? 'Hidden' : 'Visible'}</span>
         </button>
+      </div>
+
+      {/* Account Sync Key & Database Recovery Card */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Key size={18} color="var(--accent)" />
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Backup Key</h4>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Unique account restore key</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              className="glass-pill"
+              onClick={handleCopySyncKey}
+              style={{ fontSize: '11px', padding: '5px 10px' }}
+              title="Copy Sync Key"
+            >
+              <Copy size={13} /> Copy
+            </button>
+            <button
+              className="glass-pill"
+              onClick={handleRestoreAccount}
+              style={{ fontSize: '11px', padding: '5px 10px', color: 'var(--accent)' }}
+              title="Restore Database with Key"
+            >
+              <RefreshCw size={13} /> Restore
+            </button>
+          </div>
+        </div>
+
+        {/* Sync Key Pill */}
+        <div
+          style={{
+            padding: '8px 12px',
+            borderRadius: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            border: '1px solid var(--border-glass)',
+            fontSize: '11px',
+            fontFamily: 'monospace',
+            color: 'var(--text-secondary)',
+            wordBreak: 'break-all',
+          }}
+        >
+          {currentSyncKey}
+        </div>
       </div>
 
       {/* Ultra-Clean 1-Row Export CSV Card */}

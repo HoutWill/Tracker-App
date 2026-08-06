@@ -14,6 +14,7 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { AtmosphericBackground } from './components/AtmosphericBackground';
 import { CreditCard, PiggyBank, BarChart3, Calendar, Settings } from 'lucide-react';
 
+import { requestPersistentStorage } from './services/storageService';
 import { CreateTripModal } from './components/CreateTripModal';
 import { CreateExpenseFolderModal } from './components/CreateExpenseFolderModal';
 import { CreateSavingFolderModal } from './components/CreateSavingFolderModal';
@@ -24,6 +25,11 @@ export type TabName = 'EXPENSES' | 'SAVINGS' | 'STATS' | 'CALENDAR' | 'SETTINGS'
 export const App: React.FC = () => {
   const { pageColors } = useTheme();
   const [activeTab, setActiveTab] = useState<TabName>('EXPENSES');
+
+  // Request Web Persistent Storage permission to prevent browser auto-cleaning cache
+  useEffect(() => {
+    requestPersistentStorage();
+  }, []);
 
   // Dynamically inject custom theme color into CSS Root Variables when switching tabs or changing colors
   useEffect(() => {

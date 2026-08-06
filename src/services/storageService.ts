@@ -23,6 +23,20 @@ export const getGuestId = (): string => {
   }
 };
 
+export const setGuestId = (newId: string): void => {
+  try {
+    localStorage.setItem('guest_device_id', newId.trim());
+  } catch (e) {}
+};
+
+export const requestPersistentStorage = async (): Promise<boolean> => {
+  if (navigator.storage && navigator.storage.persist) {
+    const isPersisted = await navigator.storage.persist();
+    return isPersisted;
+  }
+  return false;
+};
+
 const DEFAULT_DEMO_EXPENSES: ExpenseItem[] = [
   {
     id: 'exp-demo-1',
