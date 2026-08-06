@@ -54,13 +54,15 @@ export interface TripFolder {
   type?: TransactionType;
 }
 
+export type ReminderCategory = 'BILLS' | 'SAVINGS' | 'TASK' | 'STUDY' | 'MEETING' | 'FUN' | 'SPORT' | 'WORK' | 'HEALTH';
+
 export interface ReminderItem {
   id: string;
   title: string;
   notes?: string;
   dueDate: string; // YYYY-MM-DD
   dueTime?: string; // HH:mm
-  category: 'BILLS' | 'SAVINGS' | 'TASK';
+  category: ReminderCategory;
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   level: 'URGENT' | 'SIMPLE';
   completed: boolean;

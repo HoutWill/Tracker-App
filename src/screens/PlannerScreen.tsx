@@ -345,11 +345,37 @@ export const PlannerScreen: React.FC = () => {
                         fontWeight: 800,
                         padding: '1px 6px',
                         borderRadius: '6px',
-                        backgroundColor: r.category === 'BILLS' ? 'rgba(255, 82, 82, 0.15)' : r.category === 'SAVINGS' ? 'rgba(0, 230, 118, 0.15)' : 'rgba(46, 170, 220, 0.15)',
-                        color: r.category === 'BILLS' ? 'var(--accent-danger)' : r.category === 'SAVINGS' ? 'var(--accent-success)' : 'var(--accent)',
+                        backgroundColor:
+                          r.category === 'BILLS'
+                            ? 'rgba(255, 82, 82, 0.15)'
+                            : r.category === 'SAVINGS'
+                            ? 'rgba(0, 230, 118, 0.15)'
+                            : r.category === 'STUDY'
+                            ? 'rgba(156, 39, 176, 0.15)'
+                            : r.category === 'MEETING'
+                            ? 'rgba(255, 152, 0, 0.15)'
+                            : r.category === 'SPORT'
+                            ? 'rgba(76, 175, 80, 0.15)'
+                            : r.category === 'FUN'
+                            ? 'rgba(233, 30, 99, 0.15)'
+                            : 'rgba(46, 170, 220, 0.15)',
+                        color:
+                          r.category === 'BILLS'
+                            ? '#FF5252'
+                            : r.category === 'SAVINGS'
+                            ? '#00E676'
+                            : r.category === 'STUDY'
+                            ? '#AB47BC'
+                            : r.category === 'MEETING'
+                            ? '#FFA726'
+                            : r.category === 'SPORT'
+                            ? '#66BB6A'
+                            : r.category === 'FUN'
+                            ? '#EC407A'
+                            : 'var(--accent)',
                       }}
                     >
-                      {r.category === 'BILLS' ? 'Bills' : r.category === 'SAVINGS' ? 'Savings' : 'Task'}
+                      {r.category.charAt(0) + r.category.slice(1).toLowerCase()}
                     </span>
                   </div>
                 </div>

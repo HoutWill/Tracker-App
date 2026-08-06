@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useReminders } from '../context/ReminderContext';
 import { getTodayDateString } from '../services/storageService';
+import { ReminderCategory } from '../types';
 import { X, Bell, Check, Calendar, Clock, AlertCircle } from 'lucide-react';
 
 export const AddReminderModal: React.FC = () => {
@@ -9,7 +10,7 @@ export const AddReminderModal: React.FC = () => {
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [level, setLevel] = useState<'URGENT' | 'SIMPLE'>('SIMPLE');
-  const [category, setCategory] = useState<'BILLS' | 'SAVINGS' | 'TASK'>('BILLS');
+  const [category, setCategory] = useState<ReminderCategory>('TASK');
   const [dueDate, setDueDate] = useState(getTodayDateString());
   const [dueTime, setDueTime] = useState('12:00');
   const [alertEnabled, setAlertEnabled] = useState(true);
@@ -165,28 +166,39 @@ export const AddReminderModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Category Pill Switcher */}
+        {/* Category Pill Switcher (Flex-Wrap Grid) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Category</label>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            {(['BILLS', 'SAVINGS', 'TASK'] as const).map(cat => (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {(
+              [
+                { id: 'TASK', label: 'Task' },
+                { id: 'STUDY', label: 'Study' },
+                { id: 'MEETING', label: 'Meeting' },
+                { id: 'FUN', label: 'Fun' },
+                { id: 'SPORT', label: 'Sport' },
+                { id: 'BILLS', label: 'Bills' },
+                { id: 'SAVINGS', label: 'Savings' },
+                { id: 'WORK', label: 'Work' },
+                { id: 'HEALTH', label: 'Health' },
+              ] as const
+            ).map(cat => (
               <button
-                key={cat}
+                key={cat.id}
                 type="button"
-                onClick={() => setCategory(cat)}
+                onClick={() => setCategory(cat.id as ReminderCategory)}
                 style={{
-                  flex: 1,
-                  padding: '8px 0',
+                  padding: '6px 12px',
                   borderRadius: '16px',
-                  border: category === cat ? '1px solid var(--accent)' : '1px solid var(--border-glass)',
-                  backgroundColor: category === cat ? 'var(--accent)' : 'rgba(255, 255, 255, 0.05)',
-                  color: category === cat ? '#FFF' : 'var(--text-secondary)',
+                  border: category === cat.id ? '1px solid var(--accent)' : '1px solid var(--border-glass)',
+                  backgroundColor: category === cat.id ? 'var(--accent)' : 'rgba(255, 255, 255, 0.05)',
+                  color: category === cat.id ? '#FFF' : 'var(--text-secondary)',
                   fontSize: '11px',
                   fontWeight: 800,
                   cursor: 'pointer',
                 }}
               >
-                {cat === 'BILLS' ? 'Bills' : cat === 'SAVINGS' ? 'Savings' : 'Task'}
+                {cat.label}
               </button>
             ))}
           </div>
