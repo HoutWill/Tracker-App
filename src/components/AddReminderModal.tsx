@@ -3,6 +3,7 @@ import { useReminders } from '../context/ReminderContext';
 import { getTodayDateString } from '../services/storageService';
 import { ReminderCategory } from '../types';
 import { X, Bell, Check, Calendar, Clock, AlertCircle } from 'lucide-react';
+import { syncToAppleCalendar } from '../services/calendarSyncService';
 
 export const AddReminderModal: React.FC = () => {
   const { isAddReminderOpen, setIsAddReminderOpen, addReminder } = useReminders();
@@ -14,6 +15,7 @@ export const AddReminderModal: React.FC = () => {
   const [dueDate, setDueDate] = useState(getTodayDateString());
   const [dueTime, setDueTime] = useState('12:00');
   const [alertEnabled, setAlertEnabled] = useState(true);
+  const [syncCalendar, setSyncCalendar] = useState(true);
 
   if (!isAddReminderOpen) return null;
 
@@ -31,6 +33,16 @@ export const AddReminderModal: React.FC = () => {
       dueTime,
       alertEnabled,
     });
+
+    if (syncCalendar) {
+      syncToAppleCalendar({
+        title: title.trim(),
+        notes: notes.trim(),
+        dueDate,
+        dueTime,
+        category,
+      });
+    }
 
     setTitle('');
     setNotes('');
@@ -277,25 +289,50 @@ export const AddReminderModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Alert Toggle Pill */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 700, color: '#FFF' }}>Alert</span>
-          <button
-            type="button"
-            onClick={() => setAlertEnabled(!alertEnabled)}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '12px',
-              border: 'none',
-              backgroundColor: alertEnabled ? '#6C5CE7' : 'rgba(255, 255, 255, 0.12)',
-              color: '#FFF',
-              fontSize: '11px',
-              fontWeight: 800,
-              cursor: 'pointer',
-            }}
-          >
-            {alertEnabled ? 'On' : 'Off'}
-          </button>
+        {/* Alert & Apple Calendar Toggles */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#FFF' }}>Alert</span>
+            <button
+              type="button"
+              onClick={() => setAlertEnabled(!alertEnabled)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '12px',
+                border: 'none',
+                backgroundColor: alertEnabled ? '#6C5CE7' : 'rgba(255, 255, 255, 0.12)',
+                color: '#FFF',
+                fontSize: '11px',
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              {alertEnabled ? 'On' : 'Off'}
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Calendar size={14} color="#30D158" />
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#FFF' }}>Apple Calendar</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSyncCalendar(!syncCalendar)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '12px',
+                border: 'none',
+                backgroundColor: syncCalendar ? '#30D158' : 'rgba(255, 255, 255, 0.12)',
+                color: syncCalendar ? '#141416' : '#FFF',
+                fontSize: '11px',
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              {syncCalendar ? 'Sync' : 'Off'}
+            </button>
+          </div>
         </div>
 
         {/* Save Button */}
