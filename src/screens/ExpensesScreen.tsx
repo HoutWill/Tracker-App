@@ -207,27 +207,6 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
-      {/* Toast Feedback Notification Banner */}
-      {toastMsg && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '12px 16px',
-            borderRadius: '14px',
-            border: '1px solid rgba(126, 231, 135, 0.4)',
-            backgroundColor: 'rgba(126, 231, 135, 0.18)',
-            color: 'var(--accent-success)',
-            fontSize: '14px',
-            fontWeight: 800,
-            marginBottom: '14px',
-          }}
-        >
-          <CheckCircle2 size={20} />
-          <span>{toastMsg}</span>
-        </div>
-      )}
 
       {/* Top Segmented Group Bar: Expenses vs Saving */}
       <div

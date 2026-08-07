@@ -203,27 +203,6 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
-      {/* Toast Feedback Notification Banner */}
-      {toastMsg && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '12px 16px',
-            borderRadius: '14px',
-            border: `1px solid ${hexToRgba(pageAccent, 0.4)}`,
-            backgroundColor: hexToRgba(pageAccent, 0.18),
-            color: pageAccent,
-            fontSize: '14px',
-            fontWeight: 800,
-            marginBottom: '14px',
-          }}
-        >
-          <CheckCircle2 size={20} />
-          <span>{toastMsg}</span>
-        </div>
-      )}
 
       {/* Top Segmented Group Bar: Expenses vs Saving */}
       <div

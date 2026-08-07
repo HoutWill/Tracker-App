@@ -100,27 +100,6 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
-      {/* Toast Feedback Notification */}
-      {toastMsg && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 14px',
-            borderRadius: '12px',
-            border: '1px solid rgba(126, 231, 135, 0.35)',
-            backgroundColor: 'rgba(126, 231, 135, 0.15)',
-            color: 'var(--accent-success)',
-            fontSize: '13px',
-            fontWeight: 700,
-            marginBottom: '12px',
-          }}
-        >
-          <CheckCircle2 size={18} />
-          <span>{toastMsg}</span>
-        </div>
-      )}
 
       {/* Top Segmented Category Mode Switcher: Expenses vs Savings vs All */}
       <div

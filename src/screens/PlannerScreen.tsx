@@ -95,26 +95,53 @@ export const PlannerScreen: React.FC = () => {
           <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Reminders, Todos & Alerts</p>
         </div>
 
-        {/* Web Push Alert Permission Pill Button */}
-        <button
-          type="button"
-          className="glass-pill"
-          onClick={requestNotificationPermission}
-          style={{
-            backgroundColor: isNotificationEnabled ? hexToRgba(pageAccent, 0.2) : 'rgba(255, 255, 255, 0.06)',
-            borderColor: isNotificationEnabled ? hexToRgba(pageAccent, 0.4) : 'var(--border-glass)',
-            color: isNotificationEnabled ? pageAccent : 'var(--text-muted)',
-            fontSize: '11px',
-            padding: '5px 12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-          }}
-          title="Enable Native Push Alerts"
-        >
-          <Bell size={13} />
-          <span>{isNotificationEnabled ? 'Alerts' : 'Enable'}</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Add Reminder Button */}
+          <button
+            type="button"
+            className="glass-pill"
+            onClick={() => setIsAddReminderOpen(true)}
+            style={{
+              backgroundColor: 'var(--accent)',
+              borderColor: 'var(--accent)',
+              color: '#FFF',
+              fontSize: '12px',
+              fontWeight: 800,
+              padding: '6px 14px',
+              borderRadius: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px var(--accent-glow)',
+            }}
+            title="Add Reminder"
+          >
+            <Plus size={15} />
+            <span>Add</span>
+          </button>
+
+          {/* Web Push Alert Permission Pill Button */}
+          <button
+            type="button"
+            className="glass-pill"
+            onClick={requestNotificationPermission}
+            style={{
+              backgroundColor: isNotificationEnabled ? hexToRgba(pageAccent, 0.2) : 'rgba(255, 255, 255, 0.06)',
+              borderColor: isNotificationEnabled ? hexToRgba(pageAccent, 0.4) : 'var(--border-glass)',
+              color: isNotificationEnabled ? pageAccent : 'var(--text-muted)',
+              fontSize: '11px',
+              padding: '5px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+            }}
+            title="Enable Native Push Alerts"
+          >
+            <Bell size={13} />
+            <span>{isNotificationEnabled ? 'Alerts' : 'Enable'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Top Segmented Tab Switcher (Reminders vs Calendar) */}
@@ -354,9 +381,32 @@ export const PlannerScreen: React.FC = () => {
         <h3 style={{ fontSize: '15px', fontWeight: 800 }}>
           {activeFilter === 'TODAY' ? 'Today' : activeFilter === 'SCHEDULED' ? 'Scheduled' : activeFilter === 'FLAGGED' ? 'Flagged' : 'Todos'}
         </h3>
-        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>
-          {displayedReminders.length} Items
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            onClick={() => setIsAddReminderOpen(true)}
+            style={{
+              backgroundColor: 'var(--accent)',
+              border: 'none',
+              borderRadius: '12px',
+              color: '#FFF',
+              fontSize: '11px',
+              fontWeight: 800,
+              padding: '4px 10px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px var(--accent-glow)',
+            }}
+          >
+            <Plus size={13} />
+            <span>Add</span>
+          </button>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700 }}>
+            {displayedReminders.length} Items
+          </span>
+        </div>
       </div>
 
       {/* Checklist List */}
