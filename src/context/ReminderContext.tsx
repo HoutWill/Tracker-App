@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ReminderItem } from '../types';
 import { StorageService, getTodayDateString } from '../services/storageService';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 interface ReminderContextType {
   reminders: ReminderItem[];
@@ -106,14 +107,42 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setReminders(updated);
     StorageService.saveReminders(updated);
 
-    // If notifications enabled, trigger feedback test
-    if (newReminder.alertEnabled && isNotificationEnabled && 'Notification' in window) {
+    // Schedule Native Device System Alarm Alert (Fires on Lock Screen even when app is closed)
+    if (newReminder.alertEnabled && newReminder.dueDate && newReminder.dueTime) {
       try {
-        new Notification(`Reminder set: ${newReminder.title}`, {
-          body: `Scheduled for ${newReminder.dueDate} ${newReminder.dueTime || ''}`,
-          icon: '/assets/icon-192.png',
-        });
+        const [year, month, day] = newReminder.dueDate.split('-').map(Number);
+        const [hour, minute] = newReminder.dueTime.split(':').map(Number);
+        const scheduleDate = new Date(year, month - 1, day, hour, minute, 0);
+
+        if (scheduleDate.getTime() > Date.now()) {
+          LocalNotifications.requestPermissions().then(() => {
+            LocalNotifications.schedule({
+              notifications: [
+                {
+                  title: `Due Alert: ${newReminder.title}`,
+                  body: `Reminder for ${newReminder.category} is due right now!`,
+                  id: Math.floor(Math.random() * 100000),
+                  schedule: { at: scheduleDate },
+                },
+              ],
+            }).catch(() => {});
+          }).catch(() => {});
+        }
       } catch (e) {}
+    }
+
+    // Feedback alert
+    if (newReminder.alertEnabled && isNotificationEnabled) {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+          if (reg && reg.showNotification) {
+            reg.showNotification(`Reminder Scheduled: ${newReminder.title}`, {
+              body: `Set for ${newReminder.dueDate} ${newReminder.dueTime || ''}`,
+              icon: '/icon-192.png',
+            }).catch(() => {});
+          }
+        }).catch(() => {});
+      }
     }
   };
 
