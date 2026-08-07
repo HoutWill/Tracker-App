@@ -10,6 +10,7 @@ export interface CalendarEventPayload {
   dueDate: string; // YYYY-MM-DD
   dueTime?: string; // HH:mm
   category?: string;
+  alarmOffsetMinutes?: number; // 0 = exact time, 15 = 15m before, 30 = 30m before
 }
 
 export const syncToAppleCalendar = (event: CalendarEventPayload) => {
@@ -17,17 +18,20 @@ export const syncToAppleCalendar = (event: CalendarEventPayload) => {
     const [year, month, day] = event.dueDate.split('-').map(Number);
     const [hour, minute] = (event.dueTime || '09:00').split(':').map(Number);
 
-    // Format local floating timestamp strings (YYYYMMDDTHHMMSS without Z for exact device local time)
     const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
-    const startStr = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
 
-    // 30 minute event duration
-    const endMinutes = (minute + 30) % 60;
-    const endHours = hour + Math.floor((minute + 30) / 60);
-    const endStr = `${year}${pad(month)}${pad(day)}T${pad(endHours)}${pad(endMinutes)}00`;
+    // Create Start & End Date objects
+    const startDate = new Date(year, month - 1, day, hour, minute, 0);
+    const endDate = new Date(startDate.getTime() + 15 * 60 * 1000); // 15-minute event slot
+
+    const startStr = `${startDate.getFullYear()}${pad(startDate.getMonth() + 1)}${pad(startDate.getDate())}T${pad(startDate.getHours())}${pad(startDate.getMinutes())}00`;
+    const endStr = `${endDate.getFullYear()}${pad(endDate.getMonth() + 1)}${pad(endDate.getDate())}T${pad(endDate.getHours())}${pad(endDate.getMinutes())}00`;
 
     const now = new Date();
     const stampStr = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}00Z`;
+
+    const offset = event.alarmOffsetMinutes || 0;
+    const triggerStr = offset === 0 ? '-PT0M' : `-PT${offset}M`;
 
     const icsLines = [
       'BEGIN:VCALENDAR',
@@ -43,14 +47,9 @@ export const syncToAppleCalendar = (event: CalendarEventPayload) => {
       `SUMMARY:🔔 ${event.title}`,
       `DESCRIPTION:${event.notes || 'Scheduled reminder from Tracker App'}`,
       'BEGIN:VALARM',
-      'TRIGGER:-PT0M', // Alarm right at exact due time!
+      `TRIGGER:${triggerStr}`, // Single exact alarm at exact user-selected time!
       'ACTION:DISPLAY',
       `DESCRIPTION:Due Alert: ${event.title}`,
-      'END:VALARM',
-      'BEGIN:VALARM',
-      'TRIGGER:-PT15M', // Second alarm 15 minutes before!
-      'ACTION:DISPLAY',
-      `DESCRIPTION:Upcoming Alert (15m): ${event.title}`,
       'END:VALARM',
       'END:VEVENT',
       'END:VCALENDAR',
