@@ -80,6 +80,66 @@ export const syncToAppleCalendar = (event: CalendarEventPayload) => {
   }
 };
 
+export const shareToAppleReminders = async (event: CalendarEventPayload): Promise<boolean> => {
+  try {
+    const [year, month, day] = event.dueDate.split('-').map(Number);
+    const [hour, minute] = (event.dueTime || '09:00').split(':').map(Number);
+
+    const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+    const dueDateObj = new Date(year, month - 1, day, hour, minute, 0);
+    const dueStr = `${dueDateObj.getFullYear()}${pad(dueDateObj.getMonth() + 1)}${pad(dueDateObj.getDate())}T${pad(dueDateObj.getHours())}${pad(dueDateObj.getMinutes())}00`;
+
+    const now = new Date();
+    const stampStr = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}00Z`;
+
+    const icsLines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Apple Inc.//iOS//EN',
+      'CALSCALE:GREGORIAN',
+      'BEGIN:VTODO',
+      `UID:tracker-reminder-${Date.now()}@tracker.app`,
+      `DTSTAMP:${stampStr}`,
+      `DUE:${dueStr}`,
+      `SUMMARY:🔔 ${event.title}`,
+      `DESCRIPTION:${event.notes || 'Reminder from Tracker App'}`,
+      'PRIORITY:1',
+      'STATUS:NEEDS-ACTION',
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      `DESCRIPTION:Due Alert: ${event.title}`,
+      'TRIGGER:-PT0M',
+      'END:VALARM',
+      'END:VTODO',
+      'END:VCALENDAR',
+    ];
+
+    const icsContent = icsLines.join('\r\n');
+    const fileName = `${event.title.replace(/[^a-zA-Z0-9]/g, '_')}_reminder.ics`;
+    const file = new File([icsContent], fileName, { type: 'text/calendar' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: event.title,
+        text: `Reminder: ${event.title}`,
+        files: [file],
+      });
+      return true;
+    } else if (navigator.share) {
+      await navigator.share({
+        title: event.title,
+        text: `🔔 Reminder: ${event.title}\n📅 Date: ${event.dueDate} ${event.dueTime || ''}\n${event.notes || ''}`,
+      });
+      return true;
+    } else {
+      return syncToAppleCalendar(event);
+    }
+  } catch (e) {
+    console.error('Share to Reminders error:', e);
+    return false;
+  }
+};
+
 export const syncToAppleReminders = (event: CalendarEventPayload) => {
   try {
     const [year, month, day] = event.dueDate.split('-').map(Number);
