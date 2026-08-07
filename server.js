@@ -63,16 +63,39 @@ const getDbFilePath = (req) => {
   return path.join(DATA_DIR, `expenses_${cleanId}.json`);
 };
 
-// Helper to read DB for specific guest
+// Helper to read DB for specific guest/user
 const readExpenses = (req) => {
-  const file = getDbFilePath(req);
+  const rawId = req.headers['x-guest-id'] || 'default_guest';
+  const cleanId = String(rawId).replace(/[^a-zA-Z0-9_-]/g, '_');
+
   try {
-    if (!fs.existsSync(file)) {
-      fs.writeFileSync(file, JSON.stringify([], null, 2));
-      return [];
+    if (fs.existsSync(DATA_DIR)) {
+      const files = fs.readdirSync(DATA_DIR);
+      // Look for exact prefix match e.g. expenses_usr_hout_gmail_com...
+      const matchingFiles = files.filter(f => f.startsWith(`expenses_${cleanId}`));
+      if (matchingFiles.length > 0) {
+        // Pick the largest / newest matching file
+        matchingFiles.sort((a, b) => {
+          const statA = fs.statSync(path.join(DATA_DIR, a));
+          const statB = fs.statSync(path.join(DATA_DIR, b));
+          return statB.mtimeMs - statA.mtimeMs;
+        });
+
+        const targetFile = matchingFiles[0];
+        const raw = fs.readFileSync(path.join(DATA_DIR, targetFile), 'utf8');
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
     }
-    const raw = fs.readFileSync(file, 'utf8');
-    return JSON.parse(raw);
+
+    const defaultFile = path.join(DATA_DIR, `expenses_${cleanId}.json`);
+    if (fs.existsSync(defaultFile)) {
+      const raw = fs.readFileSync(defaultFile, 'utf8');
+      return JSON.parse(raw);
+    }
+    return [];
   } catch (e) {
     return [];
   }

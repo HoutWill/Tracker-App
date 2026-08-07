@@ -162,31 +162,20 @@ export const StorageService = {
 
   async getExpenses(): Promise<ExpenseItem[]> {
     const guestId = getGuestId();
-    const isUserAccount = guestId.startsWith('usr_');
     const cached = this.getCachedExpenses();
 
-    // Logged-in user accounts strictly load real account data without demo merging
-    if (isUserAccount) {
-      return cached;
-    }
+    try {
+      const serverData = await fetchWithTimeout('/api/expenses', {
+        headers: { 'x-guest-id': guestId },
+      });
 
-    // Fast non-blocking background fetch for demo mode
-    fetchWithTimeout('/api/expenses', {
-      headers: { 'x-guest-id': guestId },
-    }).then(serverData => {
       if (Array.isArray(serverData) && serverData.length > 0) {
-        const mergedMap = new Map<string, ExpenseItem>();
-        serverData.forEach(item => mergedMap.set(item.id, item));
-        cached.forEach(item => mergedMap.set(item.id, item));
-        const merged = Array.from(mergedMap.values()).sort((a, b) => b.createdAt - a.createdAt);
-        try {
-          localStorage.setItem('pitrack_expenses_data', JSON.stringify(merged));
-          localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(merged));
-        } catch (e) {}
+        localStorage.setItem('pitrack_expenses_data', JSON.stringify(serverData));
+        localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(serverData));
+        return serverData.sort((a: ExpenseItem, b: ExpenseItem) => b.createdAt - a.createdAt);
       }
-    });
+    } catch (e) {}
 
-    // Return instant local cached data immediately (0ms UI lag)
     return cached;
   },
 
