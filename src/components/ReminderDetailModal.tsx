@@ -2,7 +2,7 @@ import React from 'react';
 import { ReminderItem } from '../types';
 import { useReminders } from '../context/ReminderContext';
 import { X, Bell, Calendar, Clock, CheckSquare, Square, Trash2, AlertCircle, Tag } from 'lucide-react';
-import { syncToAppleCalendar } from '../services/calendarSyncService';
+import { syncToAppleCalendar, syncToAppleReminders } from '../services/calendarSyncService';
 
 interface ReminderDetailModalProps {
   reminder: ReminderItem | null;
@@ -16,6 +16,16 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
 
   const handleToggle = () => {
     toggleReminder(reminder.id);
+  };
+
+  const handleSyncAppleReminders = () => {
+    syncToAppleReminders({
+      title: reminder.title,
+      notes: reminder.notes,
+      dueDate: reminder.dueDate,
+      dueTime: reminder.dueTime,
+      category: reminder.category,
+    });
   };
 
   const handleSyncAppleCalendar = () => {
@@ -189,6 +199,30 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '8px' }}>
+          <button
+            type="button"
+            onClick={handleSyncAppleReminders}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '16px',
+              border: 'none',
+              backgroundColor: '#FF9F0A',
+              color: '#141416',
+              fontWeight: 800,
+              fontSize: '13px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              boxShadow: '0 4px 14px rgba(255, 159, 10, 0.3)',
+            }}
+          >
+            <Bell size={16} />
+            <span>Add to Apple Reminders</span>
+          </button>
+
           <button
             type="button"
             onClick={handleSyncAppleCalendar}

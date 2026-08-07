@@ -3,7 +3,7 @@ import { useReminders } from '../context/ReminderContext';
 import { getTodayDateString } from '../services/storageService';
 import { ReminderCategory } from '../types';
 import { X, Bell, Check, Calendar, Clock, AlertCircle } from 'lucide-react';
-import { syncToAppleCalendar } from '../services/calendarSyncService';
+import { syncToAppleCalendar, syncToAppleReminders } from '../services/calendarSyncService';
 
 export const AddReminderModal: React.FC = () => {
   const { isAddReminderOpen, setIsAddReminderOpen, addReminder } = useReminders();
@@ -17,6 +17,7 @@ export const AddReminderModal: React.FC = () => {
   const [endTime, setEndTime] = useState('12:30'); // End Time
   const [alertEnabled, setAlertEnabled] = useState(true);
   const [syncCalendar, setSyncCalendar] = useState(true);
+  const [syncReminders, setSyncReminders] = useState(true);
 
   if (!isAddReminderOpen) return null;
 
@@ -35,7 +36,15 @@ export const AddReminderModal: React.FC = () => {
       alertEnabled,
     });
 
-    if (syncCalendar) {
+    if (syncReminders) {
+      syncToAppleReminders({
+        title: title.trim(),
+        notes: notes.trim(),
+        dueDate,
+        dueTime,
+        category,
+      });
+    } else if (syncCalendar) {
       syncToAppleCalendar({
         title: title.trim(),
         notes: notes.trim(),
@@ -335,6 +344,29 @@ export const AddReminderModal: React.FC = () => {
               }}
             >
               {alertEnabled ? 'On' : 'Off'}
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Bell size={14} color="#FF9F0A" />
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#FFF' }}>Apple Reminders</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSyncReminders(!syncReminders)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '12px',
+                border: 'none',
+                backgroundColor: syncReminders ? '#FF9F0A' : 'rgba(255, 255, 255, 0.12)',
+                color: syncReminders ? '#141416' : '#FFF',
+                fontSize: '11px',
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              {syncReminders ? 'Sync' : 'Off'}
             </button>
           </div>
 

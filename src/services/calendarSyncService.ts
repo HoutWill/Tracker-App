@@ -86,3 +86,64 @@ export const syncToAppleCalendar = (event: CalendarEventPayload) => {
     return false;
   }
 };
+
+export const syncToAppleReminders = (event: CalendarEventPayload) => {
+  try {
+    const [year, month, day] = event.dueDate.split('-').map(Number);
+    const [hour, minute] = (event.dueTime || '09:00').split(':').map(Number);
+
+    const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+    const dueDateObj = new Date(year, month - 1, day, hour, minute, 0);
+    const dueStr = `${dueDateObj.getFullYear()}${pad(dueDateObj.getMonth() + 1)}${pad(dueDateObj.getDate())}T${pad(dueDateObj.getHours())}${pad(dueDateObj.getMinutes())}00`;
+
+    const now = new Date();
+    const stampStr = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}00Z`;
+
+    const offset = event.alarmOffsetMinutes || 0;
+    const triggerStr = offset === 0 ? '-PT0M' : `-PT${offset}M`;
+
+    const icsLines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Apple Inc.//iOS//EN',
+      'CALSCALE:GREGORIAN',
+      'BEGIN:VTODO',
+      `UID:tracker-reminder-${Date.now()}@tracker.app`,
+      `DTSTAMP:${stampStr}`,
+      `DUE:${dueStr}`,
+      `SUMMARY:🔔 ${event.title}`,
+      `DESCRIPTION:${event.notes || 'Reminder from Tracker App'}`,
+      'PRIORITY:1',
+      'STATUS:NEEDS-ACTION',
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      `DESCRIPTION:Due Alert: ${event.title}`,
+      `TRIGGER:${triggerStr}`,
+      'END:VALARM',
+      'BEGIN:VALARM',
+      'ACTION:AUDIO',
+      `TRIGGER:${triggerStr}`,
+      'ATTACH;VALUE=URI:Basso',
+      'END:VALARM',
+      'END:VTODO',
+      'END:VCALENDAR',
+    ];
+
+    const icsContent = icsLines.join('\r\n');
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${event.title.replace(/[^a-zA-Z0-9]/g, '_')}_reminder.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    return true;
+  } catch (e) {
+    console.error('Apple Reminders sync error:', e);
+    return false;
+  }
+};
