@@ -67,9 +67,25 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } catch (e) {}
     }
 
+    // iOS Safari requires showNotification via Service Worker registration
+    if ('serviceWorker' in navigator) {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        if (reg && reg.showNotification) {
+          await reg.showNotification('🔔 Tracker Alert Test', {
+            body: 'Red badge (3) set on Home Screen icon! Tap to open.',
+            icon: '/assets/icon-192.png',
+            badge: '/assets/icon-192.png',
+          });
+          return 'Alert sent & red badge (3) set on Home Screen icon!';
+        }
+      } catch (e) {}
+    }
+
+    // Fallback for browsers supporting new Notification()
     try {
       new Notification('🔔 Tracker Alert Test', {
-        body: 'Red badge (3) set on Home Screen icon. Tap to open!',
+        body: 'Red badge (3) set on Home Screen icon! Tap to open.',
         icon: '/assets/icon-192.png',
         badge: '/assets/icon-192.png',
       });
@@ -120,11 +136,28 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const today = getTodayDateString();
       const nowTime = new Date().toTimeString().slice(0, 5); // HH:mm
 
-      reminders.forEach(r => {
+      reminders.forEach(async r => {
         if (!r.completed && r.alertEnabled && r.dueDate === today && r.dueTime === nowTime) {
+          const title = `Due Alert: ${r.title}`;
+          const body = `Reminder for ${r.category} is due right now!`;
+
+          if ('serviceWorker' in navigator) {
+            try {
+              const reg = await navigator.serviceWorker.ready;
+              if (reg && reg.showNotification) {
+                await reg.showNotification(title, {
+                  body,
+                  icon: '/assets/icon-192.png',
+                  badge: '/assets/icon-192.png',
+                });
+                return;
+              }
+            } catch (e) {}
+          }
+
           try {
-            new Notification(`Due Alert: ${r.title}`, {
-              body: `Reminder for ${r.category} is due right now!`,
+            new Notification(title, {
+              body,
               icon: '/assets/icon-192.png',
             });
           } catch (e) {}

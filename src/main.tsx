@@ -15,19 +15,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// Completely Unregister & Purge PWA Service Worker to remove offline caching
+// Register PWA Service Worker for iOS Safari notifications & badging
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    for (let registration of registrations) {
-      registration.unregister();
-    }
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
-
-  if ('caches' in window) {
-    caches.keys().then(keys => {
-      for (let key of keys) {
-        caches.delete(key);
-      }
-    });
-  }
 }

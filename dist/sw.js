@@ -3,17 +3,21 @@ self.addEventListener('install', () => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
-      .then(() => self.registration.unregister())
-      .then(() => self.clients.matchAll())
-      .then((clients) => {
-        clients.forEach((client) => client.navigate(client.url));
-      })
-  );
+  event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('fetch', (event) => {
-  // Pass all requests directly through network with zero caching
-  return;
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('/');
+      }
+    })
+  );
 });
