@@ -8,14 +8,16 @@
   "theme_color": "#141416",
   "icons": [
     {
-      "src": "/assets/icon-192.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/assets/icon-512.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "shortcuts": [
@@ -24,14 +26,14 @@
       "short_name": "Expense",
       "description": "Add new expense",
       "url": "/?action=add-expense",
-      "icons": [{ "src": "/assets/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Reminder",
       "short_name": "Reminder",
       "description": "Add new reminder",
       "url": "/?action=add-reminder",
-      "icons": [{ "src": "/assets/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
