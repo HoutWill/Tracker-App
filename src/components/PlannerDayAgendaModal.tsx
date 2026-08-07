@@ -7,11 +7,9 @@ import {
   ChevronLeft,
   Plus,
   Search,
-  List,
   CheckSquare,
   Square,
   Clock,
-  AlertCircle,
   MapPin,
   Sun,
   SunMedium,
@@ -54,22 +52,6 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
     return names[m] || 'Month';
   }
 
-  const getCategoryBarColor = (category: string, level?: string) => {
-    if (level === 'URGENT') return '#FF4081';
-    if (level === 'FLAGGED') return '#FB8C00';
-    switch (category) {
-      case 'BILLS': return '#E53935';
-      case 'SAVINGS': return '#00E676';
-      case 'STUDY': return '#AB47BC';
-      case 'MEETING': return '#FB8C00';
-      case 'SPORT': return '#4CAF50';
-      case 'FUN': return '#FF4081';
-      case 'WORK': return '#1E88E5';
-      case 'HEALTH': return '#00E676';
-      default: return '#2EAADC';
-    }
-  };
-
   // Time Period Grouping (Morning, Afternoon, Evening, Anytime)
   const morningTasks = filteredReminders.filter(r => {
     if (!r.dueTime) return false;
@@ -92,34 +74,33 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
   const anytimeTasks = filteredReminders.filter(r => !r.dueTime);
 
   const sections = [
-    { title: 'Morning', icon: <Sun size={14} color="#FFB300" />, items: morningTasks },
-    { title: 'Afternoon', icon: <SunMedium size={14} color="#FB8C00" />, items: afternoonTasks },
-    { title: 'Evening', icon: <Moon size={14} color="#AB47BC" />, items: eveningTasks },
-    { title: 'Anytime', icon: <Clock size={14} color="#2EAADC" />, items: anytimeTasks },
+    { title: 'Morning', icon: <Sun size={13} style={{ color: '#F59E0B' }} />, items: morningTasks },
+    { title: 'Afternoon', icon: <SunMedium size={13} style={{ color: '#3B82F6' }} />, items: afternoonTasks },
+    { title: 'Evening', icon: <Moon size={13} style={{ color: '#8B5CF6' }} />, items: eveningTasks },
+    { title: 'Anytime', icon: <Clock size={13} style={{ color: 'var(--text-muted)' }} />, items: anytimeTasks },
   ].filter(s => s.items.length > 0);
 
   const renderTaskCard = (r: ReminderItem) => {
-    const barColor = getCategoryBarColor(r.category, r.level);
     return (
       <div
         key={r.id}
         onClick={() => onSelectReminderDetail(r)}
         style={{
-          backgroundColor: 'rgba(30, 30, 35, 0.85)',
-          borderLeft: `4px solid ${barColor}`,
-          borderRadius: '16px',
-          padding: '14px 16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-glass)',
+          borderRadius: '12px',
+          padding: '12px 14px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '12px',
+          gap: '10px',
           cursor: 'pointer',
-          opacity: r.completed ? 0.5 : 1,
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+          opacity: r.completed ? 0.55 : 1,
+          transition: 'all 0.15s ease',
         }}
       >
         {/* Left Checkbox & Title Info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, overflow: 'hidden' }}>
           <button
             type="button"
             onClick={e => {
@@ -129,23 +110,23 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
             style={{
               background: 'none',
               border: 'none',
-              color: r.completed ? '#00E676' : 'rgba(255, 255, 255, 0.4)',
+              color: r.completed ? 'var(--accent-success)' : 'var(--text-muted)',
               cursor: 'pointer',
               padding: 0,
               display: 'flex',
               alignItems: 'center',
             }}
           >
-            {r.completed ? <CheckSquare size={22} /> : <Square size={22} />}
+            {r.completed ? <CheckSquare size={18} /> : <Square size={18} />}
           </button>
 
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span
                 style={{
-                  fontSize: '15px',
-                  fontWeight: 800,
-                  color: '#FFF',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
                   textDecoration: r.completed ? 'line-through' : 'none',
                 }}
               >
@@ -154,12 +135,12 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
               {r.level === 'URGENT' && (
                 <span
                   style={{
-                    fontSize: '8px',
-                    fontWeight: 800,
-                    padding: '2px 6px',
+                    fontSize: '9px',
+                    fontWeight: 600,
+                    padding: '1px 5px',
                     borderRadius: '4px',
-                    backgroundColor: 'rgba(255, 64, 129, 0.25)',
-                    color: '#FF4081',
+                    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                    color: 'var(--accent-danger)',
                   }}
                 >
                   Urgent
@@ -171,15 +152,15 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
               <div
                 style={{
                   fontSize: '11px',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  marginTop: '3px',
+                  color: 'var(--text-muted)',
+                  marginTop: '2px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
                 }}
               >
-                <MapPin size={10} color="rgba(255, 255, 255, 0.4)" />
-                <span>{r.notes}</span>
+                <MapPin size={10} style={{ color: 'var(--text-muted)' }} />
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.notes}</span>
               </div>
             )}
           </div>
@@ -187,11 +168,11 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
 
         {/* Right Time Display */}
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '12px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.8)' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)' }}>
             {r.dueTime || 'All-day'}
           </div>
-          <div style={{ fontSize: '9px', fontWeight: 800, color: barColor, marginTop: '2px' }}>
-            {r.category}
+          <div style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-muted)', marginTop: '2px' }}>
+            {r.category.charAt(0) + r.category.slice(1).toLowerCase()}
           </div>
         </div>
       </div>
@@ -203,252 +184,212 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.92)',
-        backdropFilter: 'blur(20px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        backdropFilter: 'blur(12px)',
         zIndex: 120,
         display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        color: '#FFF',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
       }}
+      onClick={onClose}
     >
-      {/* Top Header Navigation Bar */}
       <div
+        className="glass-panel"
+        onClick={e => e.stopPropagation()}
         style={{
+          width: '100%',
+          maxWidth: '420px',
+          maxHeight: '85vh',
+          borderRadius: '16px',
+          backgroundColor: 'var(--bg-card)',
+          borderColor: 'var(--border-glass)',
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '16px 20px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
-        {/* Left Back Button */}
-        <button
-          type="button"
-          onClick={onClose}
+        {/* Top Header Navigation Bar */}
+        <div
           style={{
             display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
-            gap: '4px',
-            padding: '6px 12px',
-            borderRadius: '18px',
-            backgroundColor: 'rgba(255, 255, 255, 0.12)',
-            border: 'none',
-            color: '#FFF',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer',
+            padding: '14px 16px',
+            borderBottom: '1px solid var(--border-glass)',
           }}
         >
-          <ChevronLeft size={16} />
-          <span>{fullMonth}</span>
-        </button>
-
-        {/* Right Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button
-            type="button"
-            onClick={() => setIsSearchOpen(!isSearchOpen)}
-            style={{
-              padding: '8px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              border: 'none',
-              color: '#FFF',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Search size={16} />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setIsAddReminderOpen(true);
-              onClose();
-            }}
-            style={{
-              padding: '8px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              border: 'none',
-              color: '#FFF',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Plus size={18} />
-          </button>
-
+          {/* Left Back Button */}
           <button
             type="button"
             onClick={onClose}
             style={{
-              padding: '8px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255, 82, 82, 0.2)',
-              border: 'none',
-              color: '#FF5252',
-              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              gap: '4px',
+              padding: '4px 10px',
+              borderRadius: '8px',
+              backgroundColor: 'var(--pill-bg)',
+              border: '1px solid var(--border-glass)',
+              color: 'var(--text-primary)',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
             }}
           >
-            <X size={18} />
+            <ChevronLeft size={14} />
+            <span>{fullMonth}</span>
           </button>
-        </div>
-      </div>
 
-      {/* Optional Search Bar */}
-      {isSearchOpen && (
-        <div style={{ padding: '8px 20px' }}>
-          <input
-            type="text"
-            placeholder="Search tasks..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: '14px',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: '#FFF',
-              fontSize: '13px',
-              outline: 'none',
-            }}
-          />
-        </div>
-      )}
+          {/* Right Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              style={{
+                padding: '6px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Search size={14} />
+            </button>
 
-      {/* Main Agenda List Body */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
-        {/* Date Divider Section */}
-        <div
-          style={{
-            fontSize: '15px',
-            fontWeight: 800,
-            color: isToday ? '#FF5252' : '#FFF',
-            marginBottom: '16px',
-            paddingBottom: '8px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <span>{dateHeader}</span>
-          <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 600 }}>
-            {filteredReminders.length} Tasks
-          </span>
-        </div>        {/* Task Items Grouped by Time of Day (Morning, Afternoon, Evening, Anytime) */}
-        {sections.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {sections.map(section => (
-              <div key={section.title}>
-                {/* Time Section Divider Header */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    marginBottom: '10px',
-                    fontSize: '12px',
-                    fontWeight: 800,
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {section.icon}
-                  <span>{section.title}</span>
-                  <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: 600 }}>
-                    ({section.items.length})
-                  </span>
-                </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsAddReminderOpen(true);
+                onClose();
+              }}
+              style={{
+                padding: '6px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Plus size={15} />
+            </button>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {section.items.map(r => renderTaskCard(r))}
-                </div>
-              </div>
-            ))}
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                padding: '6px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <X size={15} />
+            </button>
           </div>
-        ) : (
-          <div
-            style={{
-              padding: '40px 20px',
-              textAlign: 'center',
-              color: 'rgba(255, 255, 255, 0.4)',
-              fontSize: '13px',
-            }}
-          >
-            No tasks scheduled on {dateHeader}.
+        </div>
+
+        {/* Optional Search Bar */}
+        {isSearchOpen && (
+          <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border-glass)' }}>
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
+                color: 'var(--text-primary)',
+                fontSize: '12px',
+                outline: 'none',
+              }}
+            />
           </div>
         )}
-      </div>
 
-      {/* Floating iOS Bottom Pill Dock */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '12px 20px 24px 20px',
-        }}
-      >
-        {/* Floating Left "Today" Pill */}
-        <button
-          type="button"
-          onClick={() => {
-            // Closes modal and resets view if needed
-            onClose();
-          }}
-          style={{
-            padding: '10px 20px',
-            borderRadius: '20px',
-            backgroundColor: 'rgba(40, 40, 45, 0.9)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            color: '#FFF',
-            fontSize: '13px',
-            fontWeight: 800,
-            cursor: 'pointer',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
-          }}
-        >
-          Today
-        </button>
-
-        {/* Floating Right Action Pill */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            backgroundColor: 'rgba(40, 40, 45, 0.9)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => {
-              setIsAddReminderOpen(true);
-              onClose();
+        {/* Main Agenda List Body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+          {/* Date Divider Section */}
+          <div
+            style={{
+              fontSize: '14px',
+              fontWeight: 600,
+              color: isToday ? 'var(--accent)' : 'var(--text-primary)',
+              marginBottom: '12px',
+              paddingBottom: '6px',
+              borderBottom: '1px solid var(--border-subtle)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
             }}
-            style={{ background: 'none', border: 'none', color: '#FFF', cursor: 'pointer', display: 'flex', padding: 0 }}
-            title="Add Task"
           >
-            <Plus size={18} />
-          </button>
+            <span>{dateHeader}</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
+              {filteredReminders.length} Tasks
+            </span>
+          </div>
+
+          {/* Task Items Grouped by Time of Day */}
+          {sections.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {sections.map(section => (
+                <div key={section.title}>
+                  {/* Time Section Divider Header */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginBottom: '8px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: 'var(--text-muted)',
+                      letterSpacing: '0.2px',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {section.icon}
+                    <span>{section.title}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400 }}>
+                      ({section.items.length})
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {section.items.map(r => renderTaskCard(r))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div
+              style={{
+                padding: '32px 16px',
+                textAlign: 'center',
+                color: 'var(--text-muted)',
+                fontSize: '12px',
+              }}
+            >
+              No tasks scheduled on {dateHeader}.
+            </div>
+          )}
         </div>
       </div>
     </div>

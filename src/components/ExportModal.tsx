@@ -256,7 +256,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
             fontSize: '14px',
             cursor: 'pointer',
             marginTop: '4px',
-            boxShadow: '0 4px 16px rgba(46, 170, 220, 0.3)',
+            boxShadow: 'none',
           }}
         >
           <Download size={18} />

@@ -70,27 +70,30 @@ export const BenOfferingIcon: React.FC<CustomIconProps> = ({ size = 16, color = 
   </svg>
 );
 
-// Crisp Cambodian Flag Badge Vector Icon for National Holidays
+// Cambodian KH Badge for National Holidays
 export const CambodiaFlagBadge: React.FC<CustomIconProps> = ({ size = 16, className = '' }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
+  <span
     className={className}
-    style={{ display: 'inline-block', verticalAlign: 'middle' }}
+    style={{
+      fontSize: `${Math.max(9, Math.round(size * 0.7))}px`,
+      fontWeight: 800,
+      color: '#EF4444',
+      backgroundColor: 'rgba(239, 68, 68, 0.12)',
+      border: '1px solid rgba(239, 68, 68, 0.3)',
+      borderRadius: '4px',
+      padding: '1px 4px',
+      lineHeight: 1,
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      userSelect: 'none',
+      verticalAlign: 'middle',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      letterSpacing: '0.3px',
+    }}
+    role="img"
+    aria-label="Cambodia KH"
   >
-    <rect width="24" height="24" rx="6" fill="#E74C3C" />
-    <rect y="6" width="24" height="12" fill="#2980B9" />
-    {/* Angkor Wat Silhouette in Center */}
-    <path
-      d="M12 8L10 11H8V15H16V11H14L12 8Z"
-      fill="#FFFFFF"
-    />
-    <path
-      d="M12 9.2L11 11H13L12 9.2ZM9.5 12H10.5V14H9.5V12ZM13.5 12H14.5V14H13.5V12Z"
-      fill="#2980B9"
-    />
-  </svg>
+    KH
+  </span>
 );

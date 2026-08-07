@@ -23,29 +23,15 @@ import { CreateExpenseFolderModal } from './components/CreateExpenseFolderModal'
 import { CreateSavingFolderModal } from './components/CreateSavingFolderModal';
 import { EditTripModal } from './components/EditTripModal';
 
-import { useExpenses } from './context/ExpenseContext';
-import { useReminders } from './context/ReminderContext';
-
 export type TabName = 'EXPENSES' | 'SAVINGS' | 'STATS' | 'PLANNER' | 'CALENDAR' | 'SETTINGS';
 
 export const AppContent: React.FC = () => {
   const { pageColors } = useTheme();
-  const { setIsAddExpenseOpen } = useExpenses();
-  const { setIsAddReminderOpen } = useReminders();
   const [activeTab, setActiveTab] = useState<TabName>('EXPENSES');
 
-  // Request Web Persistent Storage & handle PWA Home Screen Shortcuts URL parameters
+  // Request Web Persistent Storage permission to prevent browser auto-cleaning cache
   useEffect(() => {
     requestPersistentStorage();
-
-    const params = new URLSearchParams(window.location.search);
-    const action = params.get('action');
-    if (action === 'add-expense') {
-      setIsAddExpenseOpen(true);
-    } else if (action === 'add-reminder') {
-      setActiveTab('PLANNER');
-      setIsAddReminderOpen(true);
-    }
   }, []);
 
   // Dynamically inject custom theme color into CSS Root Variables when switching tabs or changing colors
@@ -101,7 +87,7 @@ export const AppContent: React.FC = () => {
       <CreateSavingFolderModal />
       <EditTripModal />
 
-      {/* Modern Floating Liquid Glass Dock Bottom Navigation Bar */}
+      {/* Modern Floating Dock Bottom Navigation Bar */}
       <nav
         style={{
           position: 'fixed',
@@ -109,18 +95,18 @@ export const AppContent: React.FC = () => {
           left: '50%',
           transform: 'translateX(-50%)',
           width: 'calc(100% - 24px)',
-          maxWidth: '440px',
-          height: '62px',
-          backgroundColor: 'rgba(25, 25, 30, 0.85)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          borderRadius: '24px',
-          boxShadow: '0 12px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08) inset',
+          maxWidth: '430px',
+          height: '58px',
+          backgroundColor: 'var(--bg-card)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid var(--border-glass)',
+          borderRadius: '20px',
+          boxShadow: 'var(--shadow-card)',
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'center',
-          padding: '0 4px',
+          padding: '0 6px',
           zIndex: 40,
         }}
       >
@@ -133,28 +119,29 @@ export const AppContent: React.FC = () => {
         ].map(tab => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
-          const tabColor = pageColors[tab.id as keyof typeof pageColors] || 'var(--accent)';
 
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabName)}
               style={{
-                background: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                border: isActive ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
-                borderRadius: '14px',
-                padding: '4px 5px',
+                background: isActive ? 'var(--pill-hover)' : 'transparent',
+                border: isActive ? '1px solid var(--border-glass)' : '1px solid transparent',
+                borderRadius: '12px',
+                padding: '6px 10px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '2px',
-                color: isActive ? tabColor : 'var(--text-muted)',
+                gap: '3px',
+                color: isActive ? 'var(--accent-light)' : 'var(--text-muted)',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
-              <Icon size={17} />
-              <span style={{ fontSize: '9px', fontWeight: isActive ? 800 : 600, whiteSpace: 'nowrap' }}>{tab.label}</span>
+              <Icon size={18} />
+              <span style={{ fontSize: '10px', fontWeight: isActive ? 600 : 500, whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
+                {tab.label}
+              </span>
             </button>
           );
         })}

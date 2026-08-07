@@ -1,7 +1,7 @@
 import React from 'react';
 import { ReminderItem } from '../types';
 import { useReminders } from '../context/ReminderContext';
-import { X, Bell, Calendar, Clock, CheckSquare, Square, Trash2, AlertCircle, Tag } from 'lucide-react';
+import { X, Bell, Calendar, Clock, CheckSquare, Square, Trash2, Tag } from 'lucide-react';
 
 interface ReminderDetailModalProps {
   reminder: ReminderItem | null;
@@ -29,8 +29,8 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.85)',
-        backdropFilter: 'blur(16px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        backdropFilter: 'blur(12px)',
         zIndex: 140,
         display: 'flex',
         alignItems: 'center',
@@ -44,27 +44,38 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
         onClick={e => e.stopPropagation()}
         style={{
           width: '100%',
-          maxWidth: '380px',
-          padding: '24px',
+          maxWidth: '360px',
+          padding: '20px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
-          borderRadius: '24px',
-          borderColor: reminder.level === 'URGENT' ? 'rgba(255, 64, 129, 0.5)' : 'rgba(46, 170, 220, 0.4)',
+          gap: '14px',
+          borderRadius: '16px',
+          backgroundColor: 'var(--bg-card)',
+          borderColor: 'var(--border-glass)',
         }}
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Bell size={18} color="var(--accent)" />
-            <h3 style={{ fontSize: '16px', fontWeight: 900 }}>Detail</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Bell size={15} style={{ color: 'var(--accent)' }} />
+            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
+              Reminder Detail
+            </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
@@ -73,10 +84,11 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <h2
               style={{
-                fontSize: '18px',
-                fontWeight: 900,
+                fontSize: '16px',
+                fontWeight: 600,
                 color: 'var(--text-primary)',
                 textDecoration: reminder.completed ? 'line-through' : 'none',
+                letterSpacing: '-0.1px',
               }}
             >
               {reminder.title}
@@ -85,11 +97,11 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
               <span
                 style={{
                   fontSize: '9px',
-                  fontWeight: 800,
-                  padding: '2px 8px',
-                  borderRadius: '6px',
-                  backgroundColor: 'rgba(255, 64, 129, 0.25)',
-                  color: '#FF4081',
+                  fontWeight: 600,
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                  color: 'var(--accent-danger)',
                 }}
               >
                 Urgent
@@ -97,31 +109,33 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
             <span
               style={{
                 fontSize: '10px',
-                fontWeight: 800,
-                padding: '2px 8px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                color: 'var(--accent)',
+                fontWeight: 500,
+                padding: '2px 6px',
+                borderRadius: '6px',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-glass)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
               }}
             >
-              <Tag size={11} /> {reminder.category.charAt(0) + reminder.category.slice(1).toLowerCase()}
+              <Tag size={10} /> {reminder.category.charAt(0) + reminder.category.slice(1).toLowerCase()}
             </span>
 
             <span
               style={{
                 fontSize: '10px',
-                fontWeight: 800,
-                padding: '2px 8px',
-                borderRadius: '8px',
-                backgroundColor: reminder.alertEnabled ? 'rgba(0, 230, 118, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                fontWeight: 500,
+                padding: '2px 6px',
+                borderRadius: '6px',
+                backgroundColor: reminder.alertEnabled ? 'rgba(16, 185, 129, 0.1)' : 'var(--pill-bg)',
                 color: reminder.alertEnabled ? 'var(--accent-success)' : 'var(--text-muted)',
+                border: '1px solid var(--border-glass)',
               }}
             >
               {reminder.alertEnabled ? 'Alert On' : 'Alert Off'}
@@ -131,28 +145,29 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
 
         {/* Date & Time Box */}
         <div
-          className="glass-panel"
           style={{
-            padding: '12px 16px',
-            borderRadius: '16px',
+            padding: '10px 12px',
+            borderRadius: '10px',
+            backgroundColor: 'var(--pill-bg)',
+            border: '1px solid var(--border-glass)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Calendar size={16} color="var(--accent)" />
+            <Calendar size={15} style={{ color: 'var(--text-secondary)' }} />
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>Date</div>
-              <div style={{ fontSize: '13px', fontWeight: 800 }}>{reminder.dueDate}</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 500 }}>Date</div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>{reminder.dueDate}</div>
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Clock size={16} color="var(--accent)" />
+            <Clock size={15} style={{ color: 'var(--text-secondary)' }} />
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>Time</div>
-              <div style={{ fontSize: '13px', fontWeight: 800 }}>{reminder.dueTime || 'Task'}</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 500 }}>Time</div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>{reminder.dueTime || 'Task'}</div>
             </div>
           </div>
         </div>
@@ -160,13 +175,14 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
         {/* Notes Section */}
         {reminder.notes ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Notes</label>
+            <label style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-muted)' }}>Notes</label>
             <div
-              className="glass-panel"
               style={{
-                padding: '12px 14px',
-                borderRadius: '16px',
-                fontSize: '13px',
+                padding: '10px 12px',
+                borderRadius: '10px',
+                backgroundColor: 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
+                fontSize: '12px',
                 color: 'var(--text-primary)',
                 lineHeight: 1.4,
               }}
@@ -177,19 +193,19 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
         ) : null}
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
           <button
             type="button"
             onClick={handleToggle}
             style={{
               flex: 1,
-              padding: '12px',
-              borderRadius: '16px',
-              border: 'none',
-              backgroundColor: reminder.completed ? 'rgba(255, 255, 255, 0.1)' : 'var(--accent)',
-              color: '#FFF',
-              fontWeight: 800,
-              fontSize: '13px',
+              padding: '10px',
+              borderRadius: '10px',
+              border: '1px solid var(--border-glass)',
+              backgroundColor: reminder.completed ? 'var(--pill-bg)' : 'var(--accent)',
+              color: reminder.completed ? 'var(--text-primary)' : '#FFF',
+              fontWeight: 600,
+              fontSize: '12px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -197,21 +213,21 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
               gap: '6px',
             }}
           >
-            {reminder.completed ? <Square size={16} /> : <CheckSquare size={16} />}
-            <span>{reminder.completed ? 'Pending' : 'Complete'}</span>
+            {reminder.completed ? <Square size={15} /> : <CheckSquare size={15} />}
+            <span>{reminder.completed ? 'Mark Pending' : 'Mark Complete'}</span>
           </button>
 
           <button
             type="button"
             onClick={handleDelete}
             style={{
-              padding: '12px 16px',
-              borderRadius: '16px',
-              border: '1px solid rgba(255, 82, 82, 0.3)',
-              backgroundColor: 'rgba(255, 82, 82, 0.15)',
-              color: '#FF5252',
-              fontWeight: 800,
-              fontSize: '13px',
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+              color: 'var(--accent-danger)',
+              fontWeight: 600,
+              fontSize: '12px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -219,10 +235,11 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
             }}
             title="Delete"
           >
-            <Trash2 size={16} />
+            <Trash2 size={15} />
           </button>
         </div>
       </div>
     </div>
   );
 };
+

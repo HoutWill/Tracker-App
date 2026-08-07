@@ -240,7 +240,7 @@ export const AiChatModal: React.FC = () => {
                     fontSize: '13px',
                     lineHeight: '1.5',
                     whiteSpace: 'pre-line',
-                    boxShadow: isUser ? '0 4px 14px rgba(108, 92, 231, 0.25)' : 'none',
+                    boxShadow: 'none',
                   }}
                 >
                   <div style={{ fontWeight: 500 }}>{msg.text}</div>
@@ -365,7 +365,7 @@ export const AiChatModal: React.FC = () => {
               justifyContent: 'center',
               cursor: isProcessing ? 'not-allowed' : 'pointer',
               opacity: isProcessing || !promptText.trim() ? 0.5 : 1,
-              boxShadow: '0 4px 14px rgba(108, 92, 231, 0.3)',
+              boxShadow: 'none',
             }}
             title="Send Message"
           >

@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ReminderItem } from '../types';
 import { StorageService, getTodayDateString } from '../services/storageService';
-import { LocalNotifications } from '@capacitor/local-notifications';
-import { playAlertChime } from '../services/soundService';
 
 interface ReminderContextType {
   reminders: ReminderItem[];
@@ -69,25 +67,9 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } catch (e) {}
     }
 
-    // iOS Safari requires showNotification via Service Worker registration
-    if ('serviceWorker' in navigator) {
-      try {
-        const reg = await navigator.serviceWorker.ready;
-        if (reg && reg.showNotification) {
-          await reg.showNotification('🔔 Tracker Alert Test', {
-            body: 'Red badge (3) set on Home Screen icon! Tap to open.',
-            icon: '/assets/icon-192.png',
-            badge: '/assets/icon-192.png',
-          });
-          return 'Alert sent & red badge (3) set on Home Screen icon!';
-        }
-      } catch (e) {}
-    }
-
-    // Fallback for browsers supporting new Notification()
     try {
       new Notification('🔔 Tracker Alert Test', {
-        body: 'Red badge (3) set on Home Screen icon! Tap to open.',
+        body: 'Red badge (3) set on Home Screen icon. Tap to open!',
         icon: '/assets/icon-192.png',
         badge: '/assets/icon-192.png',
       });
@@ -108,42 +90,14 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setReminders(updated);
     StorageService.saveReminders(updated);
 
-    // Schedule Native Device System Alarm Alert (Fires on Lock Screen even when app is closed)
-    if (newReminder.alertEnabled && newReminder.dueDate && newReminder.dueTime) {
+    // If notifications enabled, trigger feedback test
+    if (newReminder.alertEnabled && isNotificationEnabled && 'Notification' in window) {
       try {
-        const [year, month, day] = newReminder.dueDate.split('-').map(Number);
-        const [hour, minute] = newReminder.dueTime.split(':').map(Number);
-        const scheduleDate = new Date(year, month - 1, day, hour, minute, 0);
-
-        if (scheduleDate.getTime() > Date.now()) {
-          LocalNotifications.requestPermissions().then(() => {
-            LocalNotifications.schedule({
-              notifications: [
-                {
-                  title: `Due Alert: ${newReminder.title}`,
-                  body: `Reminder for ${newReminder.category} is due right now!`,
-                  id: Math.floor(Math.random() * 100000),
-                  schedule: { at: scheduleDate },
-                },
-              ],
-            }).catch(() => {});
-          }).catch(() => {});
-        }
+        new Notification(`Reminder set: ${newReminder.title}`, {
+          body: `Scheduled for ${newReminder.dueDate} ${newReminder.dueTime || ''}`,
+          icon: '/assets/icon-192.png',
+        });
       } catch (e) {}
-    }
-
-    // Feedback alert
-    if (newReminder.alertEnabled && isNotificationEnabled) {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then(reg => {
-          if (reg && reg.showNotification) {
-            reg.showNotification(`Reminder Scheduled: ${newReminder.title}`, {
-              body: `Set for ${newReminder.dueDate} ${newReminder.dueTime || ''}`,
-              icon: '/icon-192.png',
-            }).catch(() => {});
-          }
-        }).catch(() => {});
-      }
     }
   };
 
@@ -166,28 +120,11 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const today = getTodayDateString();
       const nowTime = new Date().toTimeString().slice(0, 5); // HH:mm
 
-      reminders.forEach(async r => {
+      reminders.forEach(r => {
         if (!r.completed && r.alertEnabled && r.dueDate === today && r.dueTime === nowTime) {
-          const title = `Due Alert: ${r.title}`;
-          const body = `Reminder for ${r.category} is due right now!`;
-
-          if ('serviceWorker' in navigator) {
-            try {
-              const reg = await navigator.serviceWorker.ready;
-              if (reg && reg.showNotification) {
-                await reg.showNotification(title, {
-                  body,
-                  icon: '/assets/icon-192.png',
-                  badge: '/assets/icon-192.png',
-                });
-                return;
-              }
-            } catch (e) {}
-          }
-
           try {
-            new Notification(title, {
-              body,
+            new Notification(`Due Alert: ${r.title}`, {
+              body: `Reminder for ${r.category} is due right now!`,
               icon: '/assets/icon-192.png',
             });
           } catch (e) {}

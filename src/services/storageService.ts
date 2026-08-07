@@ -51,28 +51,6 @@ export const requestPersistentStorage = async (): Promise<boolean> => {
   return false;
 };
 
-export const triggerCloudBackup = () => {
-  try {
-    const guestId = getGuestId();
-    if (!guestId) return;
-
-    const payload = {
-      expenses: StorageService.getCachedExpenses(),
-      reminders: StorageService.getReminders(),
-      trips: StorageService.getTrips(),
-      savings: JSON.parse(localStorage.getItem('pitrack_savings_data') || '[]'),
-      expenseFolders: JSON.parse(localStorage.getItem('pitrack_expense_folders') || '[]'),
-      savingFolders: JSON.parse(localStorage.getItem('pitrack_saving_folders') || '[]'),
-    };
-
-    fetch('/api/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accountId: guestId, payload }),
-    }).catch(() => {});
-  } catch (e) {}
-};
-
 const DEFAULT_DEMO_EXPENSES: ExpenseItem[] = [
   {
     id: 'exp-demo-1',
@@ -222,8 +200,7 @@ export const StorageService = {
       localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
-    // 2. Fast non-blocking sync to API & Cloud Sync Backup
-    triggerCloudBackup();
+    // 2. Fast non-blocking sync to API
     fetchWithTimeout('/api/expenses', {
       method: 'POST',
       headers: {
@@ -247,8 +224,7 @@ export const StorageService = {
       localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
-    // 2. Fast non-blocking sync PUT & Cloud Sync Backup
-    triggerCloudBackup();
+    // 2. Fast non-blocking sync PUT
     fetchWithTimeout(`/api/expenses/${id}`, {
       method: 'PUT',
       headers: {
@@ -270,8 +246,7 @@ export const StorageService = {
       localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
-    // 2. Fast non-blocking sync DELETE & Cloud Sync Backup
-    triggerCloudBackup();
+    // 2. Fast non-blocking sync DELETE
     fetchWithTimeout(`/api/expenses/${id}`, {
       method: 'DELETE',
       headers: { 'x-guest-id': guestId },
