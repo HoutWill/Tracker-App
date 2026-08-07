@@ -13,6 +13,9 @@ interface ReminderContextType {
   isNotificationEnabled: boolean;
   requestNotificationPermission: () => Promise<boolean>;
   triggerTestNotification: () => Promise<string>;
+  activeCenterAlert: { isOpen: boolean; title: string; message: string; type?: 'success' | 'info' | 'warning' } | null;
+  dismissCenterAlert: () => void;
+  showCenterAlert: (title: string, message: string, type?: 'success' | 'info' | 'warning') => void;
 }
 
 const ReminderContext = createContext<ReminderContextType>({} as ReminderContextType);
@@ -23,6 +26,21 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isNotificationEnabled, setIsNotificationEnabled] = useState<boolean>(() => {
     return 'Notification' in window && Notification.permission === 'granted';
   });
+
+  const [activeCenterAlert, setActiveCenterAlert] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type?: 'success' | 'info' | 'warning';
+  } | null>(null);
+
+  const showCenterAlert = (title: string, message: string, type: 'success' | 'info' | 'warning' = 'info') => {
+    setActiveCenterAlert({ isOpen: true, title, message, type });
+  };
+
+  const dismissCenterAlert = () => {
+    setActiveCenterAlert(null);
+  };
 
   // Automatically update red badge count on Home Screen app icon whenever reminders change
   useEffect(() => {
@@ -170,6 +188,9 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const title = `Due Alert: ${r.title}`;
           const body = `Reminder for ${r.category} is due right now!`;
 
+          // Pop up Center Alert Modal right in the middle of the screen!
+          showCenterAlert(title, body, 'info');
+
           if ('serviceWorker' in navigator) {
             try {
               const reg = await navigator.serviceWorker.ready;
@@ -209,6 +230,9 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isNotificationEnabled,
         requestNotificationPermission,
         triggerTestNotification,
+        activeCenterAlert,
+        dismissCenterAlert,
+        showCenterAlert,
       }}
     >
       {children}
