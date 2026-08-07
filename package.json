@@ -7,23 +7,29 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "deploy": "npx wrangler deploy --assets=./dist",
+    "cap:build": "npm run build && npx cap copy",
+    "cap:ios": "npm run build && npx cap add ios",
     "preview": "vite preview",
     "start": "node server.js"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "lucide-react": "^0.381.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.12.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^6.0.5",
     "typescript": "^5.4.5",
     "vite": "^8.2.1"
