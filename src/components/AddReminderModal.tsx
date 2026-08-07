@@ -1,9 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useReminders } from '../context/ReminderContext';
 import { getTodayDateString } from '../services/storageService';
 import { ReminderCategory } from '../types';
 import { X, Bell, Check, Calendar, Clock, AlertCircle } from 'lucide-react';
 import { syncToAppleCalendar, syncToAppleReminders } from '../services/calendarSyncService';
+
+const getCurrentTimeString = () => {
+  const now = new Date();
+  const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+  return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+};
+
+const getEndTimeString = () => {
+  const now = new Date(Date.now() + 30 * 60 * 1000);
+  const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+  return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+};
 
 export const AddReminderModal: React.FC = () => {
   const { isAddReminderOpen, setIsAddReminderOpen, addReminder } = useReminders();
@@ -13,11 +25,20 @@ export const AddReminderModal: React.FC = () => {
   const [level, setLevel] = useState<'URGENT' | 'FLAGGED' | 'SIMPLE'>('SIMPLE');
   const [category, setCategory] = useState<ReminderCategory>('TASK');
   const [dueDate, setDueDate] = useState(getTodayDateString());
-  const [dueTime, setDueTime] = useState('12:00'); // Start Time
-  const [endTime, setEndTime] = useState('12:30'); // End Time
+  const [dueTime, setDueTime] = useState(getCurrentTimeString()); // Start Time
+  const [endTime, setEndTime] = useState(getEndTimeString()); // End Time
   const [alertEnabled, setAlertEnabled] = useState(true);
   const [syncCalendar, setSyncCalendar] = useState(true);
   const [syncReminders, setSyncReminders] = useState(true);
+
+  // Automatically sync to current live date and time whenever modal opens
+  useEffect(() => {
+    if (isAddReminderOpen) {
+      setDueDate(getTodayDateString());
+      setDueTime(getCurrentTimeString());
+      setEndTime(getEndTimeString());
+    }
+  }, [isAddReminderOpen]);
 
   if (!isAddReminderOpen) return null;
 
