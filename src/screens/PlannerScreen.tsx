@@ -96,28 +96,6 @@ export const PlannerScreen: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* Add Reminder Button */}
-          {/* Web Push Alert Permission Pill Button */}
-          <button
-            type="button"
-            className="glass-pill"
-            onClick={requestNotificationPermission}
-            style={{
-              backgroundColor: isNotificationEnabled ? hexToRgba(pageAccent, 0.2) : 'rgba(255, 255, 255, 0.06)',
-              borderColor: isNotificationEnabled ? hexToRgba(pageAccent, 0.4) : 'var(--border-glass)',
-              color: isNotificationEnabled ? pageAccent : 'var(--text-muted)',
-              fontSize: '11px',
-              padding: '5px 12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-            }}
-            title="Enable Native Push Alerts"
-          >
-            <Bell size={13} />
-            <span>{isNotificationEnabled ? 'Alerts' : 'Enable'}</span>
-          </button>
-
           <button
             type="button"
             className="glass-pill"

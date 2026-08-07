@@ -336,28 +336,8 @@ export const AddReminderModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Alert & Apple Calendar Toggles */}
+        {/* Apple Calendar Toggle */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '2px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#FFF' }}>Alert</span>
-            <button
-              type="button"
-              onClick={() => setAlertEnabled(!alertEnabled)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: '12px',
-                border: 'none',
-                backgroundColor: alertEnabled ? '#6C5CE7' : 'rgba(255, 255, 255, 0.12)',
-                color: '#FFF',
-                fontSize: '11px',
-                fontWeight: 800,
-                cursor: 'pointer',
-              }}
-            >
-              {alertEnabled ? 'On' : 'Off'}
-            </button>
-          </div>
-
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Calendar size={14} color="#30D158" />
