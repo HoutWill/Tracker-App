@@ -53,15 +53,14 @@ export const PlannerScreen: React.FC = () => {
     toggleReminder,
     deleteReminder,
     setIsAddReminderOpen,
-    isNotificationEnabled,
-    requestNotificationPermission,
+    openAddReminderWithPreset,
   } = useReminders();
 
   const [plannerTab, setPlannerTab] = useState<'REMINDERS' | 'CALENDAR'>('REMINDERS');
-  const [activeFilter, setActiveFilter] = useState<FilterTab>('TODAY');
+  const [activeFilter, setActiveFilter] = useState<FilterTab>('ALL');
   const [selectedReminderForDetail, setSelectedReminderForDetail] = useState<ReminderItem | null>(null);
 
-  // Search & Category Filter States (Matching Image 2)
+  // Search & Category Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ReminderCategory | 'ALL'>('ALL');
   const [isListeningSearch, setIsListeningSearch] = useState(false);
@@ -115,7 +114,7 @@ export const PlannerScreen: React.FC = () => {
     // Category pill filter
     if (categoryFilter !== 'ALL' && r.category !== categoryFilter) return false;
 
-    // Tile filter tab
+    // Filter tab
     if (activeFilter === 'TODAY') return r.dueDate === today && !r.completed;
     if (activeFilter === 'SCHEDULED') return r.dueDate > today && !r.completed;
     if (activeFilter === 'FLAGGED') return r.priority === 'HIGH' && !r.completed;
@@ -146,163 +145,7 @@ export const PlannerScreen: React.FC = () => {
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
-      {/* 1. Task Complete Overview Card */}
-      <div
-        className="glass-panel"
-        style={{
-          padding: '18px 20px',
-          borderRadius: '24px',
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--border-glass)',
-          boxShadow: 'var(--shadow-card)',
-          marginBottom: '16px',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CheckCircle2 size={16} color="#30D158" />
-            <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Overview</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '8px', backgroundColor: 'rgba(48, 209, 88, 0.15)', color: '#30D158' }}>
-              Goal: {reminders.length} items
-            </span>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-              {completedReminders.length} done
-            </span>
-          </div>
-        </div>
-
-        {/* Big Completion Percentage Display */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px' }}>
-          <div className="tabular-nums" style={{ fontSize: '28px', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
-            {completionPct}%
-          </div>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-            {reminders.length - completedReminders.length} remaining
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div style={{ width: '100%', height: '8px', borderRadius: '4px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)', overflow: 'hidden', marginBottom: '12px' }}>
-          <div
-            style={{
-              width: `${completionPct}%`,
-              height: '100%',
-              backgroundColor: '#30D158',
-              borderRadius: '4px',
-              transition: 'width 0.3s ease',
-            }}
-          />
-        </div>
-
-        {/* Metrics Sub-Row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border-glass)', fontSize: '11px', color: 'var(--text-secondary)' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Clock size={12} color="#EC668C" /> Urgent: {urgentReminders.length}
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Flag size={12} color="#F3A85B" /> Flagged: {flaggedReminders.length}
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <ShieldCheck size={12} color="#6C7B8A" /> Done: {completedReminders.length}
-          </span>
-        </div>
-      </div>
-
-      {/* 2. Quick Presets Bento Grid (3x3 Compact Cards) */}
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 2px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Zap size={15} color="var(--text-secondary)" />
-            <h3 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>Presets</h3>
-          </div>
-          <button
-            type="button"
-            className="glass-pill"
-            onClick={() => {
-              const name = prompt('Enter custom preset title:');
-              if (name && name.trim()) {
-                addReminder({
-                  title: name.trim(),
-                  level: 'SIMPLE',
-                  priority: 'MEDIUM',
-                  category: 'TASK',
-                  dueDate: today,
-                  dueTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
-                  endTime: new Date(Date.now() + 30 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
-                });
-              }
-            }}
-            style={{ fontSize: '11px', padding: '4px 10px', color: 'var(--text-primary)', borderColor: 'var(--border-glass)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
-          >
-            <Plus size={12} /> Add
-          </button>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-          {[
-            { id: 'p-1', title: 'Gym', category: 'SPORT', icon: Dumbbell, color: '#EC668C', level: 'FLAGGED' },
-            { id: 'p-2', title: 'Bills', category: 'BILLS', icon: Receipt, color: '#F3A85B', level: 'URGENT' },
-            { id: 'p-3', title: 'Meeting', category: 'MEETING', icon: Users, color: '#4A99E9', level: 'FLAGGED' },
-            { id: 'p-4', title: 'Study', category: 'STUDY', icon: BookOpen, color: '#6C5CE7', level: 'SIMPLE' },
-            { id: 'p-5', title: 'Doctor', category: 'HEALTH', icon: Heart, color: '#30D158', level: 'URGENT' },
-            { id: 'p-6', title: 'Shopping', category: 'FUN', icon: ShoppingBag, color: '#FF9F0A', level: 'SIMPLE' },
-            { id: 'p-7', title: 'Work', category: 'WORK', icon: Briefcase, color: '#6C7B8A', level: 'SIMPLE' },
-            { id: 'p-8', title: 'Water', category: 'HEALTH', icon: Droplets, color: '#64D2FF', level: 'SIMPLE' },
-            { id: 'p-9', title: 'Groceries', category: 'FUN', icon: ShoppingCart, color: '#A060FF', level: 'SIMPLE' },
-          ].map(preset => {
-            const IconComponent = preset.icon;
-            return (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => {
-                  const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                  const endStr = new Date(Date.now() + 30 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                  addReminder({
-                    title: preset.title,
-                    level: preset.level as any,
-                    priority: preset.level === 'FLAGGED' ? 'HIGH' : 'MEDIUM',
-                    category: preset.category as any,
-                    dueDate: today,
-                    dueTime: nowStr,
-                    endTime: endStr,
-                  });
-                }}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  padding: '10px 12px',
-                  borderRadius: '20px',
-                  border: '1px solid var(--border-glass)',
-                  backgroundColor: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  minHeight: '66px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: hexToRgba(preset.color, 0.15), border: `1px solid ${hexToRgba(preset.color, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: preset.color }}>
-                    <IconComponent size={15} />
-                  </div>
-                  <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '5px', backgroundColor: hexToRgba(preset.color, 0.15), color: preset.color }}>
-                    {preset.level}
-                  </span>
-                </div>
-                <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {preset.title}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 3. Records Header Title Bar (Matching Image 2 Header Layout) */}
+      {/* Records Header Title Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Layers size={22} color={pageAccent} />
@@ -344,128 +187,13 @@ export const PlannerScreen: React.FC = () => {
         </button>
       </div>
 
-      {/* Search Bar with Mic Icon (Matching Image 2 Search) */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          height: '44px',
-          padding: '0 14px',
-          borderRadius: '16px',
-          border: '1px solid var(--border-glass)',
-          backgroundColor: 'var(--bg-card)',
-          marginBottom: '10px',
-        }}
-      >
-        <Search size={16} color="var(--text-muted)" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          placeholder={isListeningSearch ? 'Listening... Speak now' : 'Search...'}
-          style={{
-            flex: 1,
-            background: 'none',
-            border: 'none',
-            outline: 'none',
-            color: 'var(--text-primary)',
-            fontSize: '13px',
-            fontFamily: 'inherit',
-          }}
-        />
-        <button
-          type="button"
-          onClick={handleVoiceSearch}
-          style={{ background: 'none', border: 'none', color: isListeningSearch ? '#EC668C' : pageAccent, cursor: 'pointer', padding: '2px 4px' }}
-          title="Voice Search"
-        >
-          <Mic size={16} />
-        </button>
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-          >
-            <X size={16} />
-          </button>
-        )}
-      </div>
-
-      {/* Category Chips Bar with Counts (Matching Image 2 Filter Chips) */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '6px',
-          overflowX: 'auto',
-          paddingBottom: '12px',
-          whiteSpace: 'nowrap',
-          WebkitOverflowScrolling: 'touch',
-        }}
-      >
-        <button
-          type="button"
-          className="glass-pill"
-          onClick={() => setCategoryFilter('ALL')}
-          style={{
-            backgroundColor: categoryFilter === 'ALL' ? pageAccent : 'var(--pill-bg)',
-            borderColor: categoryFilter === 'ALL' ? pageAccent : 'var(--border-glass)',
-            color: categoryFilter === 'ALL' ? '#FFF' : 'var(--text-primary)',
-            fontSize: '11px',
-            fontWeight: 700,
-            padding: '6px 14px',
-            borderRadius: '14px',
-            cursor: 'pointer',
-            flexShrink: 0,
-          }}
-        >
-          All ({reminders.length})
-        </button>
-
-        {[
-          { id: 'TASK', label: 'Task' },
-          { id: 'STUDY', label: 'Study' },
-          { id: 'MEETING', label: 'Meeting' },
-          { id: 'FUN', label: 'Fun' },
-          { id: 'SPORT', label: 'Sport' },
-          { id: 'BILLS', label: 'Bills' },
-          { id: 'SAVINGS', label: 'Savings' },
-          { id: 'WORK', label: 'Work' },
-          { id: 'HEALTH', label: 'Health' },
-        ].map(cat => {
-          const count = reminders.filter(r => r.category === cat.id).length;
-          const isActive = categoryFilter === cat.id;
-          return (
-            <button
-              key={cat.id}
-              type="button"
-              className="glass-pill"
-              onClick={() => setCategoryFilter(isActive ? 'ALL' : cat.id as any)}
-              style={{
-                backgroundColor: isActive ? pageAccent : 'var(--pill-bg)',
-                borderColor: isActive ? pageAccent : 'var(--border-glass)',
-                color: isActive ? '#FFF' : 'var(--text-primary)',
-                fontSize: '11px',
-                fontWeight: isActive ? 800 : 600,
-                padding: '6px 14px',
-                borderRadius: '14px',
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
-              {cat.label} ({count})
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Top Segmented Tab Switcher (Reminders vs Calendar) */}
+      {/* Top Segmented Tab Switcher (Moved to top below header) */}
       <div
         className="glass-panel"
         style={{
           display: 'flex',
           padding: '3px',
-          borderRadius: '12px',
+          borderRadius: '14px',
           marginBottom: '16px',
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-glass)',
@@ -476,13 +204,13 @@ export const PlannerScreen: React.FC = () => {
           onClick={() => setPlannerTab('REMINDERS')}
           style={{
             flex: 1,
-            padding: '7px 0',
-            borderRadius: '9px',
+            padding: '8px 0',
+            borderRadius: '11px',
             border: plannerTab === 'REMINDERS' ? '1px solid var(--border-glass)' : '1px solid transparent',
             backgroundColor: plannerTab === 'REMINDERS' ? 'var(--pill-hover)' : 'transparent',
             color: plannerTab === 'REMINDERS' ? 'var(--text-primary)' : 'var(--text-muted)',
-            fontSize: '12px',
-            fontWeight: plannerTab === 'REMINDERS' ? 600 : 500,
+            fontSize: '13px',
+            fontWeight: plannerTab === 'REMINDERS' ? 700 : 500,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -491,7 +219,7 @@ export const PlannerScreen: React.FC = () => {
             transition: 'all 0.15s ease',
           }}
         >
-          <Bell size={14} />
+          <Bell size={15} />
           <span>Reminders</span>
         </button>
 
@@ -500,13 +228,13 @@ export const PlannerScreen: React.FC = () => {
           onClick={() => setPlannerTab('CALENDAR')}
           style={{
             flex: 1,
-            padding: '7px 0',
-            borderRadius: '9px',
+            padding: '8px 0',
+            borderRadius: '11px',
             border: plannerTab === 'CALENDAR' ? '1px solid var(--border-glass)' : '1px solid transparent',
             backgroundColor: plannerTab === 'CALENDAR' ? 'var(--pill-hover)' : 'transparent',
             color: plannerTab === 'CALENDAR' ? 'var(--text-primary)' : 'var(--text-muted)',
-            fontSize: '12px',
-            fontWeight: plannerTab === 'CALENDAR' ? 600 : 500,
+            fontSize: '13px',
+            fontWeight: plannerTab === 'CALENDAR' ? 700 : 500,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -515,184 +243,272 @@ export const PlannerScreen: React.FC = () => {
             transition: 'all 0.15s ease',
           }}
         >
-          <Calendar size={14} />
+          <Calendar size={15} />
           <span>Calendar</span>
         </button>
       </div>
 
       {plannerTab === 'REMINDERS' ? (
         <>
-
-      {/* 6 Reminders Category Bento Tiles Grid (Compact Apple iOS Muted Pastel Style) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
-        {/* Today Tile */}
-        <button
-          type="button"
-          onClick={() => setActiveFilter('TODAY')}
+        {/* 1. Task Complete Overview Card */}
+        <div
+          className="glass-panel"
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: '10px 14px',
-            borderRadius: '20px',
-            border: activeFilter === 'TODAY' ? '1.5px solid #4A99E9' : '1px solid var(--border-glass)',
+            padding: '18px 20px',
+            borderRadius: '24px',
             backgroundColor: 'var(--bg-card)',
-            color: 'var(--text-primary)',
-            textAlign: 'left',
-            cursor: 'pointer',
-            minHeight: '66px',
-            transition: 'all 0.15s ease',
+            border: '1px solid var(--border-glass)',
+            boxShadow: 'var(--shadow-card)',
+            marginBottom: '16px',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: 'rgba(74, 153, 233, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CalendarDays size={15} color="#4A99E9" />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CheckCircle2 size={16} color="#30D158" />
+              <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Overview</span>
             </div>
-            <span className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{todayReminders.length}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '8px', backgroundColor: 'rgba(48, 209, 88, 0.15)', color: '#30D158' }}>
+                Goal: {reminders.length} items
+              </span>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                {completedReminders.length} done
+              </span>
+            </div>
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)' }}>Today</span>
-        </button>
 
-        {/* Scheduled Tile */}
-        <button
-          type="button"
-          onClick={() => setActiveFilter('SCHEDULED')}
+          {/* Big Completion Percentage Display */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px' }}>
+            <div className="tabular-nums" style={{ fontSize: '28px', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+              {completionPct}%
+            </div>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+              {reminders.length - completedReminders.length} remaining
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div style={{ width: '100%', height: '8px', borderRadius: '4px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)', overflow: 'hidden', marginBottom: '12px' }}>
+            <div
+              style={{
+                width: `${completionPct}%`,
+                height: '100%',
+                backgroundColor: '#30D158',
+                borderRadius: '4px',
+                transition: 'width 0.3s ease',
+              }}
+            />
+          </div>
+
+          {/* Metrics Sub-Row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border-glass)', fontSize: '11px', color: 'var(--text-secondary)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Clock size={12} color="#EC668C" /> Urgent: {urgentReminders.length}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Flag size={12} color="#F3A85B" /> Flagged: {flaggedReminders.length}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <ShieldCheck size={12} color="#6C7B8A" /> Done: {completedReminders.length}
+            </span>
+          </div>
+        </div>
+
+        {/* 2. Quick Presets Bento Grid (Open Add Modal with Pre-populated Info) */}
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 2px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Zap size={15} color="var(--text-secondary)" />
+              <h3 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>Presets</h3>
+            </div>
+            <button
+              type="button"
+              className="glass-pill"
+              onClick={() => setIsAddReminderOpen(true)}
+              style={{ fontSize: '11px', padding: '4px 10px', color: 'var(--text-primary)', borderColor: 'var(--border-glass)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+            >
+              <Plus size={12} /> Add
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+            {[
+              { id: 'p-1', title: 'Gym', category: 'SPORT', icon: Dumbbell, color: '#EC668C', level: 'FLAGGED' },
+              { id: 'p-2', title: 'Bills', category: 'BILLS', icon: Receipt, color: '#F3A85B', level: 'URGENT' },
+              { id: 'p-3', title: 'Meeting', category: 'MEETING', icon: Users, color: '#4A99E9', level: 'FLAGGED' },
+              { id: 'p-4', title: 'Study', category: 'STUDY', icon: BookOpen, color: '#6C5CE7', level: 'SIMPLE' },
+              { id: 'p-5', title: 'Doctor', category: 'HEALTH', icon: Heart, color: '#30D158', level: 'URGENT' },
+              { id: 'p-6', title: 'Shopping', category: 'FUN', icon: ShoppingBag, color: '#FF9F0A', level: 'SIMPLE' },
+              { id: 'p-7', title: 'Work', category: 'WORK', icon: Briefcase, color: '#6C7B8A', level: 'SIMPLE' },
+              { id: 'p-8', title: 'Water', category: 'HEALTH', icon: Droplets, color: '#64D2FF', level: 'SIMPLE' },
+              { id: 'p-9', title: 'Groceries', category: 'FUN', icon: ShoppingCart, color: '#A060FF', level: 'SIMPLE' },
+            ].map(preset => {
+              const IconComponent = preset.icon;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => {
+                    openAddReminderWithPreset({
+                      title: preset.title,
+                      category: preset.category as any,
+                      level: preset.level as any,
+                    });
+                  }}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    padding: '10px 12px',
+                    borderRadius: '20px',
+                    border: '1px solid var(--border-glass)',
+                    backgroundColor: 'var(--bg-card)',
+                    color: 'var(--text-primary)',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    minHeight: '66px',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: hexToRgba(preset.color, 0.15), border: `1px solid ${hexToRgba(preset.color, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: preset.color }}>
+                      <IconComponent size={15} />
+                    </div>
+                    <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '5px', backgroundColor: hexToRgba(preset.color, 0.15), color: preset.color }}>
+                      {preset.level}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {preset.title}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 3. Search Bar & Filter Chips Carousel with Vector Icons */}
+        <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: '10px 14px',
-            borderRadius: '20px',
-            border: activeFilter === 'SCHEDULED' ? '1.5px solid #ED6C6C' : '1px solid var(--border-glass)',
+            alignItems: 'center',
+            gap: '8px',
+            height: '44px',
+            padding: '0 14px',
+            borderRadius: '16px',
+            border: '1px solid var(--border-glass)',
             backgroundColor: 'var(--bg-card)',
-            color: 'var(--text-primary)',
-            textAlign: 'left',
-            cursor: 'pointer',
-            minHeight: '66px',
-            transition: 'all 0.15s ease',
+            marginBottom: '10px',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: 'rgba(237, 108, 108, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Calendar size={15} color="#ED6C6C" />
-            </div>
-            <span className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{scheduledReminders.length}</span>
-          </div>
-          <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)' }}>Scheduled</span>
-        </button>
+          <Search size={16} color="var(--text-muted)" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder={isListeningSearch ? 'Listening... Speak now' : 'Search...'}
+            style={{
+              flex: 1,
+              background: 'none',
+              border: 'none',
+              outline: 'none',
+              color: 'var(--text-primary)',
+              fontSize: '13px',
+              fontFamily: 'inherit',
+            }}
+          />
+          <button
+            type="button"
+            onClick={handleVoiceSearch}
+            style={{ background: 'none', border: 'none', color: isListeningSearch ? '#EC668C' : pageAccent, cursor: 'pointer', padding: '2px 4px' }}
+            title="Voice Search"
+          >
+            <Mic size={16} />
+          </button>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
 
-        {/* All Tile */}
-        <button
-          type="button"
-          onClick={() => setActiveFilter('ALL')}
+        {/* Category Chips Bar with Vector Icons & Counts */}
+        <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: '10px 14px',
-            borderRadius: '20px',
-            border: activeFilter === 'ALL' ? '1.5px solid #6C7B8A' : '1px solid var(--border-glass)',
-            backgroundColor: 'var(--bg-card)',
-            color: 'var(--text-primary)',
-            textAlign: 'left',
-            cursor: 'pointer',
-            minHeight: '66px',
-            transition: 'all 0.15s ease',
+            gap: '6px',
+            overflowX: 'auto',
+            paddingBottom: '14px',
+            whiteSpace: 'nowrap',
+            WebkitOverflowScrolling: 'touch',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Inbox size={15} color="var(--text-secondary)" />
-            </div>
-            <span className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{reminders.length}</span>
-          </div>
-          <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)' }}>All</span>
-        </button>
+          <button
+            type="button"
+            className="glass-pill"
+            onClick={() => setCategoryFilter('ALL')}
+            style={{
+              backgroundColor: categoryFilter === 'ALL' ? pageAccent : 'var(--pill-bg)',
+              borderColor: categoryFilter === 'ALL' ? pageAccent : 'var(--border-glass)',
+              color: categoryFilter === 'ALL' ? '#FFF' : 'var(--text-primary)',
+              fontSize: '11px',
+              fontWeight: 700,
+              padding: '6px 14px',
+              borderRadius: '14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              flexShrink: 0,
+            }}
+          >
+            <Inbox size={13} />
+            <span>All ({reminders.length})</span>
+          </button>
 
-        {/* Flagged Tile */}
-        <button
-          type="button"
-          onClick={() => setActiveFilter('FLAGGED')}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: '10px 14px',
-            borderRadius: '20px',
-            border: activeFilter === 'FLAGGED' ? '1.5px solid #F3A85B' : '1px solid var(--border-glass)',
-            backgroundColor: 'var(--bg-card)',
-            color: 'var(--text-primary)',
-            textAlign: 'left',
-            cursor: 'pointer',
-            minHeight: '66px',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: 'rgba(243, 168, 91, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Flag size={15} color="#F3A85B" />
-            </div>
-            <span className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{flaggedReminders.length}</span>
-          </div>
-          <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)' }}>Flagged</span>
-        </button>
-
-        {/* Urgent Tile */}
-        <button
-          type="button"
-          onClick={() => setActiveFilter('URGENT')}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: '10px 14px',
-            borderRadius: '20px',
-            border: activeFilter === 'URGENT' ? '1.5px solid #EC668C' : '1px solid var(--border-glass)',
-            backgroundColor: 'var(--bg-card)',
-            color: 'var(--text-primary)',
-            textAlign: 'left',
-            cursor: 'pointer',
-            minHeight: '66px',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: 'rgba(236, 102, 140, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Clock size={15} color="#EC668C" />
-            </div>
-            <span className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{urgentReminders.length}</span>
-          </div>
-          <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)' }}>Urgent</span>
-        </button>
-
-        {/* Completed Tile */}
-        <button
-          type="button"
-          onClick={() => setActiveFilter('COMPLETED')}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: '10px 14px',
-            borderRadius: '20px',
-            border: activeFilter === 'COMPLETED' ? '1.5px solid #6C7B8A' : '1px solid var(--border-glass)',
-            backgroundColor: 'var(--bg-card)',
-            color: 'var(--text-primary)',
-            textAlign: 'left',
-            cursor: 'pointer',
-            minHeight: '66px',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: 'rgba(108, 123, 138, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ShieldCheck size={15} color="#6C7B8A" />
-            </div>
-            <span className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{completedReminders.length}</span>
-          </div>
-          <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)' }}>Completed</span>
-        </button>
-      </div>
+          {[
+            { id: 'TASK', label: 'Task', icon: CheckSquare },
+            { id: 'STUDY', label: 'Study', icon: BookOpen },
+            { id: 'MEETING', label: 'Meeting', icon: Users },
+            { id: 'FUN', label: 'Fun', icon: Sparkles },
+            { id: 'SPORT', label: 'Sport', icon: Dumbbell },
+            { id: 'BILLS', label: 'Bills', icon: Receipt },
+            { id: 'WORK', label: 'Work', icon: Briefcase },
+            { id: 'HEALTH', label: 'Health', icon: Heart },
+          ].map(cat => {
+            const count = reminders.filter(r => r.category === cat.id).length;
+            const isActive = categoryFilter === cat.id;
+            const IconComp = cat.icon;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                className="glass-pill"
+                onClick={() => setCategoryFilter(isActive ? 'ALL' : cat.id as any)}
+                style={{
+                  backgroundColor: isActive ? pageAccent : 'var(--pill-bg)',
+                  borderColor: isActive ? pageAccent : 'var(--border-glass)',
+                  color: isActive ? '#FFF' : 'var(--text-primary)',
+                  fontSize: '11px',
+                  fontWeight: isActive ? 800 : 600,
+                  padding: '6px 14px',
+                  borderRadius: '14px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  flexShrink: 0,
+                }}
+              >
+                <IconComp size={13} />
+                <span>{cat.label} ({count})</span>
+              </button>
+            );
+          })}
+        </div>
 
       {/* Reminders & Todo Checklist Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', padding: '0 2px' }}>

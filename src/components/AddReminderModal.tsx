@@ -31,7 +31,7 @@ const REMINDER_CATEGORIES = [
 ] as const;
 
 export const AddReminderModal: React.FC = () => {
-  const { isAddReminderOpen, setIsAddReminderOpen, addReminder } = useReminders();
+  const { isAddReminderOpen, setIsAddReminderOpen, addReminder, presetDraft, setPresetDraft } = useReminders();
 
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
@@ -83,14 +83,26 @@ export const AddReminderModal: React.FC = () => {
     recognitionRef.current = rec;
   };
 
-  // Automatically sync to current live date and time whenever modal opens
+  // Automatically pre-populate modal when opening normally or with a Preset
   useEffect(() => {
     if (isAddReminderOpen) {
       setDueDate(getTodayDateString());
       setDueTime(getCurrentTimeString());
       setEndTime(getEndTimeString());
+
+      if (presetDraft) {
+        setTitle(presetDraft.title || '');
+        if (presetDraft.category) setCategory(presetDraft.category);
+        if (presetDraft.level) setLevel(presetDraft.level as any);
+        if (presetDraft.notes) setNotes(presetDraft.notes);
+      } else {
+        setTitle('');
+        setNotes('');
+        setCategory('TASK');
+        setLevel('SIMPLE');
+      }
     }
-  }, [isAddReminderOpen]);
+  }, [isAddReminderOpen, presetDraft]);
 
   if (!isAddReminderOpen) return null;
 
@@ -122,6 +134,12 @@ export const AddReminderModal: React.FC = () => {
 
     setTitle('');
     setNotes('');
+    setPresetDraft(null);
+    setIsAddReminderOpen(false);
+  };
+
+  const handleClose = () => {
+    setPresetDraft(null);
     setIsAddReminderOpen(false);
   };
 
@@ -131,15 +149,15 @@ export const AddReminderModal: React.FC = () => {
         position: 'fixed',
         inset: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        zIndex: 150,
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '16px',
+        zIndex: 1000,
       }}
-      onClick={() => setIsAddReminderOpen(false)}
+      onClick={handleClose}
     >
       <form
         onSubmit={handleSubmit}
@@ -167,7 +185,7 @@ export const AddReminderModal: React.FC = () => {
           </div>
           <button
             type="button"
-            onClick={() => setIsAddReminderOpen(false)}
+            onClick={handleClose}
             style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             <X size={20} />

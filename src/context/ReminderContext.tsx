@@ -6,6 +6,9 @@ interface ReminderContextType {
   reminders: ReminderItem[];
   isAddReminderOpen: boolean;
   setIsAddReminderOpen: (open: boolean) => void;
+  presetDraft: Partial<ReminderItem> | null;
+  setPresetDraft: (draft: Partial<ReminderItem> | null) => void;
+  openAddReminderWithPreset: (preset: Partial<ReminderItem>) => void;
   addReminder: (item: Omit<ReminderItem, 'id' | 'createdAt' | 'completed'>) => void;
   toggleReminder: (id: string) => void;
   deleteReminder: (id: string) => void;
@@ -19,6 +22,12 @@ const ReminderContext = createContext<ReminderContextType>({} as ReminderContext
 export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [reminders, setReminders] = useState<ReminderItem[]>(() => StorageService.getReminders());
   const [isAddReminderOpen, setIsAddReminderOpen] = useState<boolean>(false);
+  const [presetDraft, setPresetDraft] = useState<Partial<ReminderItem> | null>(null);
+
+  const openAddReminderWithPreset = (preset: Partial<ReminderItem>) => {
+    setPresetDraft(preset);
+    setIsAddReminderOpen(true);
+  };
   const [isNotificationEnabled, setIsNotificationEnabled] = useState<boolean>(() => {
     return 'Notification' in window && Notification.permission === 'granted';
   });
@@ -141,6 +150,9 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         reminders,
         isAddReminderOpen,
         setIsAddReminderOpen,
+        presetDraft,
+        setPresetDraft,
+        openAddReminderWithPreset,
         addReminder,
         toggleReminder,
         deleteReminder,
