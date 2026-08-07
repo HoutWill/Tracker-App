@@ -17,14 +17,14 @@ export const syncToAppleCalendar = (event: CalendarEventPayload) => {
     const [year, month, day] = event.dueDate.split('-').map(Number);
     const [hour, minute] = (event.dueTime || '09:00').split(':').map(Number);
 
-    // Format UTC ISO timestamp strings without punctuation (YYYYMMDDTHHMMSSZ)
+    // Format local floating timestamp strings (YYYYMMDDTHHMMSS without Z for exact device local time)
     const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
-    const startStr = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00Z`;
+    const startStr = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
 
     // 30 minute event duration
     const endMinutes = (minute + 30) % 60;
     const endHours = hour + Math.floor((minute + 30) / 60);
-    const endStr = `${year}${pad(month)}${pad(day)}T${pad(endHours)}${pad(endMinutes)}00Z`;
+    const endStr = `${year}${pad(month)}${pad(day)}T${pad(endHours)}${pad(endMinutes)}00`;
 
     const now = new Date();
     const stampStr = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}00Z`;
