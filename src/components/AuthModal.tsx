@@ -130,6 +130,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       localStorage.setItem('auth_token', authToken);
       localStorage.setItem('user_account', JSON.stringify(userData));
       setGuestId(userData.accountId);
+
+      // Auto-restore full account data backup from cloud database
+      try {
+        const syncRes = await fetch(`/api/sync?accountId=${userData.accountId}`);
+        if (syncRes.ok) {
+          const syncData = await syncRes.json();
+          if (syncData && syncData.expenses) {
+            localStorage.setItem('pitrack_expenses', JSON.stringify(syncData.expenses));
+            if (syncData.savings) localStorage.setItem('pitrack_savings', JSON.stringify(syncData.savings));
+            if (syncData.reminders) localStorage.setItem('pitrack_reminders', JSON.stringify(syncData.reminders));
+            if (syncData.trips) localStorage.setItem('pitrack_trips', JSON.stringify(syncData.trips));
+            if (syncData.expenseFolders) localStorage.setItem('pitrack_expense_folders', JSON.stringify(syncData.expenseFolders));
+            if (syncData.savingFolders) localStorage.setItem('pitrack_saving_folders', JSON.stringify(syncData.savingFolders));
+          }
+        }
+      } catch (e) {}
+
       onAuthSuccess(userData);
       onClose();
       window.location.reload();
