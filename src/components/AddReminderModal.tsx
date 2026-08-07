@@ -1,9 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useReminders } from '../context/ReminderContext';
 import { getTodayDateString } from '../services/storageService';
 import { ReminderCategory } from '../types';
 import { X, Bell, Check, Calendar, Clock, AlertCircle } from 'lucide-react';
 import { syncToAppleCalendar } from '../services/calendarSyncService';
+
+const getCurrentTimeString = () => {
+  const now = new Date();
+  const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+  return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+};
+
+const getEndTimeString = () => {
+  const now = new Date(Date.now() + 30 * 60 * 1000);
+  const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+  return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+};
 
 export const AddReminderModal: React.FC = () => {
   const { isAddReminderOpen, setIsAddReminderOpen, addReminder } = useReminders();
@@ -13,9 +25,19 @@ export const AddReminderModal: React.FC = () => {
   const [level, setLevel] = useState<'URGENT' | 'FLAGGED' | 'SIMPLE'>('SIMPLE');
   const [category, setCategory] = useState<ReminderCategory>('TASK');
   const [dueDate, setDueDate] = useState(getTodayDateString());
-  const [dueTime, setDueTime] = useState('12:00');
+  const [dueTime, setDueTime] = useState(getCurrentTimeString());
+  const [endTime, setEndTime] = useState(getEndTimeString());
   const [alertEnabled, setAlertEnabled] = useState(true);
   const [syncCalendar, setSyncCalendar] = useState(true);
+
+  // Automatically sync to current live date and time whenever modal opens
+  useEffect(() => {
+    if (isAddReminderOpen) {
+      setDueDate(getTodayDateString());
+      setDueTime(getCurrentTimeString());
+      setEndTime(getEndTimeString());
+    }
+  }, [isAddReminderOpen]);
 
   if (!isAddReminderOpen) return null;
 
@@ -40,6 +62,7 @@ export const AddReminderModal: React.FC = () => {
         notes: notes.trim(),
         dueDate,
         dueTime,
+        endTime,
         category,
       });
     }
@@ -245,9 +268,9 @@ export const AddReminderModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Date & Time Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {/* Date, Start Time & End Time Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
             <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Date</label>
             <input
               type="date"
@@ -256,34 +279,60 @@ export const AddReminderModal: React.FC = () => {
               onChange={e => setDueDate(e.target.value)}
               style={{
                 width: '100%',
-                padding: '10px 12px',
+                padding: '10px 8px',
                 borderRadius: '14px',
                 border: '1px solid rgba(255, 255, 255, 0.14)',
                 backgroundColor: 'rgba(255, 255, 255, 0.08)',
                 color: '#FFF',
-                fontSize: '12px',
+                fontSize: '11px',
                 outline: 'none',
                 colorScheme: 'dark',
+                boxSizing: 'border-box',
+                minWidth: 0,
               }}
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Time</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Start Time</label>
             <input
               type="time"
               value={dueTime}
               onChange={e => setDueTime(e.target.value)}
               style={{
                 width: '100%',
-                padding: '10px 12px',
+                padding: '10px 8px',
                 borderRadius: '14px',
                 border: '1px solid rgba(255, 255, 255, 0.14)',
                 backgroundColor: 'rgba(255, 255, 255, 0.08)',
                 color: '#FFF',
-                fontSize: '12px',
+                fontSize: '11px',
                 outline: 'none',
                 colorScheme: 'dark',
+                boxSizing: 'border-box',
+                minWidth: 0,
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>End Time</label>
+            <input
+              type="time"
+              value={endTime}
+              onChange={e => setEndTime(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 8px',
+                borderRadius: '14px',
+                border: '1px solid rgba(255, 255, 255, 0.14)',
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                color: '#FFF',
+                fontSize: '11px',
+                outline: 'none',
+                colorScheme: 'dark',
+                boxSizing: 'border-box',
+                minWidth: 0,
               }}
             />
           </div>
