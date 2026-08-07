@@ -14,6 +14,23 @@ export interface CalendarEventPayload {
   alarmOffsetMinutes?: number; // 0 = exact time, 15 = 15m before, 30 = 30m before
 }
 
+const triggerIcsDownload = (url: string) => {
+  try {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = url;
+    document.body.appendChild(iframe);
+
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 5000);
+  } catch (e) {
+    window.open(url, '_blank');
+  }
+};
+
 export const syncToAppleCalendar = (event: CalendarEventPayload) => {
   try {
     const params = new URLSearchParams({
@@ -25,7 +42,7 @@ export const syncToAppleCalendar = (event: CalendarEventPayload) => {
     });
 
     const httpUrl = `/api/ics?${params.toString()}`;
-    window.location.href = httpUrl;
+    triggerIcsDownload(httpUrl);
     return true;
   } catch (e) {
     console.error('Calendar sync error:', e);
@@ -44,7 +61,7 @@ export const syncToAppleReminders = (event: CalendarEventPayload) => {
     });
 
     const httpUrl = `/api/ics?${params.toString()}`;
-    window.location.href = httpUrl;
+    triggerIcsDownload(httpUrl);
     return true;
   } catch (e) {
     console.error('Apple Reminders sync error:', e);
