@@ -97,6 +97,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const authToken = `jwt_${userData.accountId}_${Date.now()}`;
       localStorage.setItem('auth_token', authToken);
       localStorage.setItem('user_account', JSON.stringify(userData));
+      localStorage.setItem('pitrack_expenses_initialized', 'true');
       setGuestId(userData.accountId);
 
       // Auto-restore full account data backup from cloud database
@@ -108,6 +109,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             const syncData = await syncRes.json();
             if (syncData && syncData.expenses) {
               localStorage.setItem('pitrack_expenses', JSON.stringify(syncData.expenses));
+              localStorage.setItem('pitrack_expenses_data', JSON.stringify(syncData.expenses));
               localStorage.setItem(`pitrack_expenses_${userData.accountId}`, JSON.stringify(syncData.expenses));
               if (syncData.savings) localStorage.setItem('pitrack_savings', JSON.stringify(syncData.savings));
               if (syncData.reminders) localStorage.setItem('pitrack_reminders', JSON.stringify(syncData.reminders));

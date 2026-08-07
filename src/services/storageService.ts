@@ -135,28 +135,28 @@ const fetchWithTimeout = (url: string, options: RequestInit = {}) => {
 export const StorageService = {
   getCachedExpenses(): ExpenseItem[] {
     const guestId = getGuestId();
+    const isUserAccount = guestId.startsWith('usr_');
+
     try {
       const masterKey = `pitrack_expenses_${guestId}`;
-      const raw = localStorage.getItem(masterKey) || localStorage.getItem('pitrack_expenses_data');
+      const raw = localStorage.getItem(masterKey) || localStorage.getItem('pitrack_expenses_data') || localStorage.getItem('pitrack_expenses');
       if (raw) {
         const parsed: ExpenseItem[] = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.sort((a, b) => b.createdAt - a.createdAt);
         }
       }
 
-      // Check if user has initialized before
+      // If logged in or previously initialized, return empty array without injecting demo data
       const initialized = localStorage.getItem('pitrack_expenses_initialized');
-      if (initialized) {
+      if (isUserAccount || initialized) {
         return [];
       }
 
       localStorage.setItem('pitrack_expenses_initialized', 'true');
-      localStorage.setItem(masterKey, JSON.stringify(DEFAULT_DEMO_EXPENSES));
-      localStorage.setItem('pitrack_expenses_data', JSON.stringify(DEFAULT_DEMO_EXPENSES));
-      return DEFAULT_DEMO_EXPENSES;
+      return [];
     } catch (e) {
-      return DEFAULT_DEMO_EXPENSES;
+      return [];
     }
   },
 
