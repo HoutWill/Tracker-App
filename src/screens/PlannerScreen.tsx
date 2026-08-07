@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useReminders } from '../context/ReminderContext';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { getTodayDateString } from '../services/storageService';
 import { ReminderDetailModal } from '../components/ReminderDetailModal';
 import { PlannerDayAgendaModal } from '../components/PlannerDayAgendaModal';
-import { ReminderItem } from '../types';
+import { ReminderItem, ReminderCategory } from '../types';
+import { startVoiceRecognition } from '../services/speechService';
 import {
   Bell,
   CheckSquare,
@@ -23,6 +24,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Info,
+  Layers,
+  Search,
+  Mic,
+  X,
 } from 'lucide-react';
 
 type FilterTab = 'TODAY' | 'SCHEDULED' | 'ALL' | 'FLAGGED' | 'URGENT' | 'COMPLETED';
@@ -45,6 +50,36 @@ export const PlannerScreen: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<FilterTab>('TODAY');
   const [selectedReminderForDetail, setSelectedReminderForDetail] = useState<ReminderItem | null>(null);
 
+  // Search & Category Filter States (Matching Image 2)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<ReminderCategory | 'ALL'>('ALL');
+  const [isListeningSearch, setIsListeningSearch] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  const handleVoiceSearch = () => {
+    if (isListeningSearch) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch (e) {}
+        recognitionRef.current = null;
+      }
+      setIsListeningSearch(false);
+      return;
+    }
+
+    setIsListeningSearch(true);
+    const rec = startVoiceRecognition(
+      (text, isFinal) => {
+        setSearchQuery(text);
+        if (isFinal) {
+          setIsListeningSearch(false);
+        }
+      },
+      () => setIsListeningSearch(false),
+      () => setIsListeningSearch(false)
+    );
+    recognitionRef.current = rec;
+  };
+
   // Planner Calendar View State
   const [calViewDate, setCalViewDate] = useState<Date>(new Date());
   const [calSelectedDate, setCalSelectedDate] = useState<string>(getTodayDateString());
@@ -59,6 +94,17 @@ export const PlannerScreen: React.FC = () => {
   const completedReminders = reminders.filter(r => r.completed);
 
   const displayedReminders = reminders.filter(r => {
+    // Search query filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchTitle = r.title.toLowerCase().includes(q);
+      const matchNotes = r.notes ? r.notes.toLowerCase().includes(q) : false;
+      if (!matchTitle && !matchNotes) return false;
+    }
+    // Category pill filter
+    if (categoryFilter !== 'ALL' && r.category !== categoryFilter) return false;
+
+    // Tile filter tab
     if (activeFilter === 'TODAY') return r.dueDate === today && !r.completed;
     if (activeFilter === 'SCHEDULED') return r.dueDate > today && !r.completed;
     if (activeFilter === 'FLAGGED') return r.priority === 'HIGH' && !r.completed;
@@ -89,35 +135,161 @@ export const PlannerScreen: React.FC = () => {
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
-      {/* Header Title Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-        <div>
-          <h2 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--text-primary)' }}>Planner</h2>
-          <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Reminders, Todos & Alerts</p>
-        </div>
-
+      {/* Header Title Bar (Matching Image 2 Header Layout) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            type="button"
-            className="glass-pill"
-            onClick={() => setIsAddReminderOpen(true)}
+          <Layers size={22} color={pageAccent} />
+          <h2 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--text-primary)' }}>Records</h2>
+          <span
             style={{
-              backgroundColor: pageAccent,
-              borderColor: pageAccent,
-              color: '#FFF',
               fontSize: '11px',
               fontWeight: 800,
-              padding: '5px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              cursor: 'pointer',
+              padding: '2px 8px',
+              borderRadius: '10px',
+              backgroundColor: 'rgba(243, 168, 91, 0.18)',
+              color: '#F3A85B',
             }}
           >
-            <Plus size={13} />
-            <span>Add</span>
-          </button>
+            {reminders.length}
+          </span>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setIsAddReminderOpen(true)}
+          style={{
+            backgroundColor: pageAccent,
+            color: '#FFF',
+            fontSize: '13px',
+            fontWeight: 800,
+            padding: '8px 18px',
+            borderRadius: '14px',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(108, 92, 231, 0.3)',
+          }}
+        >
+          <Plus size={16} strokeWidth={3} />
+          <span>Add</span>
+        </button>
+      </div>
+
+      {/* Search Bar with Mic Icon (Matching Image 2 Search) */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          height: '44px',
+          padding: '0 14px',
+          borderRadius: '16px',
+          border: '1px solid var(--border-glass)',
+          backgroundColor: 'var(--bg-card)',
+          marginBottom: '10px',
+        }}
+      >
+        <Search size={16} color="var(--text-muted)" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder={isListeningSearch ? 'Listening... Speak now' : 'Search...'}
+          style={{
+            flex: 1,
+            background: 'none',
+            border: 'none',
+            outline: 'none',
+            color: 'var(--text-primary)',
+            fontSize: '13px',
+            fontFamily: 'inherit',
+          }}
+        />
+        <button
+          type="button"
+          onClick={handleVoiceSearch}
+          style={{ background: 'none', border: 'none', color: isListeningSearch ? '#EC668C' : pageAccent, cursor: 'pointer', padding: '2px 4px' }}
+          title="Voice Search"
+        >
+          <Mic size={16} />
+        </button>
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+
+      {/* Category Chips Bar with Counts (Matching Image 2 Filter Chips) */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '6px',
+          overflowX: 'auto',
+          paddingBottom: '12px',
+          whiteSpace: 'nowrap',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        <button
+          type="button"
+          className="glass-pill"
+          onClick={() => setCategoryFilter('ALL')}
+          style={{
+            backgroundColor: categoryFilter === 'ALL' ? pageAccent : 'var(--pill-bg)',
+            borderColor: categoryFilter === 'ALL' ? pageAccent : 'var(--border-glass)',
+            color: categoryFilter === 'ALL' ? '#FFF' : 'var(--text-primary)',
+            fontSize: '11px',
+            fontWeight: 700,
+            padding: '6px 14px',
+            borderRadius: '14px',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          All ({reminders.length})
+        </button>
+
+        {[
+          { id: 'TASK', label: 'Task' },
+          { id: 'STUDY', label: 'Study' },
+          { id: 'MEETING', label: 'Meeting' },
+          { id: 'FUN', label: 'Fun' },
+          { id: 'SPORT', label: 'Sport' },
+          { id: 'BILLS', label: 'Bills' },
+          { id: 'SAVINGS', label: 'Savings' },
+          { id: 'WORK', label: 'Work' },
+          { id: 'HEALTH', label: 'Health' },
+        ].map(cat => {
+          const count = reminders.filter(r => r.category === cat.id).length;
+          const isActive = categoryFilter === cat.id;
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              className="glass-pill"
+              onClick={() => setCategoryFilter(isActive ? 'ALL' : cat.id as any)}
+              style={{
+                backgroundColor: isActive ? pageAccent : 'var(--pill-bg)',
+                borderColor: isActive ? pageAccent : 'var(--border-glass)',
+                color: isActive ? '#FFF' : 'var(--text-primary)',
+                fontSize: '11px',
+                fontWeight: isActive ? 800 : 600,
+                padding: '6px 14px',
+                borderRadius: '14px',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              {cat.label} ({count})
+            </button>
+          );
+        })}
       </div>
 
       {/* Top Segmented Tab Switcher (Reminders vs Calendar) */}
@@ -183,103 +355,6 @@ export const PlannerScreen: React.FC = () => {
 
       {plannerTab === 'REMINDERS' ? (
         <>
-        {/* Quick Presets Bar for Planner (Matching Image 2) */}
-        <div style={{ marginBottom: '14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', padding: '0 2px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>
-              Presets
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                const name = prompt('Enter custom preset name:');
-                if (name && name.trim()) {
-                  addReminder({
-                    title: name.trim(),
-                    level: 'SIMPLE',
-                    priority: 'MEDIUM',
-                    category: 'TASK',
-                    dueDate: today,
-                    dueTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
-                    endTime: new Date(Date.now() + 30 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
-                  });
-                }
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: pageAccent,
-                fontSize: '11px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '2px',
-              }}
-            >
-              <Plus size={12} />
-              <span>Preset</span>
-            </button>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              gap: '8px',
-              overflowX: 'auto',
-              paddingBottom: '4px',
-              whiteSpace: 'nowrap',
-              WebkitOverflowScrolling: 'touch',
-            }}
-          >
-            {[
-              { id: 'p-1', label: 'Gym', category: 'SPORT', level: 'FLAGGED' },
-              { id: 'p-2', label: 'Bills', category: 'BILLS', level: 'URGENT' },
-              { id: 'p-3', label: 'Meeting', category: 'MEETING', level: 'FLAGGED' },
-              { id: 'p-4', label: 'Study', category: 'STUDY', level: 'SIMPLE' },
-              { id: 'p-5', label: 'Doctor', category: 'HEALTH', level: 'URGENT' },
-              { id: 'p-6', label: 'Shopping', category: 'FUN', level: 'SIMPLE' },
-              { id: 'p-7', label: 'Work', category: 'WORK', level: 'SIMPLE' },
-              { id: 'p-8', label: 'Water', category: 'HEALTH', level: 'SIMPLE' },
-            ].map(p => (
-              <button
-                key={p.id}
-                type="button"
-                className="glass-pill"
-                onClick={() => {
-                  const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                  const endStr = new Date(Date.now() + 30 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                  addReminder({
-                    title: p.label,
-                    level: p.level as any,
-                    priority: p.level === 'FLAGGED' ? 'HIGH' : 'MEDIUM',
-                    category: p.category as any,
-                    dueDate: today,
-                    dueTime: nowStr,
-                    endTime: endStr,
-                  });
-                }}
-                style={{
-                  backgroundColor: 'var(--pill-bg)',
-                  border: '1px solid var(--border-glass)',
-                  color: 'var(--text-primary)',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  padding: '6px 14px',
-                  borderRadius: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                }}
-              >
-                <Plus size={12} color={pageAccent} />
-                <span>{p.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
 
       {/* 6 Reminders Category Bento Tiles Grid (Compact Apple iOS Muted Pastel Style) */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
