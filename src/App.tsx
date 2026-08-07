@@ -23,8 +23,6 @@ import { CreateExpenseFolderModal } from './components/CreateExpenseFolderModal'
 import { CreateSavingFolderModal } from './components/CreateSavingFolderModal';
 import { EditTripModal } from './components/EditTripModal';
 
-import { CenterAlertModal } from './components/CenterAlertModal';
-
 import { useExpenses } from './context/ExpenseContext';
 import { useReminders } from './context/ReminderContext';
 
@@ -33,7 +31,7 @@ export type TabName = 'EXPENSES' | 'SAVINGS' | 'STATS' | 'PLANNER' | 'CALENDAR' 
 export const AppContent: React.FC = () => {
   const { pageColors } = useTheme();
   const { setIsAddExpenseOpen } = useExpenses();
-  const { setIsAddReminderOpen, activeCenterAlert, dismissCenterAlert } = useReminders();
+  const { setIsAddReminderOpen } = useReminders();
   const [activeTab, setActiveTab] = useState<TabName>('EXPENSES');
 
   // Request Web Persistent Storage & handle PWA Home Screen Shortcuts URL parameters
@@ -102,15 +100,6 @@ export const AppContent: React.FC = () => {
       <CreateExpenseFolderModal />
       <CreateSavingFolderModal />
       <EditTripModal />
-
-      {/* Global Unmissable Center Alert Modal */}
-      <CenterAlertModal
-        isOpen={Boolean(activeCenterAlert?.isOpen)}
-        onClose={dismissCenterAlert}
-        title={activeCenterAlert?.title || ''}
-        message={activeCenterAlert?.message || ''}
-        type={activeCenterAlert?.type || 'info'}
-      />
 
       {/* Modern Floating Liquid Glass Dock Bottom Navigation Bar */}
       <nav
