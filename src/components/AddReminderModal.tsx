@@ -9,11 +9,12 @@ export const AddReminderModal: React.FC = () => {
   const { isAddReminderOpen, setIsAddReminderOpen, addReminder } = useReminders();
 
   const [title, setTitle] = useState('');
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState(''); // Description
   const [level, setLevel] = useState<'URGENT' | 'FLAGGED' | 'SIMPLE'>('SIMPLE');
   const [category, setCategory] = useState<ReminderCategory>('TASK');
   const [dueDate, setDueDate] = useState(getTodayDateString());
-  const [dueTime, setDueTime] = useState('12:00');
+  const [dueTime, setDueTime] = useState('12:00'); // Start Time
+  const [endTime, setEndTime] = useState('12:30'); // End Time
   const [alertEnabled, setAlertEnabled] = useState(true);
   const [syncCalendar, setSyncCalendar] = useState(true);
 
@@ -40,6 +41,7 @@ export const AddReminderModal: React.FC = () => {
         notes: notes.trim(),
         dueDate,
         dueTime,
+        endTime,
         category,
       });
     }
@@ -74,7 +76,7 @@ export const AddReminderModal: React.FC = () => {
           padding: '24px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: '14px',
           borderRadius: '24px',
           backgroundColor: 'rgba(26, 26, 36, 0.95)',
           backdropFilter: 'blur(24px)',
@@ -82,13 +84,14 @@ export const AddReminderModal: React.FC = () => {
           border: '1px solid rgba(255, 255, 255, 0.15)',
           boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
           color: '#FFF',
+          boxSizing: 'border-box',
         }}
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Bell size={18} color="#4A99E9" />
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#FFF' }}>Reminder</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#FFF' }}>Event Reminder</h3>
           </div>
           <button
             type="button"
@@ -99,7 +102,7 @@ export const AddReminderModal: React.FC = () => {
           </button>
         </div>
 
-        {/* Title Input Pill */}
+        {/* Title Input */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Title</label>
           <input
@@ -107,38 +110,40 @@ export const AddReminderModal: React.FC = () => {
             required
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder="Bills"
+            placeholder="Event Title (e.g. Pay Bills)"
             style={{
               width: '100%',
-              padding: '12px 16px',
-              borderRadius: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.14)',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              color: '#FFF',
-              fontSize: '14px',
-              outline: 'none',
-              fontWeight: 600,
-            }}
-          />
-        </div>
-
-        {/* Notes Input Pill */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Notes</label>
-          <input
-            type="text"
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="Details"
-            style={{
-              width: '100%',
-              padding: '10px 16px',
-              borderRadius: '16px',
+              padding: '12px 14px',
+              borderRadius: '14px',
               border: '1px solid rgba(255, 255, 255, 0.14)',
               backgroundColor: 'rgba(255, 255, 255, 0.08)',
               color: '#FFF',
               fontSize: '13px',
               outline: 'none',
+              fontWeight: 600,
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
+        {/* Description Input (Apple Calendar Format) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Description</label>
+          <input
+            type="text"
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="Event details or notes"
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: '14px',
+              border: '1px solid rgba(255, 255, 255, 0.14)',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              color: '#FFF',
+              fontSize: '12px',
+              outline: 'none',
+              boxSizing: 'border-box',
             }}
           />
         </div>
@@ -152,15 +157,14 @@ export const AddReminderModal: React.FC = () => {
               onClick={() => setLevel('SIMPLE')}
               style={{
                 flex: 1,
-                padding: '9px 0',
-                borderRadius: '14px',
+                padding: '8px 0',
+                borderRadius: '12px',
                 border: level === 'SIMPLE' ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
                 backgroundColor: level === 'SIMPLE' ? '#48484A' : 'rgba(255, 255, 255, 0.06)',
                 color: '#FFF',
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: 800,
                 cursor: 'pointer',
-                boxShadow: level === 'SIMPLE' ? '0 4px 12px rgba(72, 72, 74, 0.4)' : 'none',
               }}
             >
               Simple
@@ -171,15 +175,14 @@ export const AddReminderModal: React.FC = () => {
               onClick={() => setLevel('FLAGGED')}
               style={{
                 flex: 1,
-                padding: '9px 0',
-                borderRadius: '14px',
+                padding: '8px 0',
+                borderRadius: '12px',
                 border: level === 'FLAGGED' ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
                 backgroundColor: level === 'FLAGGED' ? '#F3A85B' : 'rgba(255, 255, 255, 0.06)',
                 color: level === 'FLAGGED' ? '#141416' : '#A0A0B2',
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: 800,
                 cursor: 'pointer',
-                boxShadow: level === 'FLAGGED' ? '0 4px 12px rgba(243, 168, 91, 0.4)' : 'none',
               }}
             >
               Flagged
@@ -190,15 +193,14 @@ export const AddReminderModal: React.FC = () => {
               onClick={() => setLevel('URGENT')}
               style={{
                 flex: 1,
-                padding: '9px 0',
-                borderRadius: '14px',
+                padding: '8px 0',
+                borderRadius: '12px',
                 border: level === 'URGENT' ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
                 backgroundColor: level === 'URGENT' ? '#EC668C' : 'rgba(255, 255, 255, 0.06)',
                 color: level === 'URGENT' ? '#FFF' : '#A0A0B2',
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: 800,
                 cursor: 'pointer',
-                boxShadow: level === 'URGENT' ? '0 4px 12px rgba(236, 102, 140, 0.4)' : 'none',
               }}
             >
               Urgent
@@ -206,7 +208,7 @@ export const AddReminderModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Category Pill Switcher (Flex-Wrap Grid) */}
+        {/* Category Pill Switcher */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Category</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -228,15 +230,14 @@ export const AddReminderModal: React.FC = () => {
                 type="button"
                 onClick={() => setCategory(cat.id as ReminderCategory)}
                 style={{
-                  padding: '6px 12px',
-                  borderRadius: '14px',
+                  padding: '5px 10px',
+                  borderRadius: '12px',
                   border: category === cat.id ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
                   backgroundColor: category === cat.id ? '#6C5CE7' : 'rgba(255, 255, 255, 0.08)',
                   color: '#FFF',
                   fontSize: '11px',
                   fontWeight: category === cat.id ? 800 : 600,
                   cursor: 'pointer',
-                  boxShadow: category === cat.id ? '0 4px 12px rgba(108, 92, 231, 0.4)' : 'none',
                 }}
               >
                 {cat.label}
@@ -245,38 +246,40 @@ export const AddReminderModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Date & Time Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Date</label>
-            <input
-              type="date"
-              required
-              value={dueDate}
-              onChange={e => setDueDate(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '14px',
-                border: '1px solid rgba(255, 255, 255, 0.14)',
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                color: '#FFF',
-                fontSize: '12px',
-                outline: 'none',
-                colorScheme: 'dark',
-              }}
-            />
-          </div>
+        {/* Date Row (Full Width - Clean Separated Layout) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Date</label>
+          <input
+            type="date"
+            required
+            value={dueDate}
+            onChange={e => setDueDate(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: '14px',
+              border: '1px solid rgba(255, 255, 255, 0.14)',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              color: '#FFF',
+              fontSize: '12px',
+              outline: 'none',
+              colorScheme: 'dark',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Time</label>
+        {/* Start Time & End Time Row ("Time to Time" - Non-Overlapping Grid) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', minWidth: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Start Time</label>
             <input
               type="time"
               value={dueTime}
               onChange={e => setDueTime(e.target.value)}
               style={{
                 width: '100%',
-                padding: '10px 12px',
+                padding: '10px 10px',
                 borderRadius: '14px',
                 border: '1px solid rgba(255, 255, 255, 0.14)',
                 backgroundColor: 'rgba(255, 255, 255, 0.08)',
@@ -284,13 +287,37 @@ export const AddReminderModal: React.FC = () => {
                 fontSize: '12px',
                 outline: 'none',
                 colorScheme: 'dark',
+                boxSizing: 'border-box',
+                minWidth: 0,
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>End Time</label>
+            <input
+              type="time"
+              value={endTime}
+              onChange={e => setEndTime(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 10px',
+                borderRadius: '14px',
+                border: '1px solid rgba(255, 255, 255, 0.14)',
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                color: '#FFF',
+                fontSize: '12px',
+                outline: 'none',
+                colorScheme: 'dark',
+                boxSizing: 'border-box',
+                minWidth: 0,
               }}
             />
           </div>
         </div>
 
         {/* Alert & Apple Calendar Toggles */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '2px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#FFF' }}>Alert</span>
             <button
@@ -348,7 +375,7 @@ export const AddReminderModal: React.FC = () => {
             fontWeight: 800,
             fontSize: '14px',
             cursor: 'pointer',
-            marginTop: '6px',
+            marginTop: '4px',
             boxShadow: '0 6px 18px rgba(108, 92, 231, 0.45)',
           }}
         >

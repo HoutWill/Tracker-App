@@ -8,7 +8,8 @@ export interface CalendarEventPayload {
   title: string;
   notes?: string;
   dueDate: string; // YYYY-MM-DD
-  dueTime?: string; // HH:mm
+  dueTime?: string; // HH:mm (Start Time)
+  endTime?: string; // HH:mm (End Time)
   category?: string;
   alarmOffsetMinutes?: number; // 0 = exact time, 15 = 15m before, 30 = 30m before
 }
@@ -20,9 +21,16 @@ export const syncToAppleCalendar = (event: CalendarEventPayload) => {
 
     const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
 
-    // Create Start & End Date objects
+    // Create Start & End Date objects matching Apple Calendar event duration
     const startDate = new Date(year, month - 1, day, hour, minute, 0);
-    const endDate = new Date(startDate.getTime() + 15 * 60 * 1000); // 15-minute event slot
+    
+    let endDate: Date;
+    if (event.endTime) {
+      const [endHour, endMinute] = event.endTime.split(':').map(Number);
+      endDate = new Date(year, month - 1, day, endHour, endMinute, 0);
+    } else {
+      endDate = new Date(startDate.getTime() + 30 * 60 * 1000); // 30-minute default slot
+    }
 
     const startStr = `${startDate.getFullYear()}${pad(startDate.getMonth() + 1)}${pad(startDate.getDate())}T${pad(startDate.getHours())}${pad(startDate.getMinutes())}00`;
     const endStr = `${endDate.getFullYear()}${pad(endDate.getMonth() + 1)}${pad(endDate.getDate())}T${pad(endDate.getHours())}${pad(endDate.getMinutes())}00`;
