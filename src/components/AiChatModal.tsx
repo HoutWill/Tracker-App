@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
 import { parseNaturalLanguageExpense } from '../services/aiAgentService';
-import { Sparkles, X, Send, Bot, User, Zap } from 'lucide-react';
+import { Sparkles, X, Send, Bot, User, Zap, Mic } from 'lucide-react';
+import { startVoiceRecognition } from '../services/speechService';
 
 interface ChatMessage {
   id: string;
@@ -23,6 +24,19 @@ export const AiChatModal: React.FC = () => {
 
   const [promptText, setPromptText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
+  const handleVoiceInput = () => {
+    setIsListening(true);
+    startVoiceRecognition(
+      (text) => {
+        setPromptText(text);
+        setIsListening(false);
+      },
+      () => setIsListening(false),
+      () => setIsListening(false)
+    );
+  };
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome-1',
@@ -335,20 +349,41 @@ export const AiChatModal: React.FC = () => {
             value={promptText}
             onChange={e => setPromptText(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSendPrompt()}
-            placeholder="Ask anything or log expenses..."
+            placeholder={isListening ? 'Listening... Speak now' : 'Ask anything or log expenses...'}
             disabled={isProcessing}
             style={{
               flex: 1,
               height: '44px',
               padding: '0 14px',
               borderRadius: '12px',
-              border: '1px solid var(--border-glass)',
+              border: isListening ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
               backgroundColor: 'rgba(255, 255, 255, 0.04)',
               color: 'var(--text-primary)',
               fontSize: '13px',
               outline: 'none',
             }}
           />
+
+          <button
+            type="button"
+            onClick={handleVoiceInput}
+            disabled={isProcessing}
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '12px',
+              border: '1px solid var(--border-glass)',
+              backgroundColor: isListening ? 'var(--accent-danger)' : 'rgba(255, 255, 255, 0.06)',
+              color: isListening ? '#FFFFFF' : 'var(--accent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: isProcessing ? 'not-allowed' : 'pointer',
+            }}
+            title="Voice Input"
+          >
+            <Mic size={18} />
+          </button>
 
           <button
             onClick={() => handleSendPrompt()}

@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useReminders } from '../context/ReminderContext';
 import { getTodayDateString } from '../services/storageService';
 import { ReminderCategory } from '../types';
-import { X, Bell, Check, Calendar, Clock, AlertCircle } from 'lucide-react';
+import { X, Bell, Check, Calendar, Clock, AlertCircle, Mic } from 'lucide-react';
 import { syncToAppleCalendar } from '../services/calendarSyncService';
+import { startVoiceRecognition } from '../services/speechService';
 
 const getCurrentTimeString = () => {
   const now = new Date();
@@ -41,6 +42,19 @@ export const AddReminderModal: React.FC = () => {
   const [endTime, setEndTime] = useState(getEndTimeString());
   const [alertEnabled, setAlertEnabled] = useState(true);
   const [syncCalendar, setSyncCalendar] = useState(true);
+  const [isListening, setIsListening] = useState(false);
+
+  const handleVoiceInput = () => {
+    setIsListening(true);
+    startVoiceRecognition(
+      (text) => {
+        setTitle(text);
+        setIsListening(false);
+      },
+      () => setIsListening(false),
+      () => setIsListening(false)
+    );
+  };
 
   // Automatically sync to current live date and time whenever modal opens
   useEffect(() => {
@@ -133,20 +147,41 @@ export const AddReminderModal: React.FC = () => {
           </button>
         </div>
 
-        {/* Title Input Pill */}
+        {/* Title Input Pill with Mic Button */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Title</label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Title</label>
+            <button
+              type="button"
+              onClick={handleVoiceInput}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: isListening ? '#EC668C' : '#4A99E9',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '11px',
+                fontWeight: 700,
+              }}
+              title="Speak to dictate title"
+            >
+              <Mic size={14} />
+              <span>{isListening ? 'Listening...' : 'Voice'}</span>
+            </button>
+          </div>
           <input
             type="text"
             required
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder="Bills"
+            placeholder={isListening ? 'Listening... Speak now' : 'Bills, Workout...'}
             style={{
               width: '100%',
               padding: '12px 16px',
               borderRadius: '16px',
-              border: '1px solid var(--border-glass)',
+              border: isListening ? '1.5px solid #4A99E9' : '1px solid var(--border-glass)',
               backgroundColor: 'var(--pill-bg)',
               color: 'var(--text-primary)',
               fontSize: '14px',

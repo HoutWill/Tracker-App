@@ -3,7 +3,8 @@ import { useExpenses } from '../context/ExpenseContext';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
 import { getTodayDateString } from '../services/storageService';
 import { PaymentMethod } from '../types';
-import { X, Plus, ArrowDownRight } from 'lucide-react';
+import { X, Plus, ArrowDownRight, Mic } from 'lucide-react';
+import { startVoiceRecognition } from '../services/speechService';
 
 export const AddExpenseModal: React.FC = () => {
   const { isAddExpenseOpen, setIsAddExpenseOpen, addExpense, categories, currency, trips, selectedTripId } = useExpenses();
@@ -15,6 +16,19 @@ export const AddExpenseModal: React.FC = () => {
   const [dateStr, setDateStr] = useState(getTodayDateString());
   const [tripId, setTripId] = useState<string | undefined>(selectedTripId || undefined);
   const [notes, setNotes] = useState('');
+  const [isListening, setIsListening] = useState(false);
+
+  const handleVoiceInput = () => {
+    setIsListening(true);
+    startVoiceRecognition(
+      (text) => {
+        setTitle(text);
+        setIsListening(false);
+      },
+      () => setIsListening(false),
+      () => setIsListening(false)
+    );
+  };
 
   // Pure Expense categories list
   const expenseCategories = categories.filter(c => c.type !== 'SAVING' && c.type !== 'INCOME' && !c.id.startsWith('cat-saving'));
@@ -125,23 +139,44 @@ export const AddExpenseModal: React.FC = () => {
           </button>
         </div>
 
-        {/* Title Input */}
+        {/* Title Input with Mic Button */}
         <div>
-          <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Title
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+              Title
+            </label>
+            <button
+              type="button"
+              onClick={handleVoiceInput}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: isListening ? 'var(--accent-danger)' : 'var(--accent)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '11px',
+                fontWeight: 700,
+              }}
+              title="Speak to dictate title"
+            >
+              <Mic size={14} className={isListening ? 'animate-pulse' : ''} />
+              <span>{isListening ? 'Listening...' : 'Voice'}</span>
+            </button>
+          </div>
           <input
             type="text"
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder="Coffee, Dinner..."
+            placeholder={isListening ? 'Listening... Speak now' : 'Coffee, Dinner...'}
             required
             style={{
               width: '100%',
               height: '42px',
               padding: '0 12px',
               borderRadius: '10px',
-              border: '1px solid var(--border-glass)',
+              border: isListening ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
               backgroundColor: 'rgba(255, 255, 255, 0.05)',
               color: 'var(--text-primary)',
               fontSize: '13px',
