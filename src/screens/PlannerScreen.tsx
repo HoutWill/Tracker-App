@@ -33,6 +33,7 @@ export const PlannerScreen: React.FC = () => {
 
   const {
     reminders,
+    addReminder,
     toggleReminder,
     deleteReminder,
     setIsAddReminderOpen,
@@ -182,9 +183,106 @@ export const PlannerScreen: React.FC = () => {
 
       {plannerTab === 'REMINDERS' ? (
         <>
+        {/* Quick Presets Bar for Planner (Matching Image 2) */}
+        <div style={{ marginBottom: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', padding: '0 2px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>
+              Presets
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const name = prompt('Enter custom preset name:');
+                if (name && name.trim()) {
+                  addReminder({
+                    title: name.trim(),
+                    level: 'SIMPLE',
+                    priority: 'MEDIUM',
+                    category: 'TASK',
+                    dueDate: today,
+                    dueTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+                    endTime: new Date(Date.now() + 30 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+                  });
+                }
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: pageAccent,
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px',
+              }}
+            >
+              <Plus size={12} />
+              <span>Preset</span>
+            </button>
+          </div>
 
-      {/* 6 Reminders Category Tiles Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '18px' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              overflowX: 'auto',
+              paddingBottom: '4px',
+              whiteSpace: 'nowrap',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            {[
+              { id: 'p-1', label: 'Gym', category: 'SPORT', level: 'FLAGGED' },
+              { id: 'p-2', label: 'Bills', category: 'BILLS', level: 'URGENT' },
+              { id: 'p-3', label: 'Meeting', category: 'MEETING', level: 'FLAGGED' },
+              { id: 'p-4', label: 'Study', category: 'STUDY', level: 'SIMPLE' },
+              { id: 'p-5', label: 'Doctor', category: 'HEALTH', level: 'URGENT' },
+              { id: 'p-6', label: 'Shopping', category: 'FUN', level: 'SIMPLE' },
+              { id: 'p-7', label: 'Work', category: 'WORK', level: 'SIMPLE' },
+              { id: 'p-8', label: 'Water', category: 'HEALTH', level: 'SIMPLE' },
+            ].map(p => (
+              <button
+                key={p.id}
+                type="button"
+                className="glass-pill"
+                onClick={() => {
+                  const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                  const endStr = new Date(Date.now() + 30 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                  addReminder({
+                    title: p.label,
+                    level: p.level as any,
+                    priority: p.level === 'FLAGGED' ? 'HIGH' : 'MEDIUM',
+                    category: p.category as any,
+                    dueDate: today,
+                    dueTime: nowStr,
+                    endTime: endStr,
+                  });
+                }}
+                style={{
+                  backgroundColor: 'var(--pill-bg)',
+                  border: '1px solid var(--border-glass)',
+                  color: 'var(--text-primary)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  padding: '6px 14px',
+                  borderRadius: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                <Plus size={12} color={pageAccent} />
+                <span>{p.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+      {/* 6 Reminders Category Bento Tiles Grid (Compact Apple iOS Muted Pastel Style) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
         {/* Today Tile */}
         <button
           type="button"
@@ -193,24 +291,24 @@ export const PlannerScreen: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            padding: '12px 14px',
-            borderRadius: '14px',
-            border: activeFilter === 'TODAY' ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
+            padding: '10px 14px',
+            borderRadius: '20px',
+            border: activeFilter === 'TODAY' ? '1.5px solid #4A99E9' : '1px solid var(--border-glass)',
             backgroundColor: 'var(--bg-card)',
             color: 'var(--text-primary)',
             textAlign: 'left',
             cursor: 'pointer',
-            minHeight: '80px',
+            minHeight: '66px',
             transition: 'all 0.15s ease',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CalendarDays size={16} color="#3B82F6" />
+            <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: 'rgba(74, 153, 233, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CalendarDays size={15} color="#4A99E9" />
             </div>
-            <span className="tabular-nums" style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>{todayReminders.length}</span>
+            <span className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{todayReminders.length}</span>
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 600, marginTop: '8px', color: 'var(--text-secondary)' }}>Today</span>
+          <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)' }}>Today</span>
         </button>
 
         {/* Scheduled Tile */}
@@ -221,24 +319,24 @@ export const PlannerScreen: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            padding: '12px 14px',
-            borderRadius: '14px',
-            border: activeFilter === 'SCHEDULED' ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
+            padding: '10px 14px',
+            borderRadius: '20px',
+            border: activeFilter === 'SCHEDULED' ? '1.5px solid #ED6C6C' : '1px solid var(--border-glass)',
             backgroundColor: 'var(--bg-card)',
             color: 'var(--text-primary)',
             textAlign: 'left',
             cursor: 'pointer',
-            minHeight: '80px',
+            minHeight: '66px',
             transition: 'all 0.15s ease',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Calendar size={16} color="#EF4444" />
+            <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: 'rgba(237, 108, 108, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Calendar size={15} color="#ED6C6C" />
             </div>
-            <span className="tabular-nums" style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>{scheduledReminders.length}</span>
+            <span className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{scheduledReminders.length}</span>
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 600, marginTop: '8px', color: 'var(--text-secondary)' }}>Scheduled</span>
+          <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)' }}>Scheduled</span>
         </button>
 
         {/* All Tile */}
@@ -249,24 +347,24 @@ export const PlannerScreen: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            padding: '12px 14px',
-            borderRadius: '14px',
-            border: activeFilter === 'ALL' ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
+            padding: '10px 14px',
+            borderRadius: '20px',
+            border: activeFilter === 'ALL' ? '1.5px solid #6C7B8A' : '1px solid var(--border-glass)',
             backgroundColor: 'var(--bg-card)',
             color: 'var(--text-primary)',
             textAlign: 'left',
             cursor: 'pointer',
-            minHeight: '80px',
+            minHeight: '66px',
             transition: 'all 0.15s ease',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Inbox size={16} color="var(--text-secondary)" />
+            <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Inbox size={15} color="var(--text-secondary)" />
             </div>
-            <span className="tabular-nums" style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>{reminders.length}</span>
+            <span className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{reminders.length}</span>
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 600, marginTop: '8px', color: 'var(--text-secondary)' }}>All</span>
+          <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)' }}>All</span>
         </button>
 
         {/* Flagged Tile */}
@@ -277,24 +375,24 @@ export const PlannerScreen: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            padding: '12px 14px',
-            borderRadius: '14px',
-            border: activeFilter === 'FLAGGED' ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
+            padding: '10px 14px',
+            borderRadius: '20px',
+            border: activeFilter === 'FLAGGED' ? '1.5px solid #F3A85B' : '1px solid var(--border-glass)',
             backgroundColor: 'var(--bg-card)',
             color: 'var(--text-primary)',
             textAlign: 'left',
             cursor: 'pointer',
-            minHeight: '80px',
+            minHeight: '66px',
             transition: 'all 0.15s ease',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Flag size={16} color="#F59E0B" />
+            <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: 'rgba(243, 168, 91, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Flag size={15} color="#F3A85B" />
             </div>
-            <span className="tabular-nums" style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>{flaggedReminders.length}</span>
+            <span className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{flaggedReminders.length}</span>
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 600, marginTop: '8px', color: 'var(--text-secondary)' }}>Flagged</span>
+          <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)' }}>Flagged</span>
         </button>
 
         {/* Urgent Tile */}
@@ -305,24 +403,24 @@ export const PlannerScreen: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            padding: '12px 14px',
-            borderRadius: '14px',
-            border: activeFilter === 'URGENT' ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
+            padding: '10px 14px',
+            borderRadius: '20px',
+            border: activeFilter === 'URGENT' ? '1.5px solid #EC668C' : '1px solid var(--border-glass)',
             backgroundColor: 'var(--bg-card)',
             color: 'var(--text-primary)',
             textAlign: 'left',
             cursor: 'pointer',
-            minHeight: '80px',
+            minHeight: '66px',
             transition: 'all 0.15s ease',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: 'rgba(236, 72, 153, 0.12)', border: '1px solid rgba(236, 72, 153, 0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Clock size={16} color="#EC4899" />
+            <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: 'rgba(236, 102, 140, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Clock size={15} color="#EC668C" />
             </div>
-            <span className="tabular-nums" style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>{urgentReminders.length}</span>
+            <span className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{urgentReminders.length}</span>
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 600, marginTop: '8px', color: 'var(--text-secondary)' }}>Urgent</span>
+          <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)' }}>Urgent</span>
         </button>
 
         {/* Completed Tile */}
@@ -333,30 +431,30 @@ export const PlannerScreen: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            padding: '12px 14px',
-            borderRadius: '14px',
-            border: activeFilter === 'COMPLETED' ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
+            padding: '10px 14px',
+            borderRadius: '20px',
+            border: activeFilter === 'COMPLETED' ? '1.5px solid #6C7B8A' : '1px solid var(--border-glass)',
             backgroundColor: 'var(--bg-card)',
             color: 'var(--text-primary)',
             textAlign: 'left',
             cursor: 'pointer',
-            minHeight: '80px',
+            minHeight: '66px',
             transition: 'all 0.15s ease',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '8px', backgroundColor: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ShieldCheck size={16} color="#10B981" />
+            <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: 'rgba(108, 123, 138, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ShieldCheck size={15} color="#6C7B8A" />
             </div>
-            <span className="tabular-nums" style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>{completedReminders.length}</span>
+            <span className="tabular-nums" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>{completedReminders.length}</span>
           </div>
-          <span style={{ fontSize: '12px', fontWeight: 600, marginTop: '8px', color: 'var(--text-secondary)' }}>Completed</span>
+          <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)' }}>Completed</span>
         </button>
       </div>
 
       {/* Reminders & Todo Checklist Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', padding: '0 2px' }}>
-        <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
           {activeFilter === 'TODAY' ? 'Today' : activeFilter === 'SCHEDULED' ? 'Scheduled' : activeFilter === 'FLAGGED' ? 'Flagged' : activeFilter === 'URGENT' ? 'Urgent' : activeFilter === 'COMPLETED' ? 'Completed' : 'Todos'}
         </h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -366,36 +464,36 @@ export const PlannerScreen: React.FC = () => {
             style={{
               backgroundColor: 'var(--pill-bg)',
               border: '1px solid var(--border-glass)',
-              borderRadius: '8px',
+              borderRadius: '10px',
               color: 'var(--text-primary)',
               fontSize: '11px',
-              fontWeight: 500,
-              padding: '3px 8px',
+              fontWeight: 700,
+              padding: '4px 10px',
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
               cursor: 'pointer',
             }}
           >
-            <Plus size={12} />
+            <Plus size={13} />
             <span>Add</span>
           </button>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
             {displayedReminders.length} Items
           </span>
         </div>
       </div>
 
       {/* Checklist List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {displayedReminders.length > 0 ? (
           displayedReminders.map(r => (
             <div
               key={r.id}
               className="glass-panel"
               style={{
-                padding: '12px 14px',
-                borderRadius: '12px',
+                padding: '14px 16px',
+                borderRadius: '20px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -406,21 +504,27 @@ export const PlannerScreen: React.FC = () => {
               }}
             >
               {/* Left Checkbox & Info */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, overflow: 'hidden' }}>
                 <button
                   type="button"
                   onClick={() => toggleReminder(r.id)}
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: r.completed ? 'var(--accent-success)' : 'var(--text-muted)',
+                    color: r.completed ? '#30D158' : 'var(--text-muted)',
                     cursor: 'pointer',
                     padding: 0,
                     display: 'flex',
                     alignItems: 'center',
                   }}
                 >
-                  {r.completed ? <CheckSquare size={18} /> : <Square size={18} />}
+                  {r.completed ? (
+                    <div style={{ width: '20px', height: '20px', borderRadius: '6px', backgroundColor: '#30D158', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#141416' }}>
+                      <Check size={14} strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div style={{ width: '20px', height: '20px', borderRadius: '6px', border: '1.5px solid var(--border-glass)', backgroundColor: 'var(--pill-bg)' }} />
+                  )}
                 </button>
 
                 <div
@@ -430,8 +534,8 @@ export const PlannerScreen: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span
                       style={{
-                        fontSize: '13px',
-                        fontWeight: 600,
+                        fontSize: '14px',
+                        fontWeight: 700,
                         textDecoration: r.completed ? 'line-through' : 'none',
                         color: r.completed ? 'var(--text-muted)' : 'var(--text-primary)',
                       }}
@@ -442,11 +546,11 @@ export const PlannerScreen: React.FC = () => {
                       <span
                         style={{
                           fontSize: '9px',
-                          fontWeight: 600,
-                          padding: '1px 5px',
-                          borderRadius: '4px',
-                          backgroundColor: 'rgba(236, 72, 153, 0.12)',
-                          color: '#EC4899',
+                          fontWeight: 700,
+                          padding: '2px 6px',
+                          borderRadius: '6px',
+                          backgroundColor: 'rgba(236, 102, 140, 0.15)',
+                          color: '#EC668C',
                         }}
                       >
                         Urgent
@@ -454,50 +558,64 @@ export const PlannerScreen: React.FC = () => {
                     )}
                   </div>
                   {r.notes && (
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 400 }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px', fontWeight: 400 }}>
                       {r.notes}
                     </div>
                   )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                      <Calendar size={11} /> {r.dueDate} {r.dueTime ? `@ ${r.dueTime}` : ''}
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Calendar size={11} color="var(--text-muted)" /> {r.dueDate} {r.dueTime ? `@ ${r.dueTime}` : ''}
                     </span>
-                    <span
-                      style={{
-                        fontSize: '9px',
-                        fontWeight: 600,
-                        padding: '1px 5px',
-                        borderRadius: '4px',
-                        backgroundColor: 'var(--pill-bg)',
-                        color: 'var(--text-secondary)',
-                        border: '1px solid var(--border-glass)',
-                      }}
-                    >
-                      {r.category.charAt(0) + r.category.slice(1).toLowerCase()}
-                    </span>
+                    {r.category && (
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontWeight: 600,
+                          padding: '1px 6px',
+                          borderRadius: '6px',
+                          backgroundColor: 'var(--pill-bg)',
+                          color: 'var(--text-secondary)',
+                          border: '1px solid var(--border-glass)',
+                        }}
+                      >
+                        {r.category.charAt(0) + r.category.slice(1).toLowerCase()}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Info Detail Icon Button */}
-              <button
-                type="button"
-                onClick={() => setSelectedReminderForDetail(r)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
-                title="Detail"
-              >
-                <Info size={15} />
-              </button>
-
-              {/* Delete Button */}
-              <button
-                type="button"
-                onClick={() => deleteReminder(r.id)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
-                title="Delete"
-              >
-                <Trash2 size={15} />
-              </button>
+              {/* Right Action Icons */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedReminderForDetail(r)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    padding: '4px',
+                  }}
+                  title="View Detail"
+                >
+                  <Info size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteReminder(r.id)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    padding: '4px',
+                  }}
+                  title="Delete"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
           ))
         ) : (

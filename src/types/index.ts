@@ -62,10 +62,11 @@ export interface ReminderItem {
   notes?: string;
   dueDate: string; // YYYY-MM-DD
   dueTime?: string; // HH:mm
+  endTime?: string; // HH:mm
   category: ReminderCategory;
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   level: 'URGENT' | 'FLAGGED' | 'SIMPLE';
   completed: boolean;
-  alertEnabled: boolean;
+  alertEnabled?: boolean;
   createdAt: number;
 }
