@@ -145,34 +145,10 @@ export const PlannerScreen: React.FC = () => {
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
-      {/* Main Screen Title Bar (Single Add Button Exists Here) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-        <div>
-          <h2 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--text-primary)' }}>Planner</h2>
-          <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Reminders, Todos & Alerts</p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setIsAddReminderOpen(true)}
-          style={{
-            backgroundColor: pageAccent,
-            color: '#FFF',
-            fontSize: '13px',
-            fontWeight: 800,
-            padding: '8px 18px',
-            borderRadius: '14px',
-            border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(108, 92, 231, 0.3)',
-          }}
-        >
-          <Plus size={16} strokeWidth={3} />
-          <span>Add</span>
-        </button>
+      {/* Main Screen Title Bar */}
+      <div style={{ marginBottom: '14px' }}>
+        <h2 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--text-primary)' }}>Planner</h2>
+        <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Reminders, Todos & Alerts</p>
       </div>
 
       {/* Top Segmented Tab Switcher */}
@@ -365,22 +341,46 @@ export const PlannerScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* 3. Records Section (At Bottom) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', padding: '0 2px' }}>
-          <Layers size={18} color={pageAccent} />
-          <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>Records</h3>
-          <span
+        {/* 3. Records Section (At Bottom with Single Primary Add Button) */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Layers size={18} color={pageAccent} />
+            <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>Records</h3>
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                padding: '2px 8px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(243, 168, 91, 0.18)',
+                color: '#F3A85B',
+              }}
+            >
+              {reminders.length}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsAddReminderOpen(true)}
             style={{
-              fontSize: '11px',
+              backgroundColor: pageAccent,
+              color: '#FFF',
+              fontSize: '13px',
               fontWeight: 800,
-              padding: '2px 8px',
-              borderRadius: '10px',
-              backgroundColor: 'rgba(243, 168, 91, 0.18)',
-              color: '#F3A85B',
+              padding: '7px 16px',
+              borderRadius: '14px',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(108, 92, 231, 0.3)',
             }}
           >
-            {reminders.length}
-          </span>
+            <Plus size={15} strokeWidth={3} />
+            <span>Add</span>
+          </button>
         </div>
 
         {/* Search Bar with Mic Icon */}
