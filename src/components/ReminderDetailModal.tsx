@@ -18,16 +18,6 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
     toggleReminder(reminder.id);
   };
 
-  const handleSyncAppleReminders = () => {
-    syncToAppleReminders({
-      title: reminder.title,
-      notes: reminder.notes,
-      dueDate: reminder.dueDate,
-      dueTime: reminder.dueTime,
-      category: reminder.category,
-    });
-  };
-
   const handleSyncAppleCalendar = () => {
     syncToAppleCalendar({
       title: reminder.title,
@@ -215,30 +205,6 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-          <button
-            type="button"
-            onClick={handleSyncAppleReminders}
-            style={{
-              width: '100%',
-              padding: '11px',
-              borderRadius: '12px',
-              border: 'none',
-              backgroundColor: '#FF9F0A',
-              color: '#141416',
-              fontWeight: 800,
-              fontSize: '12px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              boxShadow: '0 4px 14px rgba(255, 159, 10, 0.3)',
-            }}
-          >
-            <Bell size={15} />
-            <span>Add to Apple Reminders</span>
-          </button>
-
           <button
             type="button"
             onClick={handleSyncAppleCalendar}
