@@ -2,6 +2,7 @@ import React from 'react';
 import { ReminderItem } from '../types';
 import { useReminders } from '../context/ReminderContext';
 import { X, Bell, Calendar, Clock, CheckSquare, Square, Trash2, Tag } from 'lucide-react';
+import { syncToAppleCalendar, syncToAppleReminders } from '../services/calendarSyncService';
 
 interface ReminderDetailModalProps {
   reminder: ReminderItem | null;
@@ -15,6 +16,26 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
 
   const handleToggle = () => {
     toggleReminder(reminder.id);
+  };
+
+  const handleSyncAppleReminders = () => {
+    syncToAppleReminders({
+      title: reminder.title,
+      notes: reminder.notes,
+      dueDate: reminder.dueDate,
+      dueTime: reminder.dueTime,
+      category: reminder.category,
+    });
+  };
+
+  const handleSyncAppleCalendar = () => {
+    syncToAppleCalendar({
+      title: reminder.title,
+      notes: reminder.notes,
+      dueDate: reminder.dueDate,
+      dueTime: reminder.dueTime,
+      category: reminder.category,
+    });
   };
 
   const handleDelete = () => {
@@ -193,50 +214,100 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
         ) : null}
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
           <button
             type="button"
-            onClick={handleToggle}
+            onClick={handleSyncAppleReminders}
             style={{
-              flex: 1,
-              padding: '10px',
-              borderRadius: '10px',
-              border: '1px solid var(--border-glass)',
-              backgroundColor: reminder.completed ? 'var(--pill-bg)' : 'var(--accent)',
-              color: reminder.completed ? 'var(--text-primary)' : '#FFF',
-              fontWeight: 600,
+              width: '100%',
+              padding: '11px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: '#FF9F0A',
+              color: '#141416',
+              fontWeight: 800,
               fontSize: '12px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
+              boxShadow: '0 4px 14px rgba(255, 159, 10, 0.3)',
             }}
           >
-            {reminder.completed ? <Square size={15} /> : <CheckSquare size={15} />}
-            <span>{reminder.completed ? 'Mark Pending' : 'Mark Complete'}</span>
+            <Bell size={15} />
+            <span>Add to Apple Reminders</span>
           </button>
 
           <button
             type="button"
-            onClick={handleDelete}
+            onClick={handleSyncAppleCalendar}
             style={{
-              padding: '10px 14px',
-              borderRadius: '10px',
-              border: '1px solid rgba(239, 68, 68, 0.25)',
-              backgroundColor: 'rgba(239, 68, 68, 0.08)',
-              color: 'var(--accent-danger)',
-              fontWeight: 600,
+              width: '100%',
+              padding: '11px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: '#30D158',
+              color: '#141416',
+              fontWeight: 800,
               fontSize: '12px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: '6px',
+              boxShadow: '0 4px 14px rgba(48, 209, 88, 0.3)',
             }}
-            title="Delete"
           >
-            <Trash2 size={15} />
+            <Calendar size={15} />
+            <span>Add to Apple Calendar</span>
           </button>
+
+          <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
+            <button
+              type="button"
+              onClick={handleToggle}
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: '10px',
+                border: '1px solid var(--border-glass)',
+                backgroundColor: reminder.completed ? 'var(--pill-bg)' : 'var(--accent)',
+                color: reminder.completed ? 'var(--text-primary)' : '#FFF',
+                fontWeight: 600,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+              }}
+            >
+              {reminder.completed ? <Square size={15} /> : <CheckSquare size={15} />}
+              <span>{reminder.completed ? 'Mark Pending' : 'Mark Complete'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDelete}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                color: 'var(--accent-danger)',
+                fontWeight: 600,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title="Delete"
+            >
+              <Trash2 size={15} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
