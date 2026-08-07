@@ -289,12 +289,13 @@ export const AddReminderModal: React.FC = () => {
                 flex: 1,
                 padding: '9px 0',
                 borderRadius: '14px',
-                border: level === 'SIMPLE' ? 'none' : '1px solid var(--border-glass)',
-                backgroundColor: level === 'SIMPLE' ? '#48484A' : 'var(--pill-bg)',
-                color: '#FFF',
+                border: level === 'SIMPLE' ? '1.5px solid #6C7B8A' : '1px solid var(--border-glass)',
+                backgroundColor: level === 'SIMPLE' ? '#6C7B8A' : 'var(--pill-bg)',
+                color: level === 'SIMPLE' ? '#FFF' : 'var(--text-primary)',
                 fontSize: '12px',
                 fontWeight: 800,
                 cursor: 'pointer',
+                transition: 'all 0.15s ease',
               }}
             >
               Simple
@@ -307,12 +308,13 @@ export const AddReminderModal: React.FC = () => {
                 flex: 1,
                 padding: '9px 0',
                 borderRadius: '14px',
-                border: level === 'FLAGGED' ? 'none' : '1px solid var(--border-glass)',
+                border: level === 'FLAGGED' ? '1.5px solid #F3A85B' : '1px solid var(--border-glass)',
                 backgroundColor: level === 'FLAGGED' ? '#F3A85B' : 'var(--pill-bg)',
-                color: level === 'FLAGGED' ? '#141416' : 'var(--text-secondary)',
+                color: level === 'FLAGGED' ? '#FFF' : 'var(--text-primary)',
                 fontSize: '12px',
                 fontWeight: 800,
                 cursor: 'pointer',
+                transition: 'all 0.15s ease',
               }}
             >
               Flagged
@@ -325,12 +327,13 @@ export const AddReminderModal: React.FC = () => {
                 flex: 1,
                 padding: '9px 0',
                 borderRadius: '14px',
-                border: level === 'URGENT' ? 'none' : '1px solid var(--border-glass)',
+                border: level === 'URGENT' ? '1.5px solid #EC668C' : '1px solid var(--border-glass)',
                 backgroundColor: level === 'URGENT' ? '#EC668C' : 'var(--pill-bg)',
-                color: level === 'URGENT' ? '#FFF' : 'var(--text-secondary)',
+                color: level === 'URGENT' ? '#FFF' : 'var(--text-primary)',
                 fontSize: '12px',
                 fontWeight: 800,
                 cursor: 'pointer',
+                transition: 'all 0.15s ease',
               }}
             >
               Urgent
@@ -348,14 +351,15 @@ export const AddReminderModal: React.FC = () => {
                 type="button"
                 onClick={() => setCategory(cat.id as ReminderCategory)}
                 style={{
-                  padding: '6px 12px',
+                  padding: '6px 14px',
                   borderRadius: '14px',
-                  border: category === cat.id ? 'none' : '1px solid var(--border-glass)',
-                  backgroundColor: category === cat.id ? '#6C5CE7' : 'var(--pill-bg)',
+                  border: category === cat.id ? '1.5px solid #4A99E9' : '1px solid var(--border-glass)',
+                  backgroundColor: category === cat.id ? '#4A99E9' : 'var(--pill-bg)',
                   color: category === cat.id ? '#FFF' : 'var(--text-primary)',
                   fontSize: '11px',
                   fontWeight: category === cat.id ? 800 : 600,
                   cursor: 'pointer',
+                  transition: 'all 0.15s ease',
                 }}
               >
                 {cat.label}
