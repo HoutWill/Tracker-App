@@ -145,23 +145,11 @@ export const PlannerScreen: React.FC = () => {
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
-      {/* Records Header Title Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Layers size={22} color={pageAccent} />
-          <h2 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--text-primary)' }}>Records</h2>
-          <span
-            style={{
-              fontSize: '11px',
-              fontWeight: 800,
-              padding: '2px 8px',
-              borderRadius: '10px',
-              backgroundColor: 'rgba(243, 168, 91, 0.18)',
-              color: '#F3A85B',
-            }}
-          >
-            {reminders.length}
-          </span>
+      {/* Main Screen Title Bar (Single Add Button Exists Here) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+        <div>
+          <h2 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--text-primary)' }}>Planner</h2>
+          <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Reminders, Todos & Alerts</p>
         </div>
 
         <button
@@ -187,7 +175,7 @@ export const PlannerScreen: React.FC = () => {
         </button>
       </div>
 
-      {/* Top Segmented Tab Switcher (Moved to top below header) */}
+      {/* Top Segmented Tab Switcher */}
       <div
         className="glass-panel"
         style={{
@@ -315,20 +303,10 @@ export const PlannerScreen: React.FC = () => {
         </div>
 
         {/* 2. Quick Presets Bento Grid (Open Add Modal with Pre-populated Info) */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 2px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Zap size={15} color="var(--text-secondary)" />
-              <h3 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>Presets</h3>
-            </div>
-            <button
-              type="button"
-              className="glass-pill"
-              onClick={() => setIsAddReminderOpen(true)}
-              style={{ fontSize: '11px', padding: '4px 10px', color: 'var(--text-primary)', borderColor: 'var(--border-glass)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
-            >
-              <Plus size={12} /> Add
-            </button>
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', padding: '0 2px' }}>
+            <Zap size={15} color="var(--text-secondary)" />
+            <h3 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>Presets</h3>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
@@ -387,7 +365,25 @@ export const PlannerScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* 3. Search Bar & Filter Chips Carousel with Vector Icons */}
+        {/* 3. Records Section (At Bottom) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', padding: '0 2px' }}>
+          <Layers size={18} color={pageAccent} />
+          <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>Records</h3>
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 800,
+              padding: '2px 8px',
+              borderRadius: '10px',
+              backgroundColor: 'rgba(243, 168, 91, 0.18)',
+              color: '#F3A85B',
+            }}
+          >
+            {reminders.length}
+          </span>
+        </div>
+
+        {/* Search Bar with Mic Icon */}
         <div
           style={{
             display: 'flex',
