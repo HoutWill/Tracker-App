@@ -42,7 +42,7 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
         </button>
       </div>
 
-      {/* Dynamic 9-Bar Quick Presets Grid (3x3) */}
+      {/* Dynamic 9-Bar Quick Presets Grid (3x3 Compact Apple Bento Cards) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
         {presetsList.slice(0, 9).map((preset, idx) => {
           const rawHex = presetPalette[idx % presetPalette.length];
@@ -56,17 +56,16 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '12px 8px',
-                borderRadius: '12px',
+                justifyContent: 'space-between',
+                padding: '10px 12px',
+                borderRadius: '20px',
                 border: '1px solid var(--border-glass)',
                 backgroundColor: 'var(--bg-card)',
                 color: 'var(--text-primary)',
-                textAlign: 'center',
+                textAlign: 'left',
                 cursor: 'pointer',
                 transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
-                minHeight: '100px',
+                minHeight: '66px',
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.backgroundColor = 'var(--pill-hover)';
@@ -75,55 +74,49 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                 e.currentTarget.style.backgroundColor = 'var(--bg-card)';
               }}
             >
-              {/* Soft Muted Colored Icon Badge Circle */}
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  backgroundColor: hexToRgba(tileHex, 0.12),
-                  border: `1px solid ${hexToRgba(tileHex, 0.22)}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: tileHex,
-                  marginBottom: '8px',
-                }}
-              >
-                <CategoryIconRenderer icon={preset.icon} size={18} color={tileHex} />
-              </div>
-
-              {/* Title & Price */}
-              <div style={{ width: '100%' }}>
+              {/* Top Row: Icon badge left, price count right */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div
                   style={{
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    lineHeight: '1.2',
-                    color: 'var(--text-primary)',
-                    marginBottom: '2px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '10px',
+                    backgroundColor: hexToRgba(tileHex, 0.15),
+                    border: `1px solid ${hexToRgba(tileHex, 0.25)}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: tileHex,
                   }}
                 >
-                  {preset.title}
+                  <CategoryIconRenderer icon={preset.icon} size={15} color={tileHex} />
                 </div>
-
-                {/* Price Text */}
-                <div
+                <span
                   className="tabular-nums"
                   style={{
-                    display: 'block',
-                    fontSize: '11px',
-                    fontWeight: 500,
-                    color: 'var(--text-secondary)',
-                    width: '100%',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    color: 'var(--text-primary)',
                   }}
                 >
                   {formatCurrency(preset.amount, currency)}
-                </div>
+                </span>
               </div>
+
+              {/* Bottom Row: Single-Word Clean Title */}
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  marginTop: '6px',
+                  color: 'var(--text-secondary)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {preset.title.split(' ')[0]}
+              </span>
             </button>
           );
         })}
