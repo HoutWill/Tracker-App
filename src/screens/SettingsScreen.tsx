@@ -7,6 +7,7 @@ import { AuthModal, UserAccount } from '../components/AuthModal';
 import { getGuestId, setGuestId } from '../services/storageService';
 import { Settings, Shield, Eye, EyeOff, Download, Trash2, Palette, CheckCircle2, Sparkles, Key, Copy, RefreshCw, User, ShieldCheck, LogIn, Bell } from 'lucide-react';
 import { useReminders } from '../context/ReminderContext';
+import { CenterAlertModal } from '../components/CenterAlertModal';
 
 export const SettingsScreen: React.FC = () => {
   const {
@@ -16,7 +17,12 @@ export const SettingsScreen: React.FC = () => {
   } = useExpenses();
   const { triggerTestNotification, isNotificationEnabled } = useReminders();
 
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [alertState, setAlertState] = useState<{ isOpen: boolean; title: string; message: string; type?: 'success' | 'info' | 'warning' }>({
+    isOpen: false,
+    title: '',
+    message: '',
+  });
+
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isAppearanceModalOpen, setIsAppearanceModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -25,8 +31,12 @@ export const SettingsScreen: React.FC = () => {
 
   const handleTestNotification = async () => {
     const msg = await triggerTestNotification();
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 4000);
+    setAlertState({
+      isOpen: true,
+      title: 'Notification Alert',
+      message: msg,
+      type: 'info',
+    });
   };
 
   useEffect(() => {
@@ -45,8 +55,12 @@ export const SettingsScreen: React.FC = () => {
 
   const handleCopySyncKey = () => {
     navigator.clipboard.writeText(currentSyncKey);
-    setToastMsg('Sync Key Copied!');
-    setTimeout(() => setToastMsg(null), 2500);
+    setAlertState({
+      isOpen: true,
+      title: 'Copied',
+      message: 'Sync Key copied to clipboard!',
+      type: 'success',
+    });
   };
 
   const handleRestoreAccount = () => {
@@ -54,7 +68,12 @@ export const SettingsScreen: React.FC = () => {
     if (key && key.trim()) {
       setGuestId(key.trim());
       setCurrentSyncKey(key.trim());
-      setToastMsg('Account Sync Key Updated! Refreshing database...');
+      setAlertState({
+        isOpen: true,
+        title: 'Restored',
+        message: 'Account Sync Key updated! Database refreshing...',
+        type: 'success',
+      });
       setTimeout(() => {
         window.location.reload();
       }, 1200);
@@ -64,33 +83,25 @@ export const SettingsScreen: React.FC = () => {
   const handleClearData = async () => {
     if (window.confirm('Are you sure you want to reset all expense data? This action cannot be undone.')) {
       await clearAllData();
+      setAlertState({
+        isOpen: true,
+        title: 'Reset Complete',
+        message: 'Database has been successfully cleared.',
+        type: 'warning',
+      });
     }
   };
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
-      {/* Toast Feedback Notification Banner */}
-      {toastMsg && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '12px 16px',
-            borderRadius: '14px',
-            border: '1px solid rgba(126, 231, 135, 0.4)',
-            backgroundColor: 'rgba(126, 231, 135, 0.18)',
-            color: 'var(--accent-success)',
-            fontSize: '14px',
-            fontWeight: 800,
-            marginBottom: '14px',
-            boxShadow: '0 8px 24px rgba(0, 230, 118, 0.25)',
-          }}
-        >
-          <CheckCircle2 size={20} />
-          <span>{toastMsg}</span>
-        </div>
-      )}
+      {/* Center Alert Modal */}
+      <CenterAlertModal
+        isOpen={alertState.isOpen}
+        onClose={() => setAlertState(prev => ({ ...prev, isOpen: false }))}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+      />
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>

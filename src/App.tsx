@@ -23,15 +23,29 @@ import { CreateExpenseFolderModal } from './components/CreateExpenseFolderModal'
 import { CreateSavingFolderModal } from './components/CreateSavingFolderModal';
 import { EditTripModal } from './components/EditTripModal';
 
+import { useExpenses } from './context/ExpenseContext';
+import { useReminders } from './context/ReminderContext';
+
 export type TabName = 'EXPENSES' | 'SAVINGS' | 'STATS' | 'PLANNER' | 'CALENDAR' | 'SETTINGS';
 
 export const AppContent: React.FC = () => {
   const { pageColors } = useTheme();
+  const { setIsAddExpenseOpen } = useExpenses();
+  const { setIsAddReminderOpen } = useReminders();
   const [activeTab, setActiveTab] = useState<TabName>('EXPENSES');
 
-  // Request Web Persistent Storage permission to prevent browser auto-cleaning cache
+  // Request Web Persistent Storage & handle PWA Home Screen Shortcuts URL parameters
   useEffect(() => {
     requestPersistentStorage();
+
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    if (action === 'add-expense') {
+      setIsAddExpenseOpen(true);
+    } else if (action === 'add-reminder') {
+      setActiveTab('PLANNER');
+      setIsAddReminderOpen(true);
+    }
   }, []);
 
   // Dynamically inject custom theme color into CSS Root Variables when switching tabs or changing colors
