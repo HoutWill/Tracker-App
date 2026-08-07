@@ -5,21 +5,29 @@ import { useTheme } from '../context/ThemeContext';
 export const InstallPwaBanner: React.FC = () => {
   const { pageColors } = useTheme();
   const accentColor = pageColors?.EXPENSES || '#6C5CE7';
-  const [dismissed, setDismissed] = useState<boolean>(true);
+  const [visible, setVisible] = useState<boolean>(true);
+  const [fading, setFading] = useState<boolean>(false);
 
   useEffect(() => {
-    const isDismissed = localStorage.getItem('pitrack_pwa_banner_dismissed');
-    if (!isDismissed) {
-      setDismissed(false);
-    }
+    // Auto-fadeout and disappear after 6 seconds
+    const timer = setTimeout(() => {
+      setFading(true);
+      setTimeout(() => {
+        setVisible(false);
+      }, 400);
+    }, 6000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const handleDismiss = () => {
-    setDismissed(true);
-    localStorage.setItem('pitrack_pwa_banner_dismissed', 'true');
+    setFading(true);
+    setTimeout(() => {
+      setVisible(false);
+    }, 300);
   };
 
-  if (dismissed) return null;
+  if (!visible) return null;
 
   return (
     <div
@@ -33,6 +41,9 @@ export const InstallPwaBanner: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '12px',
+        opacity: fading ? 0 : 1,
+        transform: fading ? 'translateY(-8px)' : 'translateY(0)',
+        transition: 'opacity 0.4s ease, transform 0.4s ease',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
