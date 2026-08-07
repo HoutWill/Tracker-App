@@ -22,6 +22,7 @@ import { CreateTripModal } from './components/CreateTripModal';
 import { CreateExpenseFolderModal } from './components/CreateExpenseFolderModal';
 import { CreateSavingFolderModal } from './components/CreateSavingFolderModal';
 import { EditTripModal } from './components/EditTripModal';
+import { InstallPwaBanner } from './components/InstallPwaBanner';
 
 export type TabName = 'EXPENSES' | 'SAVINGS' | 'STATS' | 'PLANNER' | 'CALENDAR' | 'SETTINGS';
 
@@ -52,11 +53,13 @@ export const AppContent: React.FC = () => {
     <div
       style={{
         minHeight: '100vh',
-        maxWidth: '480px',
+        maxWidth: '900px',
+        width: '100%',
         margin: '0 auto',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
+        boxSizing: 'border-box',
       }}
     >
       {/* Animated Atmospheric Theme Background Effects */}
@@ -65,8 +68,11 @@ export const AppContent: React.FC = () => {
       {/* Universal Header */}
       <Header />
 
+      {/* Add to Home Screen Instructions Banner */}
+      <InstallPwaBanner />
+
       {/* Main Active Screen */}
-      <main style={{ flex: 1, paddingBottom: '90px' }}>
+      <main style={{ flex: 1, paddingBottom: '90px', paddingLeft: '14px', paddingRight: '14px' }}>
         {activeTab === 'EXPENSES' && <ExpensesScreen onSwitchTab={setActiveTab} />}
         {activeTab === 'SAVINGS' && <SavingsScreen onSwitchTab={setActiveTab} />}
         {activeTab === 'STATS' && <StatsScreen />}
