@@ -121,6 +121,16 @@ export const CalendarScreen: React.FC = () => {
     return `${MONTH_NAMES[month]} ${year}`;
   };
 
+  const formatHolidayDate = (dateStr: string) => {
+    const parts = dateStr.split('-');
+    if (parts.length < 3) return { monthName: '', dayNum: 0, dayOfWeek: '', formatted: dateStr };
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    const dayOfWeek = d.toLocaleDateString('en-US', { weekday: 'short' });
+    const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+    const dayNum = parseInt(parts[2], 10);
+    return { monthName, dayNum, dayOfWeek, formatted: `${dayOfWeek}, ${monthName} ${dayNum}` };
+  };
+
   const currentMonthPrefix = `${year}-${(month + 1).toString().padStart(2, '0')}`;
   const monthHolidays = CAMBODIA_NATIONAL_HOLIDAYS.filter(h => h.dateStr.startsWith(currentMonthPrefix));
 
@@ -130,11 +140,11 @@ export const CalendarScreen: React.FC = () => {
       <div
         className="glass-panel"
         style={{
-          padding: '12px 16px',
+          padding: '12px 14px',
           marginBottom: '14px',
-          borderRadius: '16px',
-          borderColor: 'rgba(255, 123, 114, 0.35)',
-          backgroundColor: 'rgba(255, 123, 114, 0.06)',
+          borderRadius: '14px',
+          borderColor: 'var(--border-glass)',
+          backgroundColor: 'var(--bg-card)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -143,19 +153,20 @@ export const CalendarScreen: React.FC = () => {
               style={{
                 width: '32px',
                 height: '32px',
-                borderRadius: '10px',
-                backgroundColor: 'rgba(255, 123, 114, 0.18)',
-                color: 'var(--accent-danger)',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Flag size={16} />
+              <CambodiaFlagBadge size={18} />
             </div>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Holidays • បុណ្យជាតិ</div>
-              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
+                Holidays • បុណ្យជាតិ
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
                 {monthHolidays.length > 0
                   ? `${monthHolidays.length} Public Holidays in ${MONTH_NAMES[month]}`
                   : `No Public Holidays in ${MONTH_NAMES[month]}`}
@@ -170,17 +181,17 @@ export const CalendarScreen: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '6px 12px',
+              padding: '4px 10px',
               fontSize: '11px',
-              fontWeight: 800,
-              color: 'var(--accent-danger)',
-              borderColor: 'rgba(255, 123, 114, 0.3)',
-              backgroundColor: 'rgba(255, 123, 114, 0.12)',
+              fontWeight: 500,
+              color: 'var(--text-secondary)',
+              borderColor: 'var(--border-glass)',
+              backgroundColor: 'var(--pill-bg)',
               cursor: 'pointer',
             }}
           >
-            {isHolidaysOpen ? 'Close' : 'Open'}
-            {isHolidaysOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {isHolidaysOpen ? 'Hide' : 'Show'}
+            {isHolidaysOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </button>
         </div>
 
@@ -188,61 +199,137 @@ export const CalendarScreen: React.FC = () => {
         {isHolidaysOpen && (
           <div
             style={{
-              marginTop: '12px',
-              paddingTop: '12px',
-              borderTop: '1px solid var(--border-glass)',
+              marginTop: '10px',
+              paddingTop: '10px',
+              borderTop: '1px solid var(--border-subtle)',
               display: 'flex',
               flexDirection: 'column',
               gap: '8px',
-              maxHeight: '220px',
+              maxHeight: '260px',
               overflowY: 'auto',
             }}
           >
             {monthHolidays.length > 0 ? (
-              monthHolidays.map(h => (
-                <div
-                  key={h.dateStr + h.nameEn}
-                  onClick={() => {
-                    setSelectedDay(h.dateStr);
-                    setViewDate(new Date(h.dateStr + 'T00:00:00'));
-                  }}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '8px 12px',
-                    borderRadius: '10px',
-                    backgroundColor: selectedDay === h.dateStr ? 'rgba(255, 123, 114, 0.2)' : 'rgba(255, 255, 255, 0.04)',
-                    border: selectedDay === h.dateStr ? '1px solid var(--accent-danger)' : '1px solid var(--border-glass)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Sparkles size={14} color="var(--accent-danger)" />
-                    <div>
-                      {h.nameKh && (
-                        <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-primary)' }}>{h.nameKh}</div>
-                      )}
-                      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>{h.nameEn}</div>
-                    </div>
-                  </div>
-                  <span
-                    className="tabular-nums"
+              monthHolidays.map(h => {
+                const dateInfo = formatHolidayDate(h.dateStr);
+                const isSelected = selectedDay === h.dateStr;
+
+                return (
+                  <div
+                    key={h.dateStr + h.nameEn}
+                    onClick={() => {
+                      setSelectedDay(h.dateStr);
+                      setViewDate(new Date(h.dateStr + 'T00:00:00'));
+                    }}
                     style={{
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      color: 'var(--accent-danger)',
-                      padding: '2px 8px',
-                      borderRadius: '6px',
-                      backgroundColor: 'rgba(255, 123, 114, 0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 10px',
+                      borderRadius: '10px',
+                      backgroundColor: isSelected ? 'var(--pill-hover)' : 'var(--pill-bg)',
+                      border: isSelected ? '1px solid var(--accent-danger)' : '1px solid var(--border-subtle)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
                     }}
                   >
-                    {h.dateStr}
-                  </span>
-                </div>
-              ))
+                    {/* Left Side: Date Card + Holiday Title */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                      {/* Mini Calendar Ticket Badge */}
+                      <div
+                        style={{
+                          width: '42px',
+                          height: '42px',
+                          borderRadius: '8px',
+                          backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                          border: '1px solid rgba(239, 68, 68, 0.2)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '9px',
+                            fontWeight: 700,
+                            color: 'var(--accent-danger)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            lineHeight: 1,
+                          }}
+                        >
+                          {dateInfo.monthName}
+                        </span>
+                        <span
+                          className="tabular-nums"
+                          style={{
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            color: 'var(--text-primary)',
+                            lineHeight: 1.1,
+                            marginTop: '2px',
+                          }}
+                        >
+                          {dateInfo.dayNum}
+                        </span>
+                      </div>
+
+                      {/* Holiday Names in Khmer & English */}
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        {h.nameKh && (
+                          <div
+                            style={{
+                              fontSize: '13px',
+                              fontWeight: 600,
+                              color: 'var(--text-primary)',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              lineHeight: 1.3,
+                            }}
+                          >
+                            {h.nameKh}
+                          </div>
+                        )}
+                        <div
+                          style={{
+                            fontSize: '11px',
+                            color: 'var(--text-secondary)',
+                            fontWeight: 400,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {h.nameEn} • {dateInfo.dayOfWeek}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Side Tag */}
+                    <div style={{ flexShrink: 0, marginLeft: '8px' }}>
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontWeight: 600,
+                          color: 'var(--accent-danger)',
+                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid rgba(239, 68, 68, 0.2)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Holiday
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
             ) : (
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', padding: '10px 0' }}>
                 No national public holidays scheduled for {MONTH_NAMES[month]} {year}
               </div>
             )}
@@ -256,120 +343,134 @@ export const CalendarScreen: React.FC = () => {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
-            padding: '12px 16px',
-            borderRadius: '14px',
-            border: '1px solid rgba(255, 82, 82, 0.6)',
-            backgroundColor: 'rgba(255, 82, 82, 0.18)',
-            color: 'var(--accent-danger)',
-            fontSize: '13px',
-            fontWeight: 800,
-            marginBottom: '14px',
-            boxShadow: '0 8px 24px rgba(255, 82, 82, 0.25)',
+            gap: '12px',
+            padding: '12px 14px',
+            borderRadius: '12px',
+            border: '1px solid rgba(239, 68, 68, 0.25)',
+            backgroundColor: 'rgba(239, 68, 68, 0.08)',
+            marginBottom: '12px',
           }}
         >
           <CambodiaFlagBadge size={22} />
-          <div>
-            <div>{selectedDateDetails.holiday.nameKh || selectedDateDetails.holiday.nameEn}</div>
-            <div style={{ fontSize: '10px', opacity: 0.9, fontWeight: 700 }}>
-              {selectedDateDetails.holiday.nameEn} • National Public Holiday
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                {selectedDateDetails.holiday.nameKh || selectedDateDetails.holiday.nameEn}
+              </span>
+              <span
+                style={{
+                  fontSize: '9px',
+                  fontWeight: 600,
+                  color: 'var(--accent-danger)',
+                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                  padding: '1px 6px',
+                  borderRadius: '4px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.3px',
+                }}
+              >
+                Public Holiday
+              </span>
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 400 }}>
+              {selectedDateDetails.holiday.nameEn} • National Day Off
             </div>
           </div>
         </div>
       )}
 
-      {/* Pchum Ben / Cultural Festival Season Banner (Kan Ben 1-15) - Blue Theme */}
+      {/* Cultural Festival Season Banner */}
       {selectedDateDetails.culturalEvent && !selectedDateDetails.holiday && (
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
-            padding: '12px 16px',
-            borderRadius: '14px',
-            border: '1px solid rgba(41, 128, 185, 0.5)',
-            backgroundColor: 'rgba(41, 128, 185, 0.16)',
-            color: '#2980B9',
+            padding: '10px 14px',
+            borderRadius: '12px',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            backgroundColor: 'rgba(59, 130, 246, 0.08)',
+            color: 'var(--accent-light)',
             fontSize: '13px',
-            fontWeight: 800,
-            marginBottom: '14px',
+            fontWeight: 600,
+            marginBottom: '12px',
           }}
         >
-          <BenOfferingIcon size={22} color="#2980B9" />
+          <BenOfferingIcon size={20} color="var(--accent-light)" />
           <div>
             <div>{selectedDateDetails.culturalEvent}</div>
-            <div style={{ fontSize: '10px', opacity: 0.9, fontWeight: 700 }}>
-              Pchum Ben Season (Bay Ben Merit Offering Period)
+            <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 400 }}>
+              Pchum Ben Season
             </div>
           </div>
         </div>
       )}
 
-      {/* World Appreciation & Celebration Days Banner (Mother's Day, Father's Day, Girlfriend/Boyfriend Day, Halloween, Chinese New Year, Easter, etc.) */}
+      {/* World Appreciation & Celebration Days Banner */}
       {selectedDateDetails.worldDay && !selectedDateDetails.holiday && (
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
-            padding: '12px 16px',
-            borderRadius: '14px',
-            border: '1px solid rgba(255, 107, 129, 0.5)',
-            backgroundColor: 'rgba(255, 107, 129, 0.16)',
-            color: '#FF6B81',
+            padding: '10px 14px',
+            borderRadius: '12px',
+            border: '1px solid rgba(236, 72, 153, 0.3)',
+            backgroundColor: 'rgba(236, 72, 153, 0.08)',
+            color: '#EC4899',
             fontSize: '13px',
-            fontWeight: 800,
-            marginBottom: '14px',
+            fontWeight: 600,
+            marginBottom: '12px',
           }}
         >
-          <span style={{ fontSize: '20px' }}>{selectedDateDetails.worldDay.emoji || '💖'}</span>
+          <span style={{ fontSize: '18px' }}>{selectedDateDetails.worldDay.emoji || '💖'}</span>
           <div>
             <div>{selectedDateDetails.worldDay.nameKh} ({selectedDateDetails.worldDay.nameEn})</div>
-            <div style={{ fontSize: '10px', opacity: 0.9, fontWeight: 700 }}>
+            <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 400 }}>
               World Celebration & Appreciation Day
             </div>
           </div>
         </div>
       )}
 
-      {/* Buddhist Holy Day Banner (Dedicated Buddha Silhouette Icon) */}
+      {/* Buddhist Holy Day Banner */}
       {selectedDateDetails.isBuddhaDay && !selectedDateDetails.holiday && (
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
-            padding: '12px 16px',
-            borderRadius: '14px',
-            border: '1px solid rgba(243, 156, 18, 0.5)',
-            backgroundColor: 'rgba(243, 156, 18, 0.15)',
-            color: '#F39C12',
+            padding: '10px 14px',
+            borderRadius: '12px',
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+            backgroundColor: 'rgba(245, 158, 11, 0.08)',
+            color: '#F59E0B',
             fontSize: '13px',
-            fontWeight: 800,
-            marginBottom: '14px',
+            fontWeight: 600,
+            marginBottom: '12px',
           }}
         >
-          <BuddhaIcon size={22} color="#F39C12" />
+          <BuddhaIcon size={20} color="#F59E0B" />
           <div>
             <div>{selectedDateDetails.buddhaDayName}</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 700 }}>
-              Buddhist Holy Day (4 Days / Month • Uposatha)
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 400 }}>
+              Buddhist Holy Day (Uposatha)
             </div>
           </div>
         </div>
       )}
 
-      {/* Top Apple Glass View & Date Selector Bar */}
+      {/* Top Glass View & Date Selector Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', position: 'relative' }}>
-        {/* Apple Glass Dropdown Selector Trigger */}
+        {/* Dropdown Selector Trigger */}
         <button
           className="glass-pill"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          style={{ padding: '8px 14px', fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', gap: '8px' }}
+          style={{ padding: '6px 12px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', gap: '6px' }}
         >
-          <Calendar size={16} color="var(--accent)" />
+          <Calendar size={15} style={{ color: 'var(--accent)' }} />
           <span>{getHeaderTitleLabel()}</span>
-          <ChevronDown size={14} color="var(--accent)" />
+          <ChevronDown size={14} style={{ color: 'var(--text-secondary)' }} />
         </button>
 
         {/* Navigation Arrow Controls */}
@@ -377,16 +478,16 @@ export const CalendarScreen: React.FC = () => {
           <button
             className="glass-pill"
             onClick={viewMode === 'YEAR' ? prevYear : prevMonth}
-            style={{ width: '36px', height: '36px', padding: 0, justifyContent: 'center' }}
+            style={{ width: '32px', height: '32px', padding: 0, justifyContent: 'center' }}
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={16} />
           </button>
           <button
             className="glass-pill"
             onClick={viewMode === 'YEAR' ? nextYear : nextMonth}
-            style={{ width: '36px', height: '36px', padding: 0, justifyContent: 'center' }}
+            style={{ width: '32px', height: '32px', padding: 0, justifyContent: 'center' }}
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={16} />
           </button>
         </div>
 
@@ -396,23 +497,22 @@ export const CalendarScreen: React.FC = () => {
             className="glass-panel"
             style={{
               position: 'absolute',
-              top: '46px',
+              top: '42px',
               left: 0,
               zIndex: 50,
-              width: '280px',
-              padding: '12px',
+              width: '260px',
+              padding: '10px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '6px',
-              boxShadow: '0 12px 36px rgba(0, 0, 0, 0.4)',
+              gap: '4px',
             }}
           >
-            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '2px' }}>
-              SELECT CALENDAR VIEW
+            <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', padding: '2px 4px', marginBottom: '2px' }}>
+              CALENDAR VIEW
             </div>
             {[
               { id: 'YEAR', label: 'Year View', desc: '12-month annual overview' },
-              { id: 'MONTH', label: 'Month View', desc: '30-day interactive month grid' },
+              { id: 'MONTH', label: 'Month View', desc: '30-day interactive grid' },
             ].map(item => {
               const isActive = viewMode === item.id;
               return (
@@ -427,19 +527,19 @@ export const CalendarScreen: React.FC = () => {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '8px 10px',
-                    borderRadius: '10px',
-                    border: isActive ? '1px solid var(--accent)' : '1px solid transparent',
-                    backgroundColor: isActive ? 'rgba(46, 170, 220, 0.15)' : 'transparent',
+                    borderRadius: '8px',
+                    border: isActive ? '1px solid var(--border-glass)' : '1px solid transparent',
+                    backgroundColor: isActive ? 'var(--pill-hover)' : 'transparent',
                     color: 'var(--text-primary)',
                     cursor: 'pointer',
                     textAlign: 'left',
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: 700 }}>{item.label}</div>
-                    <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{item.desc}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 600 }}>{item.label}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.desc}</div>
                   </div>
-                  {isActive && <Check size={16} color="var(--accent)" />}
+                  {isActive && <Check size={15} style={{ color: 'var(--accent)' }} />}
                 </button>
               );
             })}
@@ -450,13 +550,13 @@ export const CalendarScreen: React.FC = () => {
       {/* YEAR VIEW MODE */}
       {viewMode === 'YEAR' && (
         <div className="glass-panel" style={{ padding: '16px', marginBottom: '16px' }}>
-          <div style={{ textAlign: 'center', padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.04)', marginBottom: '12px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Net Cashflow in {year}</div>
+          <div style={{ textAlign: 'center', padding: '12px', borderRadius: '10px', backgroundColor: 'var(--pill-bg)', marginBottom: '12px', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>Net Cashflow in {year}</div>
             <div
               className="tabular-nums"
               style={{
-                fontSize: '24px',
-                fontWeight: 800,
+                fontSize: '22px',
+                fontWeight: 700,
                 marginTop: '2px',
                 color: totalYearNetUSD >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)',
               }}
@@ -478,15 +578,16 @@ export const CalendarScreen: React.FC = () => {
                   padding: '10px 6px',
                   textAlign: 'center',
                   cursor: 'pointer',
-                  borderColor: m.netUSD !== 0 ? (m.netUSD > 0 ? 'rgba(0, 184, 148, 0.35)' : 'rgba(255, 82, 82, 0.35)') : 'var(--border-glass)',
+                  borderColor: 'var(--border-glass)',
+                  backgroundColor: 'var(--bg-card)',
                 }}
               >
-                <div style={{ fontSize: '13px', fontWeight: 800 }}>{m.monthName}</div>
+                <div style={{ fontSize: '13px', fontWeight: 600 }}>{m.monthName}</div>
                 <div
                   className="tabular-nums"
                   style={{
                     fontSize: '11px',
-                    fontWeight: 800,
+                    fontWeight: 600,
                     color: m.netUSD > 0 ? 'var(--accent-success)' : m.netUSD < 0 ? 'var(--accent-danger)' : 'var(--text-muted)',
                   }}
                 >
@@ -501,9 +602,9 @@ export const CalendarScreen: React.FC = () => {
 
       {/* MONTH VIEW GRID MODE */}
       {viewMode === 'MONTH' && (
-        <div className="glass-panel" style={{ padding: '14px', marginBottom: '16px' }}>
-          {/* Day Headers (Highlighting Sun & Sat weekends) */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '8px' }}>
+        <div className="glass-panel" style={{ padding: '12px', marginBottom: '16px' }}>
+          {/* Day Headers */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '6px' }}>
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, idx) => {
               const isWeekendHeader = idx === 0 || idx === 6;
               return (
@@ -511,7 +612,7 @@ export const CalendarScreen: React.FC = () => {
                   key={d}
                   style={{
                     fontSize: '11px',
-                    fontWeight: 800,
+                    fontWeight: 600,
                     color: isWeekendHeader ? 'var(--accent-danger)' : 'var(--text-muted)',
                   }}
                 >
@@ -524,7 +625,7 @@ export const CalendarScreen: React.FC = () => {
           {/* Grid Cells */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
             {emptyLeadingCells.map((_, i) => (
-              <div key={'empty-' + i} style={{ height: '52px' }} />
+              <div key={'empty-' + i} style={{ height: '48px' }} />
             ))}
 
             {days.map(item => {
@@ -533,7 +634,6 @@ export const CalendarScreen: React.FC = () => {
               const isHoliday = !!item.dateDetails.holiday;
               const isBuddhaDay = item.dateDetails.isBuddhaDay;
               const isCultural = !!item.dateDetails.culturalEvent;
-              const isWeekend = item.dateDetails.isWeekend;
               const net = item.netDailyBalance;
 
               return (
@@ -542,69 +642,57 @@ export const CalendarScreen: React.FC = () => {
                   onClick={() => setSelectedDay(item.dateStr)}
                   style={{
                     position: 'relative',
-                    height: '52px',
-                    borderRadius: '10px',
+                    height: '48px',
+                    borderRadius: '8px',
                     border: isSel
-                      ? '2px solid var(--accent)'
-                      : isHoliday
-                      ? '1.5px solid var(--accent-danger)'
-                      : isToday
                       ? '1.5px solid var(--accent)'
-                      : '1px solid var(--border-glass)',
-                    backgroundColor: isSel
-                      ? 'rgba(46, 170, 220, 0.25)'
                       : isHoliday
-                      ? 'rgba(255, 82, 82, 0.18)'
-                      : net > 0
-                      ? 'rgba(0, 184, 148, 0.14)'
-                      : net < 0
-                      ? 'rgba(255, 82, 82, 0.14)'
-                      : isWeekend
-                      ? 'rgba(255, 255, 255, 0.06)'
-                      : 'rgba(255, 255, 255, 0.03)',
-                    boxShadow: isHoliday
-                      ? '0 0 10px rgba(255, 82, 82, 0.35)'
-                      : 'none',
+                      ? '1px solid var(--accent-danger)'
+                      : isToday
+                      ? '1px solid var(--accent-light)'
+                      : '1px solid var(--border-subtle)',
+                    backgroundColor: isSel
+                      ? 'var(--pill-hover)'
+                      : 'var(--pill-bg)',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '4px 2px',
                     cursor: 'pointer',
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  {/* Top Day Number & Distinct Holiday/Buddha/KanBen Indicator */}
+                  {/* Top Day Number & Distinct Indicator */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                     <span
                       style={{
                         fontSize: '11px',
-                        fontWeight: 800,
+                        fontWeight: isSel || isToday ? 700 : 500,
                         color: isHoliday
                           ? 'var(--accent-danger)'
-                          : isWeekend
-                          ? 'var(--accent-danger)'
                           : isSel
-                          ? 'var(--accent)'
-                          : 'var(--text-primary)',
+                          ? 'var(--text-primary)'
+                          : 'var(--text-secondary)',
                       }}
                     >
                       {item.dayNum}
                     </span>
-                    {isHoliday && <CambodiaFlagBadge size={11} />}
-                    {isBuddhaDay && !isHoliday && <BuddhaIcon size={12} color="#F39C12" />}
-                    {isCultural && !isHoliday && !isBuddhaDay && <BenOfferingIcon size={11} color="#2980B9" />}
+                    {isHoliday && <CambodiaFlagBadge size={10} />}
+                    {isBuddhaDay && !isHoliday && <BuddhaIcon size={11} color="#F59E0B" />}
+                    {isCultural && !isHoliday && !isBuddhaDay && <BenOfferingIcon size={10} color="#3B82F6" />}
                     {item.dateDetails.worldDay && !isHoliday && !isBuddhaDay && !isCultural && (
                       <span style={{ fontSize: '9px', lineHeight: 1 }}>{item.dateDetails.worldDay.emoji || '💖'}</span>
                     )}
                   </div>
 
-                  {/* Net Cashflow Amount Display (> 0 Green, < 0 Red) */}
+                  {/* Net Cashflow Amount Display */}
                   {net !== 0 && (
                     <div
                       className="tabular-nums"
                       style={{
                         fontSize: '9px',
-                        fontWeight: 800,
+                        fontWeight: 600,
                         color: net > 0 ? 'var(--accent-success)' : 'var(--accent-danger)',
                       }}
                     >
@@ -619,10 +707,12 @@ export const CalendarScreen: React.FC = () => {
       )}
 
       {/* Selected Day Details Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 4px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 2px' }}>
         <div>
-          <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Transactions on {selectedDay}</h4>
-          <div style={{ fontSize: '11px', color: 'var(--accent)', fontWeight: 700 }}>
+          <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
+            Transactions on {selectedDay}
+          </h4>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 400 }}>
             {selectedDateDetails.formattedDateEn}
           </div>
         </div>
@@ -631,8 +721,8 @@ export const CalendarScreen: React.FC = () => {
           <span
             className="tabular-nums"
             style={{
-              fontSize: '14px',
-              fontWeight: 800,
+              fontSize: '13px',
+              fontWeight: 700,
               color: selectedDayNetUSD > 0 ? 'var(--accent-success)' : selectedDayNetUSD < 0 ? 'var(--accent-danger)' : 'var(--text-primary)',
             }}
           >

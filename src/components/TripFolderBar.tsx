@@ -100,19 +100,19 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '7px 14px',
-            borderRadius: '16px',
-            border: selectedTripId === null ? 'none' : '1px solid var(--border-glass)',
-            backgroundColor: selectedTripId === null ? '#4A99E9' : 'rgba(255, 255, 255, 0.08)',
-            color: selectedTripId === null ? '#FFF' : 'var(--text-primary)',
+            padding: '6px 12px',
+            borderRadius: '12px',
+            border: '1px solid var(--border-glass)',
+            backgroundColor: selectedTripId === null ? 'var(--pill-hover)' : 'var(--pill-bg)',
+            color: 'var(--text-primary)',
             fontSize: '12px',
-            fontWeight: selectedTripId === null ? 800 : 600,
+            fontWeight: selectedTripId === null ? 600 : 500,
             cursor: 'pointer',
             flexShrink: 0,
-            boxShadow: selectedTripId === null ? '0 4px 12px rgba(74, 153, 233, 0.35)' : 'none',
+            transition: 'all 0.15s ease',
           }}
         >
-          <Folder size={14} color={selectedTripId === null ? '#FFF' : 'var(--text-secondary)'} />
+          <Folder size={14} color={selectedTripId === null ? 'var(--text-primary)' : 'var(--text-secondary)'} />
           All
         </button>
 
@@ -130,19 +130,19 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '7px 14px',
-                borderRadius: '16px',
-                border: isSelected ? 'none' : '1px solid var(--border-glass)',
-                backgroundColor: isSelected ? pillColor : 'rgba(255, 255, 255, 0.08)',
-                color: isSelected ? '#FFF' : 'var(--text-primary)',
+                padding: '6px 12px',
+                borderRadius: '12px',
+                border: '1px solid var(--border-glass)',
+                backgroundColor: isSelected ? 'var(--pill-hover)' : 'var(--pill-bg)',
+                color: 'var(--text-primary)',
                 fontSize: '12px',
-                fontWeight: isSelected ? 800 : 600,
+                fontWeight: isSelected ? 600 : 500,
                 cursor: 'pointer',
                 flexShrink: 0,
-                boxShadow: isSelected ? `0 4px 12px ${pillColor}55` : 'none',
+                transition: 'all 0.15s ease',
               }}
             >
-              <CategoryIconRenderer icon={t.category.toLowerCase()} size={14} color={isSelected ? '#FFF' : pillColor} />
+              <CategoryIconRenderer icon={t.category.toLowerCase()} size={14} color={pillColor} />
               {t.name}
             </button>
           );

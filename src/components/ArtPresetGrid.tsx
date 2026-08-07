@@ -29,21 +29,21 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Zap size={16} color={pageAccent} />
-          <h3 style={{ fontSize: '15px', fontWeight: 800 }}>Presets</h3>
+          <Zap size={15} style={{ color: 'var(--text-secondary)' }} />
+          <h3 style={{ fontSize: '14px', fontWeight: 600, letterSpacing: '-0.1px', color: 'var(--text-primary)' }}>Quick Presets</h3>
         </div>
         <button
           type="button"
           className="glass-pill"
           onClick={onAddPreset}
-          style={{ fontSize: '11px', padding: '4px 10px', color: pageAccent, borderColor: 'rgba(255, 255, 255, 0.2)' }}
+          style={{ fontSize: '11px', padding: '3px 8px', color: 'var(--text-secondary)', borderColor: 'var(--border-glass)' }}
         >
           <Plus size={12} /> Add
         </button>
       </div>
 
-      {/* Dynamic 9-Bar Quick Presets Grid (Strictly 3x3) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+      {/* Dynamic 9-Bar Quick Presets Grid (3x3) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
         {presetsList.slice(0, 9).map((preset, idx) => {
           const rawHex = presetPalette[idx % presetPalette.length];
           const tileHex = (!rawHex || rawHex === '#FFFFFF') ? DEFAULT_PRESET_PALETTE[idx % DEFAULT_PRESET_PALETTE.length] : rawHex;
@@ -57,46 +57,51 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '12px 8px 10px 8px',
-                borderRadius: '18px',
-                border: 'none',
-                background: `linear-gradient(135deg, ${tileHex} 0%, ${tileHex}DD 100%)`,
-                color: '#FFF',
+                justifyContent: 'center',
+                padding: '12px 8px',
+                borderRadius: '12px',
+                border: '1px solid var(--border-glass)',
+                backgroundColor: 'var(--bg-card)',
+                color: 'var(--text-primary)',
                 textAlign: 'center',
                 cursor: 'pointer',
-                boxShadow: `0 6px 16px ${hexToRgba(tileHex, 0.35)}`,
                 transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
-                minHeight: '112px',
+                minHeight: '100px',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = 'var(--pill-hover)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-card)';
               }}
             >
-              {/* White Translucent Icon Badge Circle */}
+              {/* Soft Muted Colored Icon Badge Circle */}
               <div
                 style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  backgroundColor: hexToRgba(tileHex, 0.12),
+                  border: `1px solid ${hexToRgba(tileHex, 0.22)}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#FFF',
-                  marginBottom: '6px',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                  color: tileHex,
+                  marginBottom: '8px',
                 }}
               >
-                <CategoryIconRenderer icon={preset.icon} size={20} color="#FFF" />
+                <CategoryIconRenderer icon={preset.icon} size={18} color={tileHex} />
               </div>
 
-              {/* Title & Price Pill */}
+              {/* Title & Price */}
               <div style={{ width: '100%' }}>
                 <div
                   style={{
                     fontSize: '12px',
-                    fontWeight: 900,
+                    fontWeight: 600,
                     lineHeight: '1.2',
-                    color: '#FFF',
-                    marginBottom: '4px',
+                    color: 'var(--text-primary)',
+                    marginBottom: '2px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -110,9 +115,9 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                   className="tabular-nums"
                   style={{
                     display: 'block',
-                    fontSize: '12px',
-                    fontWeight: 900,
-                    color: 'rgba(255, 255, 255, 0.95)',
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    color: 'var(--text-secondary)',
                     width: '100%',
                   }}
                 >

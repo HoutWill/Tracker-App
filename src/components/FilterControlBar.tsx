@@ -135,12 +135,13 @@ export const FilterControlBar: React.FC<FilterControlBarProps> = ({ screenType =
           className="glass-pill"
           onClick={() => setCategoryFilter(null)}
           style={{
-            backgroundColor: categoryFilter === null ? '#4A99E9' : 'rgba(255, 255, 255, 0.08)',
-            border: categoryFilter === null ? 'none' : '1px solid var(--border-glass)',
-            color: categoryFilter === null ? '#FFF' : 'var(--text-primary)',
-            borderRadius: '16px',
-            fontWeight: 800,
-            boxShadow: categoryFilter === null ? '0 4px 12px rgba(74, 153, 233, 0.35)' : 'none',
+            backgroundColor: categoryFilter === null ? 'var(--pill-hover)' : 'var(--pill-bg)',
+            border: '1px solid var(--border-glass)',
+            color: 'var(--text-primary)',
+            borderRadius: '12px',
+            fontWeight: categoryFilter === null ? 600 : 500,
+            fontSize: '12px',
+            padding: '6px 12px',
           }}
         >
           All ({screenItems.length})
@@ -158,15 +159,16 @@ export const FilterControlBar: React.FC<FilterControlBarProps> = ({ screenType =
               className="glass-pill"
               onClick={() => setCategoryFilter(isActive ? null : cat.id)}
               style={{
-                backgroundColor: isActive ? catColor : 'rgba(255, 255, 255, 0.08)',
-                border: isActive ? 'none' : '1px solid var(--border-glass)',
-                color: isActive ? '#FFF' : 'var(--text-primary)',
-                borderRadius: '16px',
-                fontWeight: isActive ? 800 : 600,
-                boxShadow: isActive ? `0 4px 12px ${catColor}55` : 'none',
+                backgroundColor: isActive ? 'var(--pill-hover)' : 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
+                color: 'var(--text-primary)',
+                borderRadius: '12px',
+                fontWeight: isActive ? 600 : 500,
+                fontSize: '12px',
+                padding: '6px 12px',
               }}
             >
-              <CategoryIconRenderer icon={cat.icon} size={12} color={isActive ? '#FFF' : catColor} />
+              <CategoryIconRenderer icon={cat.icon} size={12} color={catColor} />
               <span>
                 {cat.name} ({count})
               </span>

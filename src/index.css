@@ -1,40 +1,46 @@
 :root {
   color-scheme: dark;
-  --bg-main: #0F0F14;
-  --bg-card: rgba(26, 26, 36, 0.75);
-  --border-glass: rgba(255, 255, 255, 0.12);
-  --text-primary: #FFFFFF;
-  --text-secondary: #A0A0B2;
-  --text-muted: #6B6B7B;
-  --accent: #6C5CE7;
-  --accent-light: #8C7CFF;
-  --accent-glow: rgba(108, 92, 231, 0.3);
-  --accent-ai: #D2A8FF;
-  --accent-success: #00B894;
-  --accent-danger: #FF5252;
-  --pill-bg: rgba(255, 255, 255, 0.07);
-  --radius-card: 20px;
-  --radius-inner: 12px;
+  --bg-main: #0B0C10;
+  --bg-card: #151720;
+  --bg-card-hover: #1C1E2B;
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --text-primary: #F9FAFB;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  --accent: #6366F1;
+  --accent-light: #818CF8;
+  --accent-glow: rgba(99, 102, 241, 0.12);
+  --accent-ai: #A855F7;
+  --accent-success: #10B981;
+  --accent-danger: #EF4444;
+  --pill-bg: rgba(255, 255, 255, 0.04);
+  --pill-hover: rgba(255, 255, 255, 0.08);
+  --radius-card: 16px;
+  --radius-inner: 10px;
   --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --shadow-card: 0 10px 36px 0 rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 body.light-theme {
   color-scheme: light;
-  --bg-main: #F4F6FA;
-  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-main: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F1F5F9;
   --border-glass: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.04);
   --text-primary: #0F172A;
   --text-secondary: #475569;
   --text-muted: #94A3B8;
-  --accent: #6C5CE7;
-  --accent-light: #8C7CFF;
-  --accent-glow: rgba(108, 92, 231, 0.2);
-  --accent-ai: #8E44AD;
-  --accent-success: #00B894;
-  --accent-danger: #FF7675;
-  --pill-bg: rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 8px 30px 0 rgba(0, 0, 0, 0.06);
+  --accent: #4F46E5;
+  --accent-light: #6366F1;
+  --accent-glow: rgba(79, 70, 229, 0.1);
+  --accent-ai: #8B5CF6;
+  --accent-success: #059669;
+  --accent-danger: #DC2626;
+  --pill-bg: rgba(0, 0, 0, 0.03);
+  --pill-hover: rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 * {
@@ -51,7 +57,9 @@ html, body, #root {
   background-color: var(--bg-main);
   color: var(--text-primary);
   overflow-x: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Force Form Controls to follow active theme text colors */
@@ -66,15 +74,13 @@ input[type="date"], input[type="time"] {
   color: var(--text-primary);
 }
 
-/* Glassmorphism Panel Utilities */
+/* Clean Professional Card Utilities */
 .glass-panel {
   background: var(--bg-card);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
-  transition: background 0.3s ease, border-color 0.3s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 
 .glass-pill {
@@ -83,25 +89,28 @@ input[type="date"], input[type="time"] {
   border-radius: var(--radius-inner);
   padding: 6px 12px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
   color: var(--text-primary);
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+}
+
+.glass-pill:hover {
+  background: var(--pill-hover);
 }
 
 .glass-pill:active {
-  transform: scale(0.96);
-  opacity: 0.8;
+  transform: scale(0.97);
 }
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* Custom Scrollbar */
+/* Custom Minimal Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -110,83 +119,7 @@ input[type="date"], input[type="time"] {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--text-muted);
+  background: var(--border-glass);
   border-radius: 4px;
 }
 
-/* Atmospheric Holiday Themes CSS Animations */
-.snowflake {
-  position: absolute;
-  top: -20px;
-  color: #FFF;
-  user-select: none;
-  animation: fall linear infinite;
-}
-
-@keyframes fall {
-  0% {
-    transform: translateY(0) rotate(0deg);
-  }
-  100% {
-    transform: translateY(105vh) rotate(360deg);
-  }
-}
-
-.lantern-float {
-  position: absolute;
-  bottom: -40px;
-  user-select: none;
-  animation: floatUp ease-in-out infinite;
-}
-
-@keyframes floatUp {
-  0% {
-    transform: translateY(0) scale(0.9);
-    opacity: 0.2;
-  }
-  50% {
-    opacity: 0.8;
-  }
-  100% {
-    transform: translateY(-110vh) scale(1.1);
-    opacity: 0;
-  }
-}
-
-.gold-sparkle {
-  position: absolute;
-  user-select: none;
-  animation: pulseSparkle ease-in-out infinite;
-}
-
-@keyframes pulseSparkle {
-  0%, 100% {
-    opacity: 0.2;
-    transform: scale(0.8);
-  }
-  50% {
-    opacity: 0.9;
-    transform: scale(1.2);
-  }
-}
-
-.ember-float {
-  position: absolute;
-  bottom: -40px;
-  user-select: none;
-  animation: floatEmber ease-in-out infinite;
-}
-
-@keyframes floatEmber {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 0.2;
-  }
-  50% {
-    opacity: 0.75;
-  }
-  100% {
-    transform: translateY(-105vh) rotate(180deg);
-    opacity: 0;
-  }
-}

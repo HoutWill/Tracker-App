@@ -132,10 +132,12 @@ export const StatsScreen: React.FC = () => {
         className="glass-panel"
         style={{
           display: 'flex',
-          padding: '4px',
-          borderRadius: '14px',
+          padding: '3px',
+          borderRadius: '12px',
           marginBottom: '16px',
           gap: '4px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-glass)',
         }}
       >
         {[
@@ -155,27 +157,15 @@ export const StatsScreen: React.FC = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '6px',
-                padding: '10px 6px',
+                padding: '8px 6px',
                 borderRadius: '10px',
-                border: isActive
-                  ? tab.id === 'SAVING'
-                    ? '1px solid var(--accent-success)'
-                    : tab.id === 'ALL'
-                    ? '1px solid #7C4DFF'
-                    : '1px solid var(--accent)'
-                  : '1px solid transparent',
-                backgroundColor: isActive
-                  ? tab.id === 'SAVING'
-                    ? 'var(--accent-success)'
-                    : tab.id === 'ALL'
-                    ? '#7C4DFF'
-                    : 'var(--accent)'
-                  : 'transparent',
-                color: isActive ? '#FFF' : 'var(--text-secondary)',
+                border: isActive ? '1px solid var(--border-glass)' : '1px solid transparent',
+                backgroundColor: isActive ? 'var(--pill-hover)' : 'transparent',
+                color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
                 fontSize: '12px',
-                fontWeight: isActive ? 800 : 600,
+                fontWeight: isActive ? 600 : 500,
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.15s ease',
               }}
             >
               <Icon size={14} />
@@ -193,8 +183,8 @@ export const StatsScreen: React.FC = () => {
             {/* Header & Date Range Controls */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <BarChart2 size={20} color="var(--accent)" />
-                <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Overview</h3>
+                <BarChart2 size={18} style={{ color: 'var(--accent)' }} />
+                <h3 style={{ fontSize: '15px', fontWeight: 600, letterSpacing: '-0.2px' }}>Overview</h3>
               </div>
 
               {/* Date Navigation Controls */}
@@ -202,12 +192,12 @@ export const StatsScreen: React.FC = () => {
                 <button
                   className="glass-pill"
                   onClick={() => setWindowOffset(prev => prev - 1)}
-                  style={{ padding: '4px 8px', color: 'var(--text-primary)' }}
+                  style={{ padding: '3px 6px', color: 'var(--text-primary)' }}
                   title="Previous Months"
                 >
                   <ChevronLeft size={14} />
                 </button>
-                <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent)' }}>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                   {barChartData[0].name} - {barChartData[5].name}
                 </span>
                 <button
@@ -215,7 +205,7 @@ export const StatsScreen: React.FC = () => {
                   onClick={() => setWindowOffset(prev => Math.min(0, prev + 1))}
                   disabled={windowOffset >= 0}
                   style={{
-                    padding: '4px 8px',
+                    padding: '3px 6px',
                     color: windowOffset >= 0 ? 'var(--text-muted)' : 'var(--text-primary)',
                     opacity: windowOffset >= 0 ? 0.4 : 1,
                   }}
@@ -233,16 +223,16 @@ export const StatsScreen: React.FC = () => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 padding: '8px 12px',
-                borderRadius: '10px',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--pill-bg)',
                 border: '1px solid var(--border-glass)',
                 marginBottom: '16px',
               }}
             >
-              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+              <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)' }}>
                 {activeMonthData.fullName}
               </span>
-              <span className="tabular-nums" style={{ fontSize: '14px', fontWeight: 800, color: 'var(--accent)' }}>
+              <span className="tabular-nums" style={{ fontSize: '14px', fontWeight: 700, color: 'var(--accent-light)' }}>
                 {hideBalances ? '••' : formatCurrency(activeMonthData.expSum, currency)}
               </span>
             </div>
@@ -260,7 +250,7 @@ export const StatsScreen: React.FC = () => {
               }}
             >
               {/* Subtle Grid Lines */}
-              <div style={{ position: 'absolute', inset: 0, bottom: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none', opacity: 0.15 }}>
+              <div style={{ position: 'absolute', inset: 0, bottom: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none', opacity: 0.12 }}>
                 <div style={{ borderTop: '1px dashed var(--text-muted)' }} />
                 <div style={{ borderTop: '1px dashed var(--text-muted)' }} />
                 <div style={{ borderTop: '1px dashed var(--text-muted)' }} />
@@ -282,29 +272,28 @@ export const StatsScreen: React.FC = () => {
                       flex: 1,
                       cursor: 'pointer',
                       padding: '4px',
-                      borderRadius: '10px',
-                      backgroundColor: isSelected ? 'rgba(108, 92, 231, 0.15)' : 'transparent',
-                      transition: 'all 0.2s ease',
+                      borderRadius: '8px',
+                      backgroundColor: isSelected ? 'var(--pill-hover)' : 'transparent',
+                      transition: 'all 0.15s ease',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-end', height: '90px', width: '100%', justifyContent: 'center' }}>
                       <div
                         style={{
-                          width: '18px',
+                          width: '16px',
                           height: `${expHeightPct}%`,
-                          background: 'linear-gradient(180deg, var(--accent-light) 0%, var(--accent) 100%)',
-                          borderRadius: '8px 8px 3px 3px',
-                          boxShadow: isSelected ? '0 0 12px var(--accent-glow)' : 'none',
-                          transition: 'height 0.3s ease, transform 0.2s ease',
-                          transform: isSelected ? 'scaleY(1.05)' : 'scaleY(1)',
+                          backgroundColor: isSelected ? 'var(--accent)' : 'var(--text-muted)',
+                          opacity: isSelected ? 1 : 0.4,
+                          borderRadius: '4px 4px 2px 2px',
+                          transition: 'height 0.2s ease, opacity 0.15s ease',
                         }}
                       />
                     </div>
                     <span
                       style={{
                         fontSize: '11px',
-                        fontWeight: isSelected ? 800 : 600,
-                        color: isSelected ? 'var(--accent)' : 'var(--text-muted)',
+                        fontWeight: isSelected ? 600 : 500,
+                        color: isSelected ? 'var(--text-primary)' : 'var(--text-muted)',
                       }}
                     >
                       {bar.name}
@@ -315,33 +304,19 @@ export const StatsScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Sparkline Overview Grid Cards */}
+          {/* Metric Overview Grid Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <div className="glass-panel" style={{ padding: '14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>Today</span>
-                <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--accent)' }}>
-                  {hideBalances ? '••' : formatCurrency(todayExpenseUSD, currency)}
-                </span>
-              </div>
-              <div style={{ height: '24px', marginTop: '8px' }}>
-                <svg viewBox="0 0 100 24" style={{ width: '100%', height: '100%' }}>
-                  <path d="M0,18 C20,10 40,22 60,8 C80,18 90,4 100,12" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
+              <div style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '4px' }}>Today</div>
+              <div className="tabular-nums" style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                {hideBalances ? '••' : formatCurrency(todayExpenseUSD, currency)}
               </div>
             </div>
 
             <div className="glass-panel" style={{ padding: '14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>Month</span>
-                <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--accent-light)' }}>
-                  {hideBalances ? '••' : formatCurrency(monthExpenseUSD, currency)}
-                </span>
-              </div>
-              <div style={{ height: '24px', marginTop: '8px' }}>
-                <svg viewBox="0 0 100 24" style={{ width: '100%', height: '100%' }}>
-                  <path d="M0,12 C25,20 45,4 70,16 C85,8 95,14 100,6" fill="none" stroke="var(--accent-light)" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
+              <div style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '4px' }}>This Month</div>
+              <div className="tabular-nums" style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                {hideBalances ? '••' : formatCurrency(monthExpenseUSD, currency)}
               </div>
             </div>
           </div>
@@ -351,28 +326,28 @@ export const StatsScreen: React.FC = () => {
             <div className="glass-panel" style={{ padding: '14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div
                 style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(108, 92, 231, 0.15)',
-                  border: '1px solid rgba(108, 92, 231, 0.3)',
-                  color: 'var(--accent)',
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--pill-bg)',
+                  border: '1px solid var(--border-glass)',
+                  color: 'var(--text-secondary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Award size={22} />
+                <Award size={18} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Top</div>
-                <div style={{ fontSize: '15px', fontWeight: 800 }}>{topExpenseCategory.name}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>Top Category</div>
+                <div style={{ fontSize: '14px', fontWeight: 600 }}>{topExpenseCategory.name}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div className="tabular-nums" style={{ fontSize: '15px', fontWeight: 800, color: 'var(--accent)' }}>
+                <div className="tabular-nums" style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
                   {hideBalances ? '••••' : formatCurrency(topExpenseCategory.sum, currency)}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--accent)', fontWeight: 800 }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>
                   {topExpenseCategory.pct}%
                 </div>
               </div>
@@ -481,12 +456,12 @@ export const StatsScreen: React.FC = () => {
       {activeTab === 'SAVING' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {/* Savings Overview Bar Graph */}
-          <div className="glass-panel" style={{ padding: '18px', borderColor: 'rgba(0, 230, 118, 0.35)' }}>
+          <div className="glass-panel" style={{ padding: '18px' }}>
             {/* Header & Date Range Controls */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-success)' }}>
-                <BarChart2 size={20} />
-                <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Overview</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <BarChart2 size={18} style={{ color: 'var(--accent-success)' }} />
+                <h3 style={{ fontSize: '15px', fontWeight: 600, letterSpacing: '-0.2px' }}>Overview</h3>
               </div>
 
               {/* Date Navigation Controls */}
@@ -494,12 +469,12 @@ export const StatsScreen: React.FC = () => {
                 <button
                   className="glass-pill"
                   onClick={() => setWindowOffset(prev => prev - 1)}
-                  style={{ padding: '4px 8px', color: 'var(--text-primary)' }}
+                  style={{ padding: '3px 6px', color: 'var(--text-primary)' }}
                   title="Previous Months"
                 >
                   <ChevronLeft size={14} />
                 </button>
-                <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent-success)' }}>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
                   {barChartData[0].name} - {barChartData[5].name}
                 </span>
                 <button
@@ -507,7 +482,7 @@ export const StatsScreen: React.FC = () => {
                   onClick={() => setWindowOffset(prev => Math.min(0, prev + 1))}
                   disabled={windowOffset >= 0}
                   style={{
-                    padding: '4px 8px',
+                    padding: '3px 6px',
                     color: windowOffset >= 0 ? 'var(--text-muted)' : 'var(--text-primary)',
                     opacity: windowOffset >= 0 ? 0.4 : 1,
                   }}
@@ -525,16 +500,16 @@ export const StatsScreen: React.FC = () => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 padding: '8px 12px',
-                borderRadius: '10px',
-                backgroundColor: 'rgba(0, 230, 118, 0.08)',
-                border: '1px solid rgba(0, 230, 118, 0.25)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
                 marginBottom: '16px',
               }}
             >
-              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+              <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)' }}>
                 {activeMonthData.fullName}
               </span>
-              <span className="tabular-nums" style={{ fontSize: '14px', fontWeight: 800, color: 'var(--accent-success)' }}>
+              <span className="tabular-nums" style={{ fontSize: '14px', fontWeight: 700, color: 'var(--accent-success)' }}>
                 {hideBalances ? '••' : formatCurrency(activeMonthData.savSum, currency)}
               </span>
             </div>
@@ -552,7 +527,7 @@ export const StatsScreen: React.FC = () => {
               }}
             >
               {/* Subtle Grid Lines */}
-              <div style={{ position: 'absolute', inset: 0, bottom: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none', opacity: 0.15 }}>
+              <div style={{ position: 'absolute', inset: 0, bottom: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none', opacity: 0.12 }}>
                 <div style={{ borderTop: '1px dashed var(--text-muted)' }} />
                 <div style={{ borderTop: '1px dashed var(--text-muted)' }} />
                 <div style={{ borderTop: '1px dashed var(--text-muted)' }} />
@@ -574,29 +549,28 @@ export const StatsScreen: React.FC = () => {
                       flex: 1,
                       cursor: 'pointer',
                       padding: '4px',
-                      borderRadius: '10px',
-                      backgroundColor: isSelected ? 'rgba(0, 230, 118, 0.15)' : 'transparent',
-                      transition: 'all 0.2s ease',
+                      borderRadius: '8px',
+                      backgroundColor: isSelected ? 'var(--pill-hover)' : 'transparent',
+                      transition: 'all 0.15s ease',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-end', height: '90px', width: '100%', justifyContent: 'center' }}>
                       <div
                         style={{
-                          width: '18px',
+                          width: '16px',
                           height: `${savHeightPct}%`,
-                          background: 'linear-gradient(180deg, #69F0AE 0%, var(--accent-success) 100%)',
-                          borderRadius: '8px 8px 3px 3px',
-                          boxShadow: isSelected ? '0 0 12px rgba(0, 230, 118, 0.4)' : 'none',
-                          transition: 'height 0.3s ease, transform 0.2s ease',
-                          transform: isSelected ? 'scaleY(1.05)' : 'scaleY(1)',
+                          backgroundColor: isSelected ? 'var(--accent-success)' : 'var(--text-muted)',
+                          opacity: isSelected ? 1 : 0.4,
+                          borderRadius: '4px 4px 2px 2px',
+                          transition: 'height 0.2s ease, opacity 0.15s ease',
                         }}
                       />
                     </div>
                     <span
                       style={{
                         fontSize: '11px',
-                        fontWeight: isSelected ? 800 : 600,
-                        color: isSelected ? 'var(--accent-success)' : 'var(--text-muted)',
+                        fontWeight: isSelected ? 600 : 500,
+                        color: isSelected ? 'var(--text-primary)' : 'var(--text-muted)',
                       }}
                     >
                       {bar.name}

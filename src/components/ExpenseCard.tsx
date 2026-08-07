@@ -18,17 +18,17 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
 
   // Category Color Map (Soft Muted iOS Pastels)
   const getCategoryTheme = () => {
-    if (isSaving) return { color: '#34D399', bg: 'rgba(52, 211, 153, 0.18)', border: 'rgba(52, 211, 153, 0.35)' };
-    if (isIncome) return { color: '#4A99E9', bg: 'rgba(74, 153, 233, 0.18)', border: 'rgba(74, 153, 233, 0.35)' };
+    if (isSaving) return { color: '#10B981', bg: 'rgba(16, 185, 129, 0.12)', border: 'rgba(16, 185, 129, 0.22)' };
+    if (isIncome) return { color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.12)', border: 'rgba(59, 130, 246, 0.22)' };
     switch (item.categoryName.toLowerCase()) {
-      case 'food': return { color: '#F3A85B', bg: 'rgba(243, 168, 91, 0.18)', border: 'rgba(243, 168, 91, 0.35)' };
-      case 'drink': case 'coffee': return { color: '#C88A58', bg: 'rgba(200, 138, 88, 0.18)', border: 'rgba(200, 138, 88, 0.35)' };
-      case 'transport': return { color: '#38BDF8', bg: 'rgba(56, 189, 248, 0.18)', border: 'rgba(56, 189, 248, 0.35)' };
-      case 'groceries': return { color: '#34D399', bg: 'rgba(52, 211, 153, 0.18)', border: 'rgba(52, 211, 153, 0.35)' };
-      case 'bills': return { color: '#ED6C6C', bg: 'rgba(237, 108, 108, 0.18)', border: 'rgba(237, 108, 108, 0.35)' };
-      case 'shopping': case 'party': return { color: '#EC668C', bg: 'rgba(236, 102, 140, 0.18)', border: 'rgba(236, 102, 140, 0.35)' };
-      case 'fun': case 'team': return { color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.18)', border: 'rgba(139, 92, 246, 0.35)' };
-      default: return { color: '#ED6C6C', bg: 'rgba(237, 108, 108, 0.18)', border: 'rgba(237, 108, 108, 0.35)' };
+      case 'food': return { color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.12)', border: 'rgba(245, 158, 11, 0.22)' };
+      case 'drink': case 'coffee': return { color: '#D97706', bg: 'rgba(217, 119, 6, 0.12)', border: 'rgba(217, 119, 6, 0.22)' };
+      case 'transport': return { color: '#0EA5E9', bg: 'rgba(14, 165, 233, 0.12)', border: 'rgba(14, 165, 233, 0.22)' };
+      case 'groceries': return { color: '#10B981', bg: 'rgba(16, 185, 129, 0.12)', border: 'rgba(16, 185, 129, 0.22)' };
+      case 'bills': return { color: '#EF4444', bg: 'rgba(239, 68, 68, 0.12)', border: 'rgba(239, 68, 68, 0.22)' };
+      case 'shopping': case 'party': return { color: '#EC4899', bg: 'rgba(236, 72, 153, 0.12)', border: 'rgba(236, 72, 153, 0.22)' };
+      case 'fun': case 'team': return { color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.12)', border: 'rgba(139, 92, 246, 0.22)' };
+      default: return { color: '#6B7280', bg: 'rgba(107, 114, 128, 0.12)', border: 'rgba(107, 114, 128, 0.22)' };
     }
   };
 
@@ -75,7 +75,7 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
             justifyContent: 'center',
             color: theme.color,
             flexShrink: 0,
-            boxShadow: `0 2px 8px ${theme.color}33`,
+            boxShadow: 'none',
           }}
         >
           {isSaving ? <PiggyBank size={20} color={theme.color} /> : <CategoryIconRenderer icon={item.categoryIcon || 'receipt-outline'} size={20} color={theme.color} />}
@@ -86,7 +86,7 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
           <h4
             style={{
               fontSize: '14px',
-              fontWeight: 800,
+              fontWeight: 600,
               letterSpacing: '-0.2px',
               marginBottom: '3px',
               color: 'var(--text-primary)',
@@ -107,8 +107,8 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
                 padding: '2px 8px',
                 borderRadius: '6px',
                 fontSize: '11px',
-                fontWeight: 700,
-                backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                fontWeight: 500,
+                backgroundColor: 'var(--pill-bg)',
                 color: 'var(--text-secondary)',
                 border: '1px solid var(--border-glass)',
               }}
@@ -120,11 +120,11 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
             <span
               style={{
                 fontSize: '10px',
-                fontWeight: 600,
+                fontWeight: 500,
                 padding: '2px 6px',
                 borderRadius: '6px',
                 border: '1px solid var(--border-glass)',
-                backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                backgroundColor: 'var(--pill-bg)',
                 color: 'var(--text-muted)',
               }}
             >
@@ -140,10 +140,10 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
           <div
             className="tabular-nums"
             style={{
-              fontSize: '15px',
-              fontWeight: 900,
-              letterSpacing: '-0.3px',
-              color: isSaving || isIncome ? '#34D399' : '#ED6C6C',
+              fontSize: '14px',
+              fontWeight: 700,
+              letterSpacing: '-0.2px',
+              color: isSaving || isIncome ? 'var(--accent-success)' : 'var(--accent-danger)',
             }}
           >
             {isSaving ? `+${formattedMain}` : isIncome ? `+${formattedMain}` : `-${formattedMain}`}

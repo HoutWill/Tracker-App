@@ -213,8 +213,8 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
         className="glass-panel"
         style={{
           display: 'flex',
-          padding: '4px',
-          borderRadius: '16px',
+          padding: '3px',
+          borderRadius: '12px',
           marginBottom: '14px',
           backgroundColor: 'var(--bg-card)',
           borderColor: 'var(--border-glass)',
@@ -229,18 +229,18 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            padding: '10px 12px',
-            borderRadius: '12px',
-            border: 'none',
-            backgroundColor: pageAccent,
-            color: '#FFF',
-            fontWeight: 800,
+            padding: '8px 12px',
+            borderRadius: '10px',
+            border: '1px solid var(--border-glass)',
+            backgroundColor: 'var(--pill-hover)',
+            color: 'var(--text-primary)',
+            fontWeight: 600,
             fontSize: '13px',
             cursor: 'pointer',
-            boxShadow: `0 4px 12px ${hexToRgba(pageAccent, 0.35)}`,
+            transition: 'all 0.15s ease',
           }}
         >
-          <CreditCard size={16} />
+          <CreditCard size={15} />
           <span>Expenses</span>
         </button>
 
@@ -253,18 +253,19 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            padding: '10px 12px',
-            borderRadius: '12px',
-            border: 'none',
+            padding: '8px 12px',
+            borderRadius: '10px',
+            border: '1px solid transparent',
             backgroundColor: 'transparent',
-            color: 'var(--text-secondary)',
-            fontWeight: 600,
+            color: 'var(--text-muted)',
+            fontWeight: 500,
             fontSize: '13px',
             cursor: 'pointer',
+            transition: 'all 0.15s ease',
           }}
         >
-          <PiggyBank size={16} />
-          <span>Saving</span>
+          <PiggyBank size={15} />
+          <span>Savings</span>
         </button>
       </div>
 
@@ -272,17 +273,17 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
       <div
         className="glass-panel"
         style={{
-          padding: '20px',
-          borderColor: hexToRgba(pageAccent, 0.4),
-          backgroundColor: hexToRgba(pageAccent, 0.12),
+          padding: '18px 20px',
+          borderColor: 'var(--border-glass)',
+          backgroundColor: 'var(--bg-card)',
           marginBottom: '16px',
         }}
       >
         {/* Top Header Row with Budget Edit Button */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: pageAccent }}>
-            <ArrowDownRight size={20} />
-            <span style={{ fontSize: '15px', fontWeight: 800 }}>Expenses</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
+            <ArrowDownRight size={16} />
+            <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '-0.1px' }}>Expenses Overview</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
@@ -296,8 +297,8 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               style={{
                 fontSize: '11px',
                 padding: '3px 8px',
-                color: pageAccent,
-                borderColor: hexToRgba(pageAccent, 0.4),
+                color: 'var(--text-secondary)',
+                borderColor: 'var(--border-glass)',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
                 display: 'inline-flex',
@@ -312,17 +313,17 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
             <span
               style={{
                 fontSize: '11px',
-                fontWeight: 800,
-                padding: '3px 9px',
-                borderRadius: '8px',
-                backgroundColor: hexToRgba(pageAccent, 0.2),
-                color: pageAccent,
-                border: `1px solid ${hexToRgba(pageAccent, 0.35)}`,
+                fontWeight: 600,
+                padding: '2px 8px',
+                borderRadius: '6px',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-glass)',
                 flexShrink: 0,
                 whiteSpace: 'nowrap',
               }}
             >
-              {expenseItems.length}
+              {expenseItems.length} items
             </span>
           </div>
         </div>
@@ -330,27 +331,27 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
         {/* Main Big Balance Amount */}
         <div
           className="tabular-nums"
-          style={{ fontSize: '34px', fontWeight: 800, letterSpacing: '-0.8px', marginBottom: '14px' }}
+          style={{ fontSize: '30px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '14px', color: 'var(--text-primary)' }}
         >
           {hideBalances ? (currency === 'USD' ? '$ ••••••' : '៛ ••••••') : formatCurrency(totalExpenseUSD, currency)}
         </div>
 
         {/* Spending Budget Target Progress Bar & Remaining Allowance */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontWeight: 700, marginBottom: '6px' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>
+        <div style={{ marginBottom: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontWeight: 500, marginBottom: '6px' }}>
+            <span style={{ color: 'var(--text-muted)' }}>
               Budget: {formatCurrency(currentBudget, currency)}
             </span>
-            <span style={{ color: budgetProgress > 90 ? 'var(--accent-danger)' : pageAccent, fontWeight: 800 }}>
-              {hideBalances ? '••••' : formatCurrency(remainingBudgetUSD, currency)} Left
+            <span style={{ color: budgetProgress > 90 ? 'var(--accent-danger)' : 'var(--text-secondary)', fontWeight: 600 }}>
+              {hideBalances ? '••••' : formatCurrency(remainingBudgetUSD, currency)} remaining
             </span>
           </div>
 
           <div
             style={{
-              height: '8px',
-              borderRadius: '4px',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              height: '6px',
+              borderRadius: '3px',
+              backgroundColor: 'var(--pill-bg)',
               overflow: 'hidden',
             }}
           >
@@ -358,10 +359,9 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               style={{
                 height: '100%',
                 width: `${budgetProgress}%`,
-                backgroundColor: budgetProgress > 90 ? 'var(--accent-danger)' : pageAccent,
-                borderRadius: '4px',
-                boxShadow: `0 0 10px ${hexToRgba(pageAccent, 0.4)}`,
-                transition: 'width 0.3s ease',
+                backgroundColor: budgetProgress > 90 ? 'var(--accent-danger)' : 'var(--accent)',
+                borderRadius: '3px',
+                transition: 'width 0.2s ease',
               }}
             />
           </div>
@@ -373,53 +373,53 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            paddingTop: '12px',
-            borderTop: '1px solid var(--border-glass)',
+            paddingTop: '10px',
+            borderTop: '1px solid var(--border-subtle)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div
               style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '8px',
-                backgroundColor: hexToRgba(pageAccent, 0.2),
-                color: pageAccent,
+                width: '26px',
+                height: '26px',
+                borderRadius: '6px',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-secondary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <TrendingUp size={14} />
+              <TrendingUp size={13} />
             </div>
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>Average</div>
-              <div className="tabular-nums" style={{ fontSize: '13px', fontWeight: 800 }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 500 }}>Average</div>
+              <div className="tabular-nums" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 {hideBalances ? '••••' : formatCurrency(averageExpenseUSD, currency)}
               </div>
             </div>
           </div>
 
-          <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border-glass)' }} />
+          <div style={{ width: '1px', height: '20px', backgroundColor: 'var(--border-subtle)' }} />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div
               style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '8px',
-                backgroundColor: hexToRgba(pageAccent, 0.2),
-                color: pageAccent,
+                width: '26px',
+                height: '26px',
+                borderRadius: '6px',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-secondary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Filter size={14} />
+              <Filter size={13} />
             </div>
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>Filtered</div>
-              <div className="tabular-nums" style={{ fontSize: '13px', fontWeight: 800 }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 500 }}>Filtered</div>
+              <div className="tabular-nums" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 {hideBalances ? '••••' : formatCurrency(totalFilteredUSD, currency)}
               </div>
             </div>
