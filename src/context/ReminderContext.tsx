@@ -11,6 +11,7 @@ interface ReminderContextType {
   deleteReminder: (id: string) => void;
   isNotificationEnabled: boolean;
   requestNotificationPermission: () => Promise<boolean>;
+  triggerTestNotification: () => Promise<string>;
 }
 
 const ReminderContext = createContext<ReminderContextType>({} as ReminderContextType);
@@ -22,6 +23,18 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return 'Notification' in window && Notification.permission === 'granted';
   });
 
+  // Automatically update red badge count on Home Screen app icon whenever reminders change
+  useEffect(() => {
+    const activeCount = reminders.filter(r => !r.completed).length;
+    if ('setAppBadge' in navigator) {
+      if (activeCount > 0) {
+        navigator.setAppBadge(activeCount).catch(() => {});
+      } else {
+        navigator.clearAppBadge().catch(() => {});
+      }
+    }
+  }, [reminders]);
+
   const requestNotificationPermission = async (): Promise<boolean> => {
     if ('Notification' in window) {
       const permission = await Notification.requestPermission();
@@ -30,6 +43,40 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return granted;
     }
     return false;
+  };
+
+  const triggerTestNotification = async (): Promise<string> => {
+    if (!('Notification' in window)) {
+      return 'Notifications API is not supported on this browser context.';
+    }
+
+    let permission = Notification.permission;
+    if (permission !== 'granted') {
+      permission = await Notification.requestPermission();
+      setIsNotificationEnabled(permission === 'granted');
+    }
+
+    if (permission !== 'granted') {
+      return 'Notification permission denied by device settings.';
+    }
+
+    // Set red badge (3) on Home Screen app icon
+    if ('setAppBadge' in navigator) {
+      try {
+        await navigator.setAppBadge(3);
+      } catch (e) {}
+    }
+
+    try {
+      new Notification('🔔 Tracker Alert Test', {
+        body: 'Red badge (3) set on Home Screen icon. Tap to open!',
+        icon: '/assets/icon-192.png',
+        badge: '/assets/icon-192.png',
+      });
+      return 'Alert sent & red badge (3) set on Home Screen icon!';
+    } catch (e: any) {
+      return 'Alert triggered! Check Home Screen icon badge.';
+    }
   };
 
   const addReminder = (item: Omit<ReminderItem, 'id' | 'createdAt' | 'completed'>) => {
@@ -99,6 +146,7 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteReminder,
         isNotificationEnabled,
         requestNotificationPermission,
+        triggerTestNotification,
       }}
     >
       {children}

@@ -5,7 +5,8 @@ import { ExportModal } from '../components/ExportModal';
 import { AppearanceModal } from '../components/AppearanceModal';
 import { AuthModal, UserAccount } from '../components/AuthModal';
 import { getGuestId, setGuestId } from '../services/storageService';
-import { Settings, Shield, Eye, EyeOff, Download, Trash2, Palette, CheckCircle2, Sparkles, Key, Copy, RefreshCw, User, ShieldCheck, LogIn } from 'lucide-react';
+import { Settings, Shield, Eye, EyeOff, Download, Trash2, Palette, CheckCircle2, Sparkles, Key, Copy, RefreshCw, User, ShieldCheck, LogIn, Bell } from 'lucide-react';
+import { useReminders } from '../context/ReminderContext';
 
 export const SettingsScreen: React.FC = () => {
   const {
@@ -13,6 +14,7 @@ export const SettingsScreen: React.FC = () => {
     setHideBalances,
     clearAllData,
   } = useExpenses();
+  const { triggerTestNotification, isNotificationEnabled } = useReminders();
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -20,6 +22,12 @@ export const SettingsScreen: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [userAccount, setUserAccount] = useState<UserAccount | null>(null);
   const [currentSyncKey, setCurrentSyncKey] = useState(getGuestId());
+
+  const handleTestNotification = async () => {
+    const msg = await triggerTestNotification();
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 4000);
+  };
 
   useEffect(() => {
     try {
@@ -197,6 +205,43 @@ export const SettingsScreen: React.FC = () => {
           {hideBalances ? <EyeOff size={14} /> : <Eye size={14} />}
           <span>{hideBalances ? 'Hidden' : 'Visible'}</span>
         </button>
+      </div>
+
+      {/* iOS Home Screen Red Badge & Lock Screen Notification Test Card */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Bell size={18} color="var(--accent-success)" />
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Notifications</h4>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                {isNotificationEnabled ? 'iOS App Badge & Alerts Active' : 'Test Home Screen Red Badge (3)'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleTestNotification}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              borderRadius: '10px',
+              border: 'none',
+              backgroundColor: 'var(--accent-success)',
+              color: '#141416',
+              fontWeight: 800,
+              fontSize: '12px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(0, 230, 118, 0.25)',
+            }}
+          >
+            <Bell size={14} />
+            Test
+          </button>
+        </div>
       </div>
 
       {/* Ultra-Clean 1-Row Export CSV Card */}
