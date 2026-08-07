@@ -260,20 +260,23 @@ export const AddReminderModal: React.FC = () => {
               <span>{activeField === 'notes' ? 'Cancel' : 'Voice'}</span>
             </button>
           </div>
-          <input
-            type="text"
+          <textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}
+            rows={3}
             placeholder={activeField === 'notes' ? 'Listening... Speak now' : 'Details'}
             style={{
               width: '100%',
-              padding: '10px 16px',
+              minHeight: '76px',
+              padding: '12px 16px',
               borderRadius: '16px',
               border: activeField === 'notes' ? '1.5px solid #4A99E9' : '1px solid var(--border-glass)',
               backgroundColor: 'var(--pill-bg)',
               color: 'var(--text-primary)',
               fontSize: '13px',
               outline: 'none',
+              resize: 'none',
+              fontFamily: 'inherit',
             }}
           />
         </div>
