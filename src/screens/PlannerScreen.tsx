@@ -28,6 +28,17 @@ import {
   Search,
   Mic,
   X,
+  Zap,
+  CheckCircle2,
+  Dumbbell,
+  Receipt,
+  Users,
+  BookOpen,
+  Heart,
+  ShoppingBag,
+  Briefcase,
+  Droplets,
+  ShoppingCart,
 } from 'lucide-react';
 
 type FilterTab = 'TODAY' | 'SCHEDULED' | 'ALL' | 'FLAGGED' | 'URGENT' | 'COMPLETED';
@@ -135,7 +146,163 @@ export const PlannerScreen: React.FC = () => {
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
-      {/* Header Title Bar (Matching Image 2 Header Layout) */}
+      {/* 1. Task Complete Overview Card */}
+      <div
+        className="glass-panel"
+        style={{
+          padding: '18px 20px',
+          borderRadius: '24px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-glass)',
+          boxShadow: 'var(--shadow-card)',
+          marginBottom: '16px',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle2 size={16} color="#30D158" />
+            <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Overview</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '8px', backgroundColor: 'rgba(48, 209, 88, 0.15)', color: '#30D158' }}>
+              Goal: {reminders.length} items
+            </span>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+              {completedReminders.length} done
+            </span>
+          </div>
+        </div>
+
+        {/* Big Completion Percentage Display */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px' }}>
+          <div className="tabular-nums" style={{ fontSize: '28px', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+            {completionPct}%
+          </div>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+            {reminders.length - completedReminders.length} remaining
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div style={{ width: '100%', height: '8px', borderRadius: '4px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)', overflow: 'hidden', marginBottom: '12px' }}>
+          <div
+            style={{
+              width: `${completionPct}%`,
+              height: '100%',
+              backgroundColor: '#30D158',
+              borderRadius: '4px',
+              transition: 'width 0.3s ease',
+            }}
+          />
+        </div>
+
+        {/* Metrics Sub-Row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border-glass)', fontSize: '11px', color: 'var(--text-secondary)' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Clock size={12} color="#EC668C" /> Urgent: {urgentReminders.length}
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Flag size={12} color="#F3A85B" /> Flagged: {flaggedReminders.length}
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <ShieldCheck size={12} color="#6C7B8A" /> Done: {completedReminders.length}
+          </span>
+        </div>
+      </div>
+
+      {/* 2. Quick Presets Bento Grid (3x3 Compact Cards) */}
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Zap size={15} color="var(--text-secondary)" />
+            <h3 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>Presets</h3>
+          </div>
+          <button
+            type="button"
+            className="glass-pill"
+            onClick={() => {
+              const name = prompt('Enter custom preset title:');
+              if (name && name.trim()) {
+                addReminder({
+                  title: name.trim(),
+                  level: 'SIMPLE',
+                  priority: 'MEDIUM',
+                  category: 'TASK',
+                  dueDate: today,
+                  dueTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+                  endTime: new Date(Date.now() + 30 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+                });
+              }
+            }}
+            style={{ fontSize: '11px', padding: '4px 10px', color: 'var(--text-primary)', borderColor: 'var(--border-glass)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+          >
+            <Plus size={12} /> Add
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+          {[
+            { id: 'p-1', title: 'Gym', category: 'SPORT', icon: Dumbbell, color: '#EC668C', level: 'FLAGGED' },
+            { id: 'p-2', title: 'Bills', category: 'BILLS', icon: Receipt, color: '#F3A85B', level: 'URGENT' },
+            { id: 'p-3', title: 'Meeting', category: 'MEETING', icon: Users, color: '#4A99E9', level: 'FLAGGED' },
+            { id: 'p-4', title: 'Study', category: 'STUDY', icon: BookOpen, color: '#6C5CE7', level: 'SIMPLE' },
+            { id: 'p-5', title: 'Doctor', category: 'HEALTH', icon: Heart, color: '#30D158', level: 'URGENT' },
+            { id: 'p-6', title: 'Shopping', category: 'FUN', icon: ShoppingBag, color: '#FF9F0A', level: 'SIMPLE' },
+            { id: 'p-7', title: 'Work', category: 'WORK', icon: Briefcase, color: '#6C7B8A', level: 'SIMPLE' },
+            { id: 'p-8', title: 'Water', category: 'HEALTH', icon: Droplets, color: '#64D2FF', level: 'SIMPLE' },
+            { id: 'p-9', title: 'Groceries', category: 'FUN', icon: ShoppingCart, color: '#A060FF', level: 'SIMPLE' },
+          ].map(preset => {
+            const IconComponent = preset.icon;
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => {
+                  const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                  const endStr = new Date(Date.now() + 30 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                  addReminder({
+                    title: preset.title,
+                    level: preset.level as any,
+                    priority: preset.level === 'FLAGGED' ? 'HIGH' : 'MEDIUM',
+                    category: preset.category as any,
+                    dueDate: today,
+                    dueTime: nowStr,
+                    endTime: endStr,
+                  });
+                }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  padding: '10px 12px',
+                  borderRadius: '20px',
+                  border: '1px solid var(--border-glass)',
+                  backgroundColor: 'var(--bg-card)',
+                  color: 'var(--text-primary)',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  minHeight: '66px',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: hexToRgba(preset.color, 0.15), border: `1px solid ${hexToRgba(preset.color, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: preset.color }}>
+                    <IconComponent size={15} />
+                  </div>
+                  <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '5px', backgroundColor: hexToRgba(preset.color, 0.15), color: preset.color }}>
+                    {preset.level}
+                  </span>
+                </div>
+                <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {preset.title}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3. Records Header Title Bar (Matching Image 2 Header Layout) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Layers size={22} color={pageAccent} />
