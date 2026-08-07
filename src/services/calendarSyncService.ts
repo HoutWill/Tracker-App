@@ -74,12 +74,11 @@ export const syncToAppleCalendar = (event: CalendarEventPayload) => {
     const a = document.createElement('a');
     a.href = url;
     a.download = `${event.title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
-    a.target = '_blank';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
     return true;
   } catch (e) {
     console.error('Calendar sync error:', e);
@@ -136,12 +135,11 @@ export const syncToAppleReminders = (event: CalendarEventPayload) => {
     const a = document.createElement('a');
     a.href = url;
     a.download = `${event.title.replace(/[^a-zA-Z0-9]/g, '_')}_reminder.ics`;
-    a.target = '_blank';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
     return true;
   } catch (e) {
     console.error('Apple Reminders sync error:', e);
