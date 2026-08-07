@@ -511,31 +511,9 @@ export const PlannerScreen: React.FC = () => {
         <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
           {activeFilter === 'TODAY' ? 'Today' : activeFilter === 'SCHEDULED' ? 'Scheduled' : activeFilter === 'FLAGGED' ? 'Flagged' : activeFilter === 'URGENT' ? 'Urgent' : activeFilter === 'COMPLETED' ? 'Completed' : 'Todos'}
         </h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            type="button"
-            onClick={() => setIsAddReminderOpen(true)}
-            style={{
-              backgroundColor: 'var(--pill-bg)',
-              border: '1px solid var(--border-glass)',
-              borderRadius: '10px',
-              color: 'var(--text-primary)',
-              fontSize: '11px',
-              fontWeight: 700,
-              padding: '4px 10px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              cursor: 'pointer',
-            }}
-          >
-            <Plus size={13} />
-            <span>Add</span>
-          </button>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
-            {displayedReminders.length} Items
-          </span>
-        </div>
+        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+          {displayedReminders.length} Items
+        </span>
       </div>
 
       {/* Checklist List */}
