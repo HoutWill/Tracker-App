@@ -3,7 +3,7 @@ export const isSpeechRecognitionSupported = (): boolean => {
 };
 
 export const startVoiceRecognition = (
-  onResult: (text: string) => void,
+  onResult: (text: string, isFinal: boolean) => void,
   onEnd?: () => void,
   onError?: (err: any) => void
 ) => {
@@ -16,14 +16,23 @@ export const startVoiceRecognition = (
   const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
   const recognition = new SpeechRecognition();
 
-  recognition.continuous = false;
-  recognition.interimResults = false;
+  recognition.continuous = true;
+  recognition.interimResults = true;
   recognition.lang = 'en-US';
 
   recognition.onresult = (event: any) => {
-    if (event.results && event.results[0] && event.results[0][0]) {
-      const transcript = event.results[0][0].transcript;
-      onResult(transcript);
+    let currentTranscript = '';
+    let isFinal = false;
+
+    for (let i = 0; i < event.results.length; ++i) {
+      currentTranscript += event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        isFinal = true;
+      }
+    }
+
+    if (currentTranscript.trim()) {
+      onResult(currentTranscript, isFinal);
     }
   };
 

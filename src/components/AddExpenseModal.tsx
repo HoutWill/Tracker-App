@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
 import { getTodayDateString } from '../services/storageService';
 import { PaymentMethod } from '../types';
-import { X, Plus, ArrowDownRight, Mic } from 'lucide-react';
+import { X, Plus, ArrowDownRight, Mic, Square } from 'lucide-react';
 import { startVoiceRecognition } from '../services/speechService';
 
 export const AddExpenseModal: React.FC = () => {
@@ -16,18 +16,45 @@ export const AddExpenseModal: React.FC = () => {
   const [dateStr, setDateStr] = useState(getTodayDateString());
   const [tripId, setTripId] = useState<string | undefined>(selectedTripId || undefined);
   const [notes, setNotes] = useState('');
-  const [isListening, setIsListening] = useState(false);
+  const [activeField, setActiveField] = useState<'title' | 'notes' | null>(null);
 
-  const handleVoiceInput = () => {
-    setIsListening(true);
-    startVoiceRecognition(
-      (text) => {
-        setTitle(text);
-        setIsListening(false);
+  const recognitionRef = useRef<any>(null);
+
+  const stopVoiceInput = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (e) {}
+      recognitionRef.current = null;
+    }
+    setActiveField(null);
+  };
+
+  const handleVoiceInput = (field: 'title' | 'notes') => {
+    if (activeField === field) {
+      stopVoiceInput();
+      return;
+    }
+
+    stopVoiceInput();
+    setActiveField(field);
+
+    const rec = startVoiceRecognition(
+      (text, isFinal) => {
+        if (field === 'title') {
+          setTitle(text);
+        } else {
+          setNotes(text);
+        }
+        if (isFinal) {
+          stopVoiceInput();
+        }
       },
-      () => setIsListening(false),
-      () => setIsListening(false)
+      () => setActiveField(null),
+      () => setActiveField(null)
     );
+
+    recognitionRef.current = rec;
   };
 
   // Pure Expense categories list
@@ -139,7 +166,7 @@ export const AddExpenseModal: React.FC = () => {
           </button>
         </div>
 
-        {/* Title Input with Mic Button */}
+        {/* Title Input with Voice & Cancel */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
@@ -147,11 +174,11 @@ export const AddExpenseModal: React.FC = () => {
             </label>
             <button
               type="button"
-              onClick={handleVoiceInput}
+              onClick={() => handleVoiceInput('title')}
               style={{
                 background: 'none',
                 border: 'none',
-                color: isListening ? 'var(--accent-danger)' : 'var(--accent)',
+                color: activeField === 'title' ? 'var(--accent-danger)' : 'var(--accent)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -161,22 +188,22 @@ export const AddExpenseModal: React.FC = () => {
               }}
               title="Speak to dictate title"
             >
-              <Mic size={14} className={isListening ? 'animate-pulse' : ''} />
-              <span>{isListening ? 'Listening...' : 'Voice'}</span>
+              {activeField === 'title' ? <Square size={13} fill="currentColor" /> : <Mic size={14} />}
+              <span>{activeField === 'title' ? 'Cancel' : 'Voice'}</span>
             </button>
           </div>
           <input
             type="text"
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder={isListening ? 'Listening... Speak now' : 'Coffee, Dinner...'}
+            placeholder={activeField === 'title' ? 'Listening... Speak now' : 'Coffee, Dinner...'}
             required
             style={{
               width: '100%',
               height: '42px',
               padding: '0 12px',
               borderRadius: '10px',
-              border: isListening ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
+              border: activeField === 'title' ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
               backgroundColor: 'rgba(255, 255, 255, 0.05)',
               color: 'var(--text-primary)',
               fontSize: '13px',
@@ -336,21 +363,42 @@ export const AddExpenseModal: React.FC = () => {
           </div>
         )}
 
-        {/* Notes Input */}
+        {/* Notes Input with Voice & Cancel */}
         <div>
-          <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Notes
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+              Notes
+            </label>
+            <button
+              type="button"
+              onClick={() => handleVoiceInput('notes')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: activeField === 'notes' ? 'var(--accent-danger)' : 'var(--accent)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '11px',
+                fontWeight: 700,
+              }}
+              title="Speak to dictate notes"
+            >
+              {activeField === 'notes' ? <Square size={13} fill="currentColor" /> : <Mic size={14} />}
+              <span>{activeField === 'notes' ? 'Cancel' : 'Voice'}</span>
+            </button>
+          </div>
           <textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}
             rows={2}
-            placeholder="Notes..."
+            placeholder={activeField === 'notes' ? 'Listening... Speak now' : 'Notes...'}
             style={{
               width: '100%',
               padding: '8px 12px',
               borderRadius: '10px',
-              border: '1px solid var(--border-glass)',
+              border: activeField === 'notes' ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
               backgroundColor: 'rgba(255, 255, 255, 0.05)',
               color: 'var(--text-primary)',
               fontSize: '13px',

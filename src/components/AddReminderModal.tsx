@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useReminders } from '../context/ReminderContext';
 import { getTodayDateString } from '../services/storageService';
 import { ReminderCategory } from '../types';
-import { X, Bell, Check, Calendar, Clock, AlertCircle, Mic } from 'lucide-react';
+import { X, Bell, Check, Calendar, Clock, AlertCircle, Mic, Square } from 'lucide-react';
 import { syncToAppleCalendar } from '../services/calendarSyncService';
 import { startVoiceRecognition } from '../services/speechService';
 
@@ -42,18 +42,45 @@ export const AddReminderModal: React.FC = () => {
   const [endTime, setEndTime] = useState(getEndTimeString());
   const [alertEnabled, setAlertEnabled] = useState(true);
   const [syncCalendar, setSyncCalendar] = useState(true);
-  const [isListening, setIsListening] = useState(false);
+  const [activeField, setActiveField] = useState<'title' | 'notes' | null>(null);
 
-  const handleVoiceInput = () => {
-    setIsListening(true);
-    startVoiceRecognition(
-      (text) => {
-        setTitle(text);
-        setIsListening(false);
+  const recognitionRef = useRef<any>(null);
+
+  const stopVoiceInput = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (e) {}
+      recognitionRef.current = null;
+    }
+    setActiveField(null);
+  };
+
+  const handleVoiceInput = (field: 'title' | 'notes') => {
+    if (activeField === field) {
+      stopVoiceInput();
+      return;
+    }
+
+    stopVoiceInput();
+    setActiveField(field);
+
+    const rec = startVoiceRecognition(
+      (text, isFinal) => {
+        if (field === 'title') {
+          setTitle(text);
+        } else {
+          setNotes(text);
+        }
+        if (isFinal) {
+          stopVoiceInput();
+        }
       },
-      () => setIsListening(false),
-      () => setIsListening(false)
+      () => setActiveField(null),
+      () => setActiveField(null)
     );
+
+    recognitionRef.current = rec;
   };
 
   // Automatically sync to current live date and time whenever modal opens
@@ -147,17 +174,17 @@ export const AddReminderModal: React.FC = () => {
           </button>
         </div>
 
-        {/* Title Input Pill with Mic Button */}
+        {/* Title Input Pill with Voice & Cancel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Title</label>
             <button
               type="button"
-              onClick={handleVoiceInput}
+              onClick={() => handleVoiceInput('title')}
               style={{
                 background: 'none',
                 border: 'none',
-                color: isListening ? '#EC668C' : '#4A99E9',
+                color: activeField === 'title' ? '#EC668C' : '#4A99E9',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -167,8 +194,8 @@ export const AddReminderModal: React.FC = () => {
               }}
               title="Speak to dictate title"
             >
-              <Mic size={14} />
-              <span>{isListening ? 'Listening...' : 'Voice'}</span>
+              {activeField === 'title' ? <Square size={13} fill="currentColor" /> : <Mic size={14} />}
+              <span>{activeField === 'title' ? 'Cancel' : 'Voice'}</span>
             </button>
           </div>
           <input
@@ -176,12 +203,12 @@ export const AddReminderModal: React.FC = () => {
             required
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder={isListening ? 'Listening... Speak now' : 'Bills, Workout...'}
+            placeholder={activeField === 'title' ? 'Listening... Speak now' : 'Bills, Workout...'}
             style={{
               width: '100%',
               padding: '12px 16px',
               borderRadius: '16px',
-              border: isListening ? '1.5px solid #4A99E9' : '1px solid var(--border-glass)',
+              border: activeField === 'title' ? '1.5px solid #4A99E9' : '1px solid var(--border-glass)',
               backgroundColor: 'var(--pill-bg)',
               color: 'var(--text-primary)',
               fontSize: '14px',
@@ -191,19 +218,40 @@ export const AddReminderModal: React.FC = () => {
           />
         </div>
 
-        {/* Notes Input Pill */}
+        {/* Notes Input Pill with Voice & Cancel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Notes</label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Notes</label>
+            <button
+              type="button"
+              onClick={() => handleVoiceInput('notes')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: activeField === 'notes' ? '#EC668C' : '#4A99E9',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '11px',
+                fontWeight: 700,
+              }}
+              title="Speak to dictate notes"
+            >
+              {activeField === 'notes' ? <Square size={13} fill="currentColor" /> : <Mic size={14} />}
+              <span>{activeField === 'notes' ? 'Cancel' : 'Voice'}</span>
+            </button>
+          </div>
           <input
             type="text"
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            placeholder="Details"
+            placeholder={activeField === 'notes' ? 'Listening... Speak now' : 'Details'}
             style={{
               width: '100%',
               padding: '10px 16px',
               borderRadius: '16px',
-              border: '1px solid var(--border-glass)',
+              border: activeField === 'notes' ? '1.5px solid #4A99E9' : '1px solid var(--border-glass)',
               backgroundColor: 'var(--pill-bg)',
               color: 'var(--text-primary)',
               fontSize: '13px',

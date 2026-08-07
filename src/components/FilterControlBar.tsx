@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useExpenses, DateRangeOption, SortOption } from '../context/ExpenseContext';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
-import { Search, SlidersHorizontal, X, RotateCcw } from 'lucide-react';
+import { Search, SlidersHorizontal, X, RotateCcw, Mic, Square } from 'lucide-react';
 import { PaymentMethod } from '../types';
+import { startVoiceRecognition } from '../services/speechService';
 
 import { TripFolderBar } from './TripFolderBar';
 
@@ -34,6 +35,32 @@ export const FilterControlBar: React.FC<FilterControlBarProps> = ({ screenType =
   } = useExpenses();
 
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  const handleVoiceSearch = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch (e) {}
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
+      return;
+    }
+
+    setIsListening(true);
+    const rec = startVoiceRecognition(
+      (text, isFinal) => {
+        setSearchQuery(text);
+        if (isFinal) {
+          setIsListening(false);
+        }
+      },
+      () => setIsListening(false),
+      () => setIsListening(false)
+    );
+    recognitionRef.current = rec;
+  };
 
   const hasActiveFilters =
     searchQuery !== '' ||
@@ -80,7 +107,7 @@ export const FilterControlBar: React.FC<FilterControlBarProps> = ({ screenType =
           type="text"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          placeholder="Search..."
+          placeholder={isListening ? 'Listening... Speak now' : 'Search...'}
           style={{
             flex: 1,
             background: 'none',
@@ -91,6 +118,14 @@ export const FilterControlBar: React.FC<FilterControlBarProps> = ({ screenType =
             fontFamily: 'inherit',
           }}
         />
+        <button
+          type="button"
+          onClick={handleVoiceSearch}
+          style={{ background: 'none', border: 'none', color: isListening ? 'var(--accent-danger)' : screenAccent, cursor: 'pointer', padding: '2px 4px' }}
+          title="Voice Search"
+        >
+          {isListening ? <Square size={14} fill="currentColor" /> : <Mic size={16} />}
+        </button>
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
