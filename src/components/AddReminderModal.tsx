@@ -17,6 +17,18 @@ const getEndTimeString = () => {
   return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 };
 
+const REMINDER_CATEGORIES = [
+  { id: 'TASK', label: 'Task' },
+  { id: 'STUDY', label: 'Study' },
+  { id: 'MEETING', label: 'Meeting' },
+  { id: 'FUN', label: 'Fun' },
+  { id: 'SPORT', label: 'Sport' },
+  { id: 'BILLS', label: 'Bills' },
+  { id: 'SAVINGS', label: 'Savings' },
+  { id: 'WORK', label: 'Work' },
+  { id: 'HEALTH', label: 'Health' },
+] as const;
+
 export const AddReminderModal: React.FC = () => {
   const { isAddReminderOpen, setIsAddReminderOpen, addReminder } = useReminders();
 
@@ -91,6 +103,7 @@ export const AddReminderModal: React.FC = () => {
       <form
         onSubmit={handleSubmit}
         onClick={e => e.stopPropagation()}
+        className="glass-panel"
         style={{
           width: '100%',
           maxWidth: '380px',
@@ -99,24 +112,22 @@ export const AddReminderModal: React.FC = () => {
           flexDirection: 'column',
           gap: '16px',
           borderRadius: '24px',
-          backgroundColor: 'rgba(26, 26, 36, 0.95)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
-          color: '#FFF',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-glass)',
+          boxShadow: 'var(--shadow-card)',
+          color: 'var(--text-primary)',
         }}
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Bell size={18} color="#4A99E9" />
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#FFF' }}>Reminder</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>Reminder</h3>
           </div>
           <button
             type="button"
             onClick={() => setIsAddReminderOpen(false)}
-            style={{ background: 'none', border: 'none', color: '#A0A0B2', cursor: 'pointer' }}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             <X size={20} />
           </button>
@@ -124,7 +135,7 @@ export const AddReminderModal: React.FC = () => {
 
         {/* Title Input Pill */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Title</label>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Title</label>
           <input
             type="text"
             required
@@ -135,9 +146,9 @@ export const AddReminderModal: React.FC = () => {
               width: '100%',
               padding: '12px 16px',
               borderRadius: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.14)',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              color: '#FFF',
+              border: '1px solid var(--border-glass)',
+              backgroundColor: 'var(--pill-bg)',
+              color: 'var(--text-primary)',
               fontSize: '14px',
               outline: 'none',
               fontWeight: 600,
@@ -147,7 +158,7 @@ export const AddReminderModal: React.FC = () => {
 
         {/* Notes Input Pill */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Notes</label>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Notes</label>
           <input
             type="text"
             value={notes}
@@ -157,9 +168,9 @@ export const AddReminderModal: React.FC = () => {
               width: '100%',
               padding: '10px 16px',
               borderRadius: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.14)',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              color: '#FFF',
+              border: '1px solid var(--border-glass)',
+              backgroundColor: 'var(--pill-bg)',
+              color: 'var(--text-primary)',
               fontSize: '13px',
               outline: 'none',
             }}
@@ -168,7 +179,7 @@ export const AddReminderModal: React.FC = () => {
 
         {/* Level Switcher (Simple, Flagged, Urgent) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Type</label>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Type</label>
           <div style={{ display: 'flex', gap: '6px' }}>
             <button
               type="button"
@@ -177,13 +188,12 @@ export const AddReminderModal: React.FC = () => {
                 flex: 1,
                 padding: '9px 0',
                 borderRadius: '14px',
-                border: level === 'SIMPLE' ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
-                backgroundColor: level === 'SIMPLE' ? '#48484A' : 'rgba(255, 255, 255, 0.06)',
+                border: level === 'SIMPLE' ? 'none' : '1px solid var(--border-glass)',
+                backgroundColor: level === 'SIMPLE' ? '#48484A' : 'var(--pill-bg)',
                 color: '#FFF',
                 fontSize: '12px',
                 fontWeight: 800,
                 cursor: 'pointer',
-                boxShadow: level === 'SIMPLE' ? '0 4px 12px rgba(72, 72, 74, 0.4)' : 'none',
               }}
             >
               Simple
@@ -196,13 +206,12 @@ export const AddReminderModal: React.FC = () => {
                 flex: 1,
                 padding: '9px 0',
                 borderRadius: '14px',
-                border: level === 'FLAGGED' ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
-                backgroundColor: level === 'FLAGGED' ? '#F3A85B' : 'rgba(255, 255, 255, 0.06)',
-                color: level === 'FLAGGED' ? '#141416' : '#A0A0B2',
+                border: level === 'FLAGGED' ? 'none' : '1px solid var(--border-glass)',
+                backgroundColor: level === 'FLAGGED' ? '#F3A85B' : 'var(--pill-bg)',
+                color: level === 'FLAGGED' ? '#141416' : 'var(--text-secondary)',
                 fontSize: '12px',
                 fontWeight: 800,
                 cursor: 'pointer',
-                boxShadow: level === 'FLAGGED' ? '0 4px 12px rgba(243, 168, 91, 0.4)' : 'none',
               }}
             >
               Flagged
@@ -215,13 +224,12 @@ export const AddReminderModal: React.FC = () => {
                 flex: 1,
                 padding: '9px 0',
                 borderRadius: '14px',
-                border: level === 'URGENT' ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
-                backgroundColor: level === 'URGENT' ? '#EC668C' : 'rgba(255, 255, 255, 0.06)',
-                color: level === 'URGENT' ? '#FFF' : '#A0A0B2',
+                border: level === 'URGENT' ? 'none' : '1px solid var(--border-glass)',
+                backgroundColor: level === 'URGENT' ? '#EC668C' : 'var(--pill-bg)',
+                color: level === 'URGENT' ? '#FFF' : 'var(--text-secondary)',
                 fontSize: '12px',
                 fontWeight: 800,
                 cursor: 'pointer',
-                boxShadow: level === 'URGENT' ? '0 4px 12px rgba(236, 102, 140, 0.4)' : 'none',
               }}
             >
               Urgent
@@ -229,23 +237,11 @@ export const AddReminderModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Category Pill Switcher (Flex-Wrap Grid) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Category</label>
+        {/* Category Selector Grid */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Category</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            {(
-              [
-                { id: 'TASK', label: 'Task' },
-                { id: 'STUDY', label: 'Study' },
-                { id: 'MEETING', label: 'Meeting' },
-                { id: 'FUN', label: 'Fun' },
-                { id: 'SPORT', label: 'Sport' },
-                { id: 'BILLS', label: 'Bills' },
-                { id: 'SAVINGS', label: 'Savings' },
-                { id: 'WORK', label: 'Work' },
-                { id: 'HEALTH', label: 'Health' },
-              ] as const
-            ).map(cat => (
+            {REMINDER_CATEGORIES.map(cat => (
               <button
                 key={cat.id}
                 type="button"
@@ -253,13 +249,12 @@ export const AddReminderModal: React.FC = () => {
                 style={{
                   padding: '6px 12px',
                   borderRadius: '14px',
-                  border: category === cat.id ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
-                  backgroundColor: category === cat.id ? '#6C5CE7' : 'rgba(255, 255, 255, 0.08)',
-                  color: '#FFF',
+                  border: category === cat.id ? 'none' : '1px solid var(--border-glass)',
+                  backgroundColor: category === cat.id ? '#6C5CE7' : 'var(--pill-bg)',
+                  color: category === cat.id ? '#FFF' : 'var(--text-primary)',
                   fontSize: '11px',
                   fontWeight: category === cat.id ? 800 : 600,
                   cursor: 'pointer',
-                  boxShadow: category === cat.id ? '0 4px 12px rgba(108, 92, 231, 0.4)' : 'none',
                 }}
               >
                 {cat.label}
@@ -270,7 +265,7 @@ export const AddReminderModal: React.FC = () => {
 
         {/* Date Row */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Date</label>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Date</label>
           <input
             type="date"
             required
@@ -280,12 +275,12 @@ export const AddReminderModal: React.FC = () => {
               width: '100%',
               padding: '10px 14px',
               borderRadius: '14px',
-              border: '1px solid rgba(255, 255, 255, 0.14)',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              color: '#FFF',
+              border: '1px solid var(--border-glass)',
+              backgroundColor: 'var(--pill-bg)',
+              color: 'var(--text-primary)',
               fontSize: '13px',
               outline: 'none',
-              colorScheme: 'dark',
+              colorScheme: 'inherit',
               boxSizing: 'border-box',
             }}
           />
@@ -294,7 +289,7 @@ export const AddReminderModal: React.FC = () => {
         {/* Start Time & End Time Row */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Start Time</label>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Start Time</label>
             <input
               type="time"
               value={dueTime}
@@ -303,19 +298,19 @@ export const AddReminderModal: React.FC = () => {
                 width: '100%',
                 padding: '10px 12px',
                 borderRadius: '14px',
-                border: '1px solid rgba(255, 255, 255, 0.14)',
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                color: '#FFF',
+                border: '1px solid var(--border-glass)',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-primary)',
                 fontSize: '12px',
                 outline: 'none',
-                colorScheme: 'dark',
+                colorScheme: 'inherit',
                 boxSizing: 'border-box',
               }}
             />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>End Time</label>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>End Time</label>
             <input
               type="time"
               value={endTime}
@@ -324,12 +319,12 @@ export const AddReminderModal: React.FC = () => {
                 width: '100%',
                 padding: '10px 12px',
                 borderRadius: '14px',
-                border: '1px solid rgba(255, 255, 255, 0.14)',
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                color: '#FFF',
+                border: '1px solid var(--border-glass)',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-primary)',
                 fontSize: '12px',
                 outline: 'none',
-                colorScheme: 'dark',
+                colorScheme: 'inherit',
                 boxSizing: 'border-box',
               }}
             />
@@ -341,7 +336,7 @@ export const AddReminderModal: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Calendar size={14} color="#30D158" />
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#FFF' }}>Apple Calendar</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>Apple Calendar</span>
             </div>
             <button
               type="button"
@@ -350,8 +345,8 @@ export const AddReminderModal: React.FC = () => {
                 padding: '6px 14px',
                 borderRadius: '12px',
                 border: 'none',
-                backgroundColor: syncCalendar ? '#30D158' : 'rgba(255, 255, 255, 0.12)',
-                color: syncCalendar ? '#141416' : '#FFF',
+                backgroundColor: syncCalendar ? '#30D158' : 'var(--pill-bg)',
+                color: syncCalendar ? '#141416' : 'var(--text-primary)',
                 fontSize: '11px',
                 fontWeight: 800,
                 cursor: 'pointer',
