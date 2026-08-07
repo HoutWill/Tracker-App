@@ -162,9 +162,15 @@ export const StorageService = {
 
   async getExpenses(): Promise<ExpenseItem[]> {
     const guestId = getGuestId();
+    const isUserAccount = guestId.startsWith('usr_');
     const cached = this.getCachedExpenses();
 
-    // Fast non-blocking background fetch with 1.2s timeout
+    // Logged-in user accounts strictly load real account data without demo merging
+    if (isUserAccount) {
+      return cached;
+    }
+
+    // Fast non-blocking background fetch for demo mode
     fetchWithTimeout('/api/expenses', {
       headers: { 'x-guest-id': guestId },
     }).then(serverData => {
