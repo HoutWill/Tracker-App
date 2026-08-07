@@ -141,6 +141,27 @@ export const PlannerScreen: React.FC = () => {
             <Bell size={13} />
             <span>{isNotificationEnabled ? 'Alerts' : 'Enable'}</span>
           </button>
+
+          <button
+            type="button"
+            className="glass-pill"
+            onClick={() => setIsAddReminderOpen(true)}
+            style={{
+              backgroundColor: pageAccent,
+              borderColor: pageAccent,
+              color: '#FFF',
+              fontSize: '11px',
+              fontWeight: 800,
+              padding: '5px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            <Plus size={13} />
+            <span>Add</span>
+          </button>
         </div>
       </div>
 

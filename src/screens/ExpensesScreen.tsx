@@ -1013,21 +1013,44 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
 
       {/* Database Header & Filter Control Bar */}
       <div style={{ marginBottom: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-          <Layers size={18} color={pageAccent} />
-          <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Records</h3>
-          <span
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Layers size={18} color={pageAccent} />
+            <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Records</h3>
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: '6px',
+                backgroundColor: hexToRgba(pageAccent, 0.18),
+                color: pageAccent,
+              }}
+            >
+              {filteredExpenseItems.length}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsAddExpenseOpen(true)}
             style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              padding: '2px 8px',
-              borderRadius: '6px',
-              backgroundColor: hexToRgba(pageAccent, 0.18),
-              color: pageAccent,
+              padding: '6px 14px',
+              borderRadius: '10px',
+              border: 'none',
+              backgroundColor: pageAccent,
+              color: '#FFF',
+              fontSize: '12px',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
             }}
           >
-            {filteredExpenseItems.length}
-          </span>
+            <Plus size={14} />
+            <span>Add</span>
+          </button>
         </div>
 
         <FilterControlBar screenType="EXPENSE" />
