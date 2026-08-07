@@ -398,7 +398,6 @@ export const AddReminderModal: React.FC = () => {
             fontSize: '14px',
             cursor: 'pointer',
             marginTop: '6px',
-            boxShadow: '0 6px 18px rgba(108, 92, 231, 0.45)',
           }}
         >
           Save

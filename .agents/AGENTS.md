@@ -22,3 +22,7 @@
 3. **Single-Word Clean Naming Directive**:
    - ALL UI text labels, category names, preset titles, navbar tabs, card headers, and action buttons MUST strictly use 1 single word (e.g. `Expenses`, `Savings`, `Vault`, `Emergency`, `Goal`, `Food`, `Drink`, `Transport`, `Investment`, `Groceries`, `Bills`, `Shopping`, `Fun`, `Tech`, `Health`, `Income`).
    - Never use multi-word labels anywhere in the application interface.
+
+4. **No Blur Glowing Colors Directive**:
+   - DO NOT use blurry glowing colors, radial glow backdrops, backdrop blur effects, or heavy neon box-shadow glows anywhere in the application UI.
+   - Use clean, crisp, solid matte cards with subtle clean borders (`1px solid rgba(255, 255, 255, 0.08)`) and high-contrast typography.
