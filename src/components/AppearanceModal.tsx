@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme, HOLIDAY_THEMES, COLOR_PACKS, COLOR_PALETTE_OPTIONS, PageColors } from '../context/ThemeContext';
-import { X, Sparkles, Palette, Check, RotateCcw } from 'lucide-react';
+import { X, Sparkles, Palette, Check, RotateCcw, Sun, Moon } from 'lucide-react';
 
 interface AppearanceModalProps {
   isOpen: boolean;
@@ -9,6 +9,8 @@ interface AppearanceModalProps {
 
 export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClose }) => {
   const {
+    isDark,
+    toggleTheme,
     activeThemeId,
     setHolidayTheme,
     activePackId,
@@ -27,16 +29,22 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
   if (!isOpen) return null;
 
   const pageNames: { key: keyof PageColors; label: string }[] = [
-    { key: 'EXPENSES', label: 'Expenses' },
-    { key: 'SAVING', label: 'Saving' },
+    { key: 'EXPENSES', label: 'Expenses Page' },
+    { key: 'SAVING', label: 'Saving Page' },
   ];
+
+  const handleSetAllPresetsToWhite = () => {
+    for (let i = 0; i < 9; i++) {
+      setPresetColorItem(i, '#FFFFFF');
+    }
+  };
 
   return (
     <div
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
         backdropFilter: 'blur(12px)',
         zIndex: 110,
         display: 'flex',
@@ -58,7 +66,9 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
           gap: '16px',
           maxHeight: '85vh',
           overflowY: 'auto',
-          borderColor: 'rgba(46, 170, 220, 0.4)',
+          borderRadius: '20px',
+          backgroundColor: 'var(--bg-card)',
+          borderColor: 'var(--border-glass)',
         }}
       >
         {/* Modal Header */}
@@ -66,38 +76,66 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
               style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '12px',
-                backgroundColor: 'rgba(46, 170, 220, 0.15)',
-                border: '1px solid rgba(46, 170, 220, 0.35)',
-                color: 'var(--accent)',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                backgroundColor: 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
+                color: 'var(--text-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Palette size={20} />
+              <Palette size={18} />
             </div>
             <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Appearance</h3>
-              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Themes, Colors & Preset Customizer</span>
+              <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
+                Appearance & Theme
+              </h3>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Themes, Colors & Preset Customizer</span>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-          >
-            <X size={20} />
-          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Mode Switcher Toggle */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '4px 8px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
+                color: 'var(--text-primary)',
+                fontSize: '11px',
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDark ? <Moon size={13} style={{ color: '#FCD34D' }} /> : <Sun size={13} style={{ color: '#F59E0B' }} />}
+              <span>{isDark ? 'Dark' : 'Light'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
-        {/* Unified Segmented Nav Switcher (Themes • Colors • Presets) */}
+        {/* Segmented Nav Switcher */}
         <div
           style={{
             display: 'flex',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            backgroundColor: 'var(--pill-bg)',
             borderRadius: '10px',
             padding: '3px',
             border: '1px solid var(--border-glass)',
@@ -105,7 +143,7 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
         >
           {[
             { id: 'THEME', label: 'Themes' },
-            { id: 'COLOR', label: 'Colors' },
+            { id: 'COLOR', label: 'Accents & Colors' },
             { id: 'PRESET', label: 'Presets' },
           ].map(tab => (
             <button
@@ -116,11 +154,11 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
                 flex: 1,
                 padding: '7px 0',
                 borderRadius: '8px',
-                border: 'none',
-                backgroundColor: activeSection === tab.id ? 'var(--accent)' : 'transparent',
-                color: activeSection === tab.id ? '#FFF' : 'var(--text-secondary)',
+                border: activeSection === tab.id ? '1px solid var(--border-glass)' : 'none',
+                backgroundColor: activeSection === tab.id ? 'var(--pill-hover)' : 'transparent',
+                color: activeSection === tab.id ? 'var(--text-primary)' : 'var(--text-muted)',
                 fontSize: '12px',
-                fontWeight: activeSection === tab.id ? 800 : 600,
+                fontWeight: activeSection === tab.id ? 600 : 500,
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
               }}
@@ -143,78 +181,224 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
+                    gap: '10px',
                     padding: '12px',
-                    borderRadius: '14px',
-                    border: isSelected ? '2px solid var(--accent)' : '1px solid var(--border-glass)',
-                    backgroundColor: isSelected ? 'rgba(46, 170, 220, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                    borderRadius: '12px',
+                    border: isSelected ? '1px solid var(--text-primary)' : '1px solid var(--border-glass)',
+                    backgroundColor: isSelected ? 'var(--pill-hover)' : 'var(--pill-bg)',
                     color: 'var(--text-primary)',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  <span style={{ fontSize: '18px' }}>{theme.emoji}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 800 }}>{theme.name}</div>
-                    <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{theme.description}</div>
+                  <span style={{ fontSize: '20px' }}>{theme.emoji}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>{theme.name}</div>
+                    <div
+                      style={{
+                        fontSize: '10px',
+                        color: 'var(--text-muted)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {theme.description}
+                    </div>
                   </div>
-                  {isSelected && <Check size={16} color="var(--accent)" />}
+                  {isSelected && <Check size={14} style={{ color: 'var(--text-primary)', flexShrink: 0 }} />}
                 </button>
               );
             })}
           </div>
         )}
 
-        {/* Section 2: Curated Color Packs */}
+        {/* Section 2: Color Packs & Custom Page Color Overrides */}
         {activeSection === 'COLOR' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            {COLOR_PACKS.map(pack => {
-              const isSelected = activePackId === pack.id;
-              return (
-                <button
-                  key={pack.id}
-                  type="button"
-                  onClick={() => setColorPack(pack.id)}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px',
-                    padding: '12px',
-                    borderRadius: '14px',
-                    border: isSelected ? '2px solid var(--accent)' : '1px solid var(--border-glass)',
-                    backgroundColor: isSelected ? 'rgba(46, 170, 220, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-                    color: 'var(--text-primary)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 800 }}>{pack.name}</span>
-                    {isSelected && <Check size={16} color="var(--accent)" />}
-                  </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Presets / Color Packs */}
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                Curated Color Packs
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                {COLOR_PACKS.map(pack => {
+                  const isSelected = activePackId === pack.id;
+                  return (
+                    <button
+                      key={pack.id}
+                      type="button"
+                      onClick={() => setColorPack(pack.id)}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                        padding: '10px 12px',
+                        borderRadius: '12px',
+                        border: isSelected ? '1px solid var(--text-primary)' : '1px solid var(--border-glass)',
+                        backgroundColor: isSelected ? 'var(--pill-hover)' : 'var(--pill-bg)',
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600 }}>{pack.name}</span>
+                        {isSelected && <Check size={14} style={{ color: 'var(--text-primary)' }} />}
+                      </div>
 
-                  <div style={{ display: 'flex', gap: '5px', marginTop: '2px' }}>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: pack.expensesColor }} title="Expenses Accent" />
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: pack.savingColor }} title="Saving Accent" />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div
+                          style={{
+                            width: '14px',
+                            height: '14px',
+                            borderRadius: '50%',
+                            backgroundColor: pack.expensesColor,
+                            border: pack.expensesColor === '#FFFFFF' ? '1px solid #CBD5E1' : 'none',
+                          }}
+                          title="Expenses Color"
+                        />
+                        <div
+                          style={{
+                            width: '14px',
+                            height: '14px',
+                            borderRadius: '50%',
+                            backgroundColor: pack.savingColor,
+                            border: pack.savingColor === '#FFFFFF' ? '1px solid #CBD5E1' : 'none',
+                          }}
+                          title="Saving Color"
+                        />
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginLeft: '2px' }}>
+                          {pack.description.split(' ')[0]}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Individual Page Custom Accents */}
+            <div
+              style={{
+                padding: '12px',
+                borderRadius: '12px',
+                backgroundColor: 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+              }}
+            >
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Individual Page Accent Customizer
+              </div>
+
+              {pageNames.map(({ key, label }) => {
+                const currentColor = pageColors[key] || '#11B5C6';
+
+                return (
+                  <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div
+                          style={{
+                            width: '14px',
+                            height: '14px',
+                            borderRadius: '50%',
+                            backgroundColor: currentColor,
+                            border: '1px solid var(--border-glass)',
+                          }}
+                        />
+                        <span className="tabular-nums" style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                          {currentColor.toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      {COLOR_PALETTE_OPTIONS.map(opt => {
+                        const isMatch = currentColor.toLowerCase() === opt.hex.toLowerCase();
+                        return (
+                          <button
+                            key={opt.hex}
+                            type="button"
+                            onClick={() => setPageColor(key, opt.hex)}
+                            style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              backgroundColor: opt.hex,
+                              border: isMatch ? '2px solid var(--text-primary)' : '1px solid rgba(150, 150, 150, 0.2)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'transform 0.1s ease',
+                              transform: isMatch ? 'scale(1.15)' : 'scale(1)',
+                            }}
+                            title={`${opt.name} (${opt.hex})`}
+                          >
+                            {isMatch && (
+                              <Check
+                                size={12}
+                                style={{ color: opt.hex === '#FFFFFF' || opt.hex === '#E2E8F0' ? '#000' : '#FFF' }}
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
+
+                      {/* Native Color Input */}
+                      <label
+                        style={{
+                          position: 'relative',
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          backgroundColor: currentColor,
+                          border: '1px dashed var(--border-glass)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        title="Pick Custom Color"
+                      >
+                        <input
+                          type="color"
+                          value={currentColor}
+                          onChange={e => setPageColor(key, e.target.value)}
+                          style={{
+                            opacity: 0,
+                            position: 'absolute',
+                            inset: 0,
+                            width: '100%',
+                            height: '100%',
+                            cursor: 'pointer',
+                          }}
+                        />
+                        <span style={{ fontSize: '10px', color: currentColor === '#FFFFFF' ? '#000' : '#FFF' }}>+</span>
+                      </label>
+                    </div>
                   </div>
-                </button>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         )}
 
         {/* Section 3: Full Range Custom Preset Color Customizer */}
         {activeSection === 'PRESET' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-            {/* Presets Color Spectrum & Randomizer Card */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div
               style={{
                 padding: '14px',
-                borderRadius: '14px',
-                backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                borderRadius: '12px',
+                backgroundColor: 'var(--pill-bg)',
                 border: '1px solid var(--border-glass)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -223,18 +407,47 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <h4 style={{ fontSize: '13px', fontWeight: 800 }}>Preset Tiles Spectrum</h4>
-                  <p style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Normal white & custom color range</p>
+                  <h4 style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Preset Tile Spectrum (9 Tiles)
+                  </h4>
+                  <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Customize quick transaction color tags</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {/* Normal White / Default Button */}
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {/* Clean White Button */}
                   <button
                     type="button"
-                    className="glass-pill"
+                    onClick={handleSetAllPresetsToWhite}
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      backgroundColor: 'var(--bg-card)',
+                      border: '1px solid var(--border-glass)',
+                      color: 'var(--text-primary)',
+                      cursor: 'pointer',
+                    }}
+                    title="Set All Preset Tiles to Clean White"
+                  >
+                    All White
+                  </button>
+
+                  {/* Reset Palette Button */}
+                  <button
+                    type="button"
                     onClick={resetPresetPaletteToDefault}
-                    style={{ fontSize: '11px', padding: '4px 10px', color: 'var(--text-primary)', borderColor: 'var(--border-glass)' }}
-                    title="Reset to Normal White Default"
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      backgroundColor: 'var(--bg-card)',
+                      border: '1px solid var(--border-glass)',
+                      color: 'var(--text-secondary)',
+                      cursor: 'pointer',
+                    }}
+                    title="Reset to Rainbow Palette"
                   >
                     Default
                   </button>
@@ -242,17 +455,29 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
                   {/* Randomize Palette Button */}
                   <button
                     type="button"
-                    className="glass-pill"
                     onClick={randomizePresetPalette}
-                    style={{ fontSize: '11px', padding: '4px 10px', color: 'var(--accent)', borderColor: 'rgba(46, 170, 220, 0.4)' }}
-                    title="Generate Random Colors Across Spectrum"
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      backgroundColor: 'var(--bg-card)',
+                      border: '1px solid var(--border-glass)',
+                      color: 'var(--text-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '3px',
+                      cursor: 'pointer',
+                    }}
+                    title="Generate Random Color Spectrum"
                   >
-                    <Sparkles size={12} /> Random
+                    <Sparkles size={11} />
+                    <span>Random</span>
                   </button>
                 </div>
               </div>
 
-              {/* Preset Slot Color Dots with Native Full Color Picker (Strictly 9 Bars) */}
+              {/* Preset Slot Swatches Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                 {presetPalette.slice(0, 9).map((hexColor, idx) => (
                   <div
@@ -267,18 +492,18 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
                     <label
                       style={{
                         position: 'relative',
-                        width: '36px',
-                        height: '36px',
+                        width: '34px',
+                        height: '34px',
                         borderRadius: '50%',
                         backgroundColor: hexColor,
-                        border: '2px solid rgba(255, 255, 255, 0.3)',
-                        boxShadow: `0 2px 10px ${hexColor}66`,
+                        border: '1px solid var(--border-glass)',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        transition: 'transform 0.1s ease',
                       }}
-                      title={`Preset ${idx + 1} Color - Click to change`}
+                      title={`Preset Tile #${idx + 1} (${hexColor}) - Click to change`}
                     >
                       <input
                         type="color"
@@ -294,7 +519,7 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
                         }}
                       />
                     </label>
-                    <span style={{ fontSize: '9px', fontWeight: 800, color: 'var(--text-secondary)' }}>#{idx + 1}</span>
+                    <span style={{ fontSize: '9px', fontWeight: 600, color: 'var(--text-muted)' }}>Tile #{idx + 1}</span>
                   </div>
                 ))}
               </div>
@@ -303,15 +528,30 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
         )}
 
         {/* Footer Actions */}
-        <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
           <button
             type="button"
-            className="glass-pill"
             onClick={resetDefaultColors}
-            style={{ flex: 1, justifyContent: 'center', color: 'var(--accent-danger)', borderColor: 'rgba(255, 82, 82, 0.3)' }}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '9px',
+              borderRadius: '10px',
+              border: '1px solid var(--border-glass)',
+              backgroundColor: 'var(--pill-bg)',
+              color: 'var(--accent-danger)',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
           >
-            <RotateCcw size={14} /> Reset
+            <RotateCcw size={13} />
+            <span>Reset All</span>
           </button>
+
           <button
             type="button"
             onClick={onClose}
@@ -320,17 +560,17 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '10px',
+              padding: '9px',
               borderRadius: '10px',
               border: 'none',
-              backgroundColor: 'var(--accent)',
-              color: '#FFF',
-              fontWeight: 800,
+              backgroundColor: 'var(--text-primary)',
+              color: 'var(--bg-main)',
+              fontWeight: 600,
               fontSize: '13px',
               cursor: 'pointer',
             }}
           >
-            Apply
+            Done
           </button>
         </div>
       </div>

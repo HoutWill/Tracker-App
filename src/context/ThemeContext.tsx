@@ -27,6 +27,14 @@ export interface ColorPack {
 
 export const COLOR_PACKS: ColorPack[] = [
   {
+    id: 'MINIMAL_WHITE',
+    name: 'Clean White',
+    description: 'Pure Minimalist White & Platinum',
+    accent: '#FFFFFF',
+    expensesColor: '#FFFFFF',
+    savingColor: '#E2E8F0',
+  },
+  {
     id: 'MODERN',
     name: 'Modern',
     description: 'PiTrack Cyan & Navy',
@@ -87,6 +95,8 @@ export const DEFAULT_PAGE_COLORS: PageColors = {
 };
 
 export const COLOR_PALETTE_OPTIONS = [
+  { name: 'White', hex: '#FFFFFF' },
+  { name: 'Silver', hex: '#E2E8F0' },
   { name: 'Cyan', hex: '#11B5C6' },
   { name: 'Navy', hex: '#0E4F88' },
   { name: 'Cafe', hex: '#C88A58' },
@@ -94,13 +104,13 @@ export const COLOR_PALETTE_OPTIONS = [
   { name: 'Violet', hex: '#6C5CE7' },
   { name: 'Emerald', hex: '#00B894' },
   { name: 'Gold', hex: '#FDCB6E' },
-  { name: 'Orange', hex: '#FF7675' },
+  { name: 'Rose', hex: '#FF7675' },
 ];
 
 export const DEFAULT_PRESET_PALETTE = [
-  '#4A99E9', '#ED6C6C', '#F3A85B',
-  '#EC668C', '#6C7B8A', '#8B5CF6',
-  '#34D399', '#FBBF24', '#38BDF8'
+  '#6366F1', '#3B82F6', '#10B981',
+  '#F59E0B', '#EF4444', '#8B5CF6',
+  '#EC4899', '#0EA5E9', '#64748B'
 ];
 
 export const hexToRgba = (hex: string, alpha: number): string => {
@@ -172,7 +182,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!saved) return DEFAULT_PRESET_PALETTE;
     try {
       const parsed: string[] = JSON.parse(saved);
-      return parsed.map((c, i) => (!c || c === '#FFFFFF' ? DEFAULT_PRESET_PALETTE[i % DEFAULT_PRESET_PALETTE.length] : c));
+      return parsed.map((c, i) => (!c ? DEFAULT_PRESET_PALETTE[i % DEFAULT_PRESET_PALETTE.length] : c));
     } catch (e) {
       return DEFAULT_PRESET_PALETTE;
     }
