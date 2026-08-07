@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ReminderItem } from '../types';
 import { StorageService, getTodayDateString } from '../services/storageService';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { playAlertChime } from '../services/soundService';
 
 interface ReminderContextType {
   reminders: ReminderItem[];
@@ -35,6 +36,7 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   } | null>(null);
 
   const showCenterAlert = (title: string, message: string, type: 'success' | 'info' | 'warning' = 'info') => {
+    playAlertChime();
     setActiveCenterAlert({ isOpen: true, title, message, type });
   };
 

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CheckCircle2, AlertCircle, Bell, X } from 'lucide-react';
+import { playAlertChime } from '../services/soundService';
 
 interface CenterAlertModalProps {
   isOpen: boolean;
@@ -16,6 +17,12 @@ export const CenterAlertModal: React.FC<CenterAlertModalProps> = ({
   message,
   type = 'success',
 }) => {
+  useEffect(() => {
+    if (isOpen) {
+      playAlertChime();
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const getIcon = () => {
