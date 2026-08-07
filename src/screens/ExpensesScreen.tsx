@@ -972,15 +972,18 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                 onChange={e => setPresetDate(e.target.value)}
                 style={{
                   width: '100%',
-                  height: '40px',
+                  height: '42px',
                   padding: '0 12px',
-                  borderRadius: '10px',
+                  borderRadius: '12px',
                   border: '1px solid var(--border-glass)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  backgroundColor: 'var(--pill-bg)',
                   color: 'var(--text-primary)',
                   fontSize: '13px',
+                  fontWeight: 600,
                   marginTop: '4px',
                   outline: 'none',
+                  boxSizing: 'border-box',
+                  WebkitAppearance: 'none',
                 }}
               />
             </div>

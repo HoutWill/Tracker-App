@@ -268,32 +268,32 @@ export const AddReminderModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Date, Start Time & End Time Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '8px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Date</label>
-            <input
-              type="date"
-              required
-              value={dueDate}
-              onChange={e => setDueDate(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 8px',
-                borderRadius: '14px',
-                border: '1px solid rgba(255, 255, 255, 0.14)',
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                color: '#FFF',
-                fontSize: '11px',
-                outline: 'none',
-                colorScheme: 'dark',
-                boxSizing: 'border-box',
-                minWidth: 0,
-              }}
-            />
-          </div>
+        {/* Date Row */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Date</label>
+          <input
+            type="date"
+            required
+            value={dueDate}
+            onChange={e => setDueDate(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: '14px',
+              border: '1px solid rgba(255, 255, 255, 0.14)',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              color: '#FFF',
+              fontSize: '13px',
+              outline: 'none',
+              colorScheme: 'dark',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+        {/* Start Time & End Time Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>Start Time</label>
             <input
               type="time"
@@ -301,21 +301,20 @@ export const AddReminderModal: React.FC = () => {
               onChange={e => setDueTime(e.target.value)}
               style={{
                 width: '100%',
-                padding: '10px 8px',
+                padding: '10px 12px',
                 borderRadius: '14px',
                 border: '1px solid rgba(255, 255, 255, 0.14)',
                 backgroundColor: 'rgba(255, 255, 255, 0.08)',
                 color: '#FFF',
-                fontSize: '11px',
+                fontSize: '12px',
                 outline: 'none',
                 colorScheme: 'dark',
                 boxSizing: 'border-box',
-                minWidth: 0,
               }}
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label style={{ fontSize: '11px', fontWeight: 700, color: '#A0A0B2' }}>End Time</label>
             <input
               type="time"
@@ -323,16 +322,15 @@ export const AddReminderModal: React.FC = () => {
               onChange={e => setEndTime(e.target.value)}
               style={{
                 width: '100%',
-                padding: '10px 8px',
+                padding: '10px 12px',
                 borderRadius: '14px',
                 border: '1px solid rgba(255, 255, 255, 0.14)',
                 backgroundColor: 'rgba(255, 255, 255, 0.08)',
                 color: '#FFF',
-                fontSize: '11px',
+                fontSize: '12px',
                 outline: 'none',
                 colorScheme: 'dark',
                 boxSizing: 'border-box',
-                minWidth: 0,
               }}
             />
           </div>

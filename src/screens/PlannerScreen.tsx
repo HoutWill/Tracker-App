@@ -97,30 +97,6 @@ export const PlannerScreen: React.FC = () => {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {/* Add Reminder Button */}
-          <button
-            type="button"
-            className="glass-pill"
-            onClick={() => setIsAddReminderOpen(true)}
-            style={{
-              backgroundColor: 'var(--accent)',
-              borderColor: 'var(--accent)',
-              color: '#FFF',
-              fontSize: '12px',
-              fontWeight: 800,
-              padding: '6px 14px',
-              borderRadius: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              cursor: 'pointer',
-              boxShadow: 'none',
-            }}
-            title="Add Reminder"
-          >
-            <Plus size={15} />
-            <span>Add</span>
-          </button>
-
           {/* Web Push Alert Permission Pill Button */}
           <button
             type="button"

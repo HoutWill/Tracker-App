@@ -68,10 +68,12 @@ input, select, textarea, button {
   color: var(--text-primary);
 }
 
-/* Fix Native Date/Time picker text color in Dark Mode */
+/* Fix Native Date/Time picker text color and styling in iOS Safari & Mobile */
 input[type="date"], input[type="time"] {
   color-scheme: inherit;
   color: var(--text-primary);
+  background-color: var(--pill-bg);
+  border: 1px solid var(--border-glass);
 }
 
 /* Clean Professional Card Utilities */
