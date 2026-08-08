@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ReminderItem, ReminderCategory } from '../types';
 import { useReminders } from '../context/ReminderContext';
-import { X, Bell, Calendar, Clock, CheckSquare, Square, Trash2, Tag, Share2, Edit3, Save, Check } from 'lucide-react';
+import { X, Bell, Calendar, Clock, CheckSquare, Square, Trash2, Tag, Share2, Edit3, Save, Layers } from 'lucide-react';
 import { syncToAppleCalendar, shareToAppleReminders } from '../services/calendarSyncService';
 
 interface ReminderDetailModalProps {
@@ -21,6 +21,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
   const [editEndTime, setEditEndTime] = useState<string>('');
   const [editCategory, setEditCategory] = useState<ReminderCategory>('TASK');
   const [editLevel, setEditLevel] = useState<'URGENT' | 'FLAGGED' | 'SIMPLE'>('SIMPLE');
+  const [editPeriodScope, setEditPeriodScope] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'>('DAILY');
 
   useEffect(() => {
     if (reminder) {
@@ -31,6 +32,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       setEditEndTime(reminder.endTime || '');
       setEditCategory(reminder.category || 'TASK');
       setEditLevel(reminder.level || 'SIMPLE');
+      setEditPeriodScope(reminder.periodScope || 'DAILY');
       setIsEditing(false);
     }
   }, [reminder]);
@@ -57,6 +59,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       category: editCategory,
       level: editLevel,
       priority: editLevel === 'URGENT' ? 'HIGH' : 'MEDIUM',
+      periodScope: editPeriodScope,
     });
 
     setIsEditing(false);
@@ -193,6 +196,36 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                   boxSizing: 'border-box',
                 }}
               />
+            </div>
+
+            {/* Period Selector Grid (Wallet / Expenses Styled) */}
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+                Period
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                {(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'] as const).map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setEditPeriodScope(p)}
+                    style={{
+                      padding: '8px 2px',
+                      borderRadius: '10px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      border: editPeriodScope === p ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
+                      backgroundColor: editPeriodScope === p ? 'rgba(99, 102, 241, 0.18)' : 'var(--pill-bg)',
+                      color: editPeriodScope === p ? 'var(--accent)' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {p === 'DAILY' ? 'Daily' : p === 'WEEKLY' ? 'Weekly' : p === 'MONTHLY' ? 'Monthly' : 'Yearly'}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -385,7 +418,25 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                 )}
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                <span
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    padding: '2px 6px',
+                    borderRadius: '6px',
+                    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                    color: 'var(--accent)',
+                    border: '1px solid rgba(99, 102, 241, 0.25)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <Layers size={10} />
+                  {editPeriodScope === 'DAILY' ? 'Daily' : editPeriodScope === 'WEEKLY' ? 'Weekly' : editPeriodScope === 'MONTHLY' ? 'Monthly' : 'Yearly'}
+                </span>
+
                 <span
                   style={{
                     fontSize: '10px',

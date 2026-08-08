@@ -784,6 +784,18 @@ export const PlannerScreen: React.FC = () => {
                     >
                       {r.title}
                     </span>
+                    <span
+                      style={{
+                        fontSize: '9px',
+                        fontWeight: 700,
+                        padding: '2px 6px',
+                        borderRadius: '6px',
+                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                        color: 'var(--accent)',
+                      }}
+                    >
+                      {r.periodScope === 'WEEKLY' ? 'Weekly' : r.periodScope === 'MONTHLY' ? 'Monthly' : r.periodScope === 'YEARLY' ? 'Yearly' : 'Daily'}
+                    </span>
                     {r.level === 'URGENT' && !r.completed && (
                       <span
                         style={{
