@@ -45,7 +45,7 @@ export const syncToAppleCalendar = (event: CalendarEventPayload) => {
       `DTSTAMP:${stampStr}`,
       `DTSTART:${startStr}`,
       `DTEND:${endStr}`,
-      `SUMMARY:🔔 ${event.title}`,
+      `SUMMARY:[PiTrack] ${event.title}`,
       `DESCRIPTION:${event.notes || 'Scheduled reminder from Tracker App'}`,
       'BEGIN:VALARM',
       'ACTION:DISPLAY',
@@ -101,7 +101,7 @@ export const shareToAppleReminders = async (event: CalendarEventPayload): Promis
       `UID:tracker-reminder-${Date.now()}@tracker.app`,
       `DTSTAMP:${stampStr}`,
       `DUE:${dueStr}`,
-      `SUMMARY:🔔 ${event.title}`,
+      `SUMMARY:[PiTrack] ${event.title}`,
       `DESCRIPTION:${event.notes || 'Reminder from Tracker App'}`,
       'PRIORITY:1',
       'STATUS:NEEDS-ACTION',
@@ -128,7 +128,7 @@ export const shareToAppleReminders = async (event: CalendarEventPayload): Promis
     } else if (navigator.share) {
       await navigator.share({
         title: event.title,
-        text: `🔔 Reminder: ${event.title}\n📅 Date: ${event.dueDate} ${event.dueTime || ''}\n${event.notes || ''}`,
+        text: `[PiTrack] Reminder: ${event.title}\nDate: ${event.dueDate} ${event.dueTime || ''}\n${event.notes || ''}`,
       });
       return true;
     } else {
@@ -164,7 +164,7 @@ export const syncToAppleReminders = (event: CalendarEventPayload) => {
       `UID:tracker-reminder-${Date.now()}@tracker.app`,
       `DTSTAMP:${stampStr}`,
       `DUE:${dueStr}`,
-      `SUMMARY:🔔 ${event.title}`,
+      `SUMMARY:[PiTrack] ${event.title}`,
       `DESCRIPTION:${event.notes || 'Reminder from Tracker App'}`,
       'PRIORITY:1',
       'STATUS:NEEDS-ACTION',
