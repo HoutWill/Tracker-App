@@ -875,8 +875,8 @@ export const PlannerScreen: React.FC = () => {
           <div className="glass-panel" style={{ padding: '14px', borderRadius: '20px' }}>
             {/* Weekday headers */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '8px' }}>
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                <div key={d} style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)' }}>
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, idx) => (
+                <div key={d} style={{ fontSize: '11px', fontWeight: 800, color: (idx === 0 || idx === 6) ? 'var(--accent-danger)' : 'var(--text-muted)' }}>
                   {d}
                 </div>
               ))}
@@ -921,7 +921,7 @@ export const PlannerScreen: React.FC = () => {
                       position: 'relative',
                     }}
                   >
-                    <span style={{ fontSize: '12px', fontWeight: 800, color: isToday ? '#FF4081' : 'var(--text-primary)' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: isToday ? '#FF4081' : (() => { const dow = new Date(item.dateStr + 'T00:00:00').getDay(); return (dow === 0 || dow === 6) ? 'var(--accent-danger)' : 'var(--text-primary)'; })() }}>
                       {item.dayNum}
                     </span>
 

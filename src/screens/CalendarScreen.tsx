@@ -635,6 +635,8 @@ export const CalendarScreen: React.FC = () => {
               const isBuddhaDay = item.dateDetails.isBuddhaDay;
               const isCultural = !!item.dateDetails.culturalEvent;
               const net = item.netDailyBalance;
+              const dayOfWeekNum = new Date(item.dateStr + 'T00:00:00').getDay();
+              const isWeekend = dayOfWeekNum === 0 || dayOfWeekNum === 6;
 
               return (
                 <div
@@ -673,6 +675,8 @@ export const CalendarScreen: React.FC = () => {
                           ? 'var(--accent-danger)'
                           : isSel
                           ? 'var(--text-primary)'
+                          : isWeekend
+                          ? 'var(--accent-danger)'
                           : 'var(--text-secondary)',
                       }}
                     >
