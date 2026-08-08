@@ -6,14 +6,8 @@ import { X, Bell, Check, Calendar, Clock, AlertCircle, Mic, Square } from 'lucid
 import { syncToAppleCalendar } from '../services/calendarSyncService';
 import { startVoiceRecognition } from '../services/speechService';
 
-const getCurrentTimeString = () => {
-  const now = new Date();
-  const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
-  return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-};
-
-const getEndTimeString = () => {
-  const now = new Date(Date.now() + 30 * 60 * 1000);
+const getFutureTimeString = (minutesToAdd: number = 5) => {
+  const now = new Date(Date.now() + minutesToAdd * 60 * 1000);
   const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
   return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 };
@@ -38,8 +32,8 @@ export const AddReminderModal: React.FC = () => {
   const [level, setLevel] = useState<'URGENT' | 'FLAGGED' | 'SIMPLE'>('SIMPLE');
   const [category, setCategory] = useState<ReminderCategory>('TASK');
   const [dueDate, setDueDate] = useState(getTodayDateString());
-  const [dueTime, setDueTime] = useState(getCurrentTimeString());
-  const [endTime, setEndTime] = useState(getEndTimeString());
+  const [dueTime, setDueTime] = useState(getFutureTimeString(5));
+  const [endTime, setEndTime] = useState(getFutureTimeString(35));
   const [alertEnabled, setAlertEnabled] = useState(true);
   const [syncCalendar, setSyncCalendar] = useState(true);
   const [activeField, setActiveField] = useState<'title' | 'notes' | null>(null);
@@ -87,8 +81,8 @@ export const AddReminderModal: React.FC = () => {
   useEffect(() => {
     if (isAddReminderOpen) {
       setDueDate(getTodayDateString());
-      setDueTime(getCurrentTimeString());
-      setEndTime(getEndTimeString());
+      setDueTime(getFutureTimeString(5));
+      setEndTime(getFutureTimeString(35));
 
       if (presetDraft) {
         setTitle(presetDraft.title || '');
