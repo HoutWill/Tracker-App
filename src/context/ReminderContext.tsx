@@ -11,6 +11,7 @@ interface ReminderContextType {
   openAddReminderWithPreset: (preset: Partial<ReminderItem>) => void;
   addReminder: (item: Omit<ReminderItem, 'id' | 'createdAt' | 'completed'>) => void;
   toggleReminder: (id: string) => void;
+  updateReminder: (id: string, fields: Partial<ReminderItem>) => void;
   deleteReminder: (id: string) => void;
   isNotificationEnabled: boolean;
   requestNotificationPermission: () => Promise<boolean>;
@@ -116,6 +117,12 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     StorageService.saveReminders(updated);
   };
 
+  const updateReminder = (id: string, fields: Partial<ReminderItem>) => {
+    const updated = reminders.map(r => (r.id === id ? { ...r, ...fields } : r));
+    setReminders(updated);
+    StorageService.saveReminders(updated);
+  };
+
   const deleteReminder = (id: string) => {
     const updated = reminders.filter(r => r.id !== id);
     setReminders(updated);
@@ -155,6 +162,7 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         openAddReminderWithPreset,
         addReminder,
         toggleReminder,
+        updateReminder,
         deleteReminder,
         isNotificationEnabled,
         requestNotificationPermission,

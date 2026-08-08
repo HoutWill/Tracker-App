@@ -166,13 +166,30 @@ export const PlannerScreen: React.FC = () => {
   const urgentReminders = reminders.filter(r => r.level === 'URGENT' && !r.completed);
   const completedReminders = reminders.filter(r => r.completed);
 
-  const handleTaskClick = (id: string) => {
-    triggerHaptic(12);
-    toggleReminder(id);
+  const [periodTab, setPeriodTab] = useState<'ALL' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'>('ALL');
+
+  const isThisWeek = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      const now = new Date();
+      const first = now.getDate() - now.getDay();
+      const last = first + 6;
+      const startOfWeek = new Date(now.setDate(first));
+      const endOfWeek = new Date(now.setDate(last));
+      return d >= startOfWeek && d <= endOfWeek;
+    } catch (e) {
+      return false;
+    }
   };
 
   const displayedReminders = reminders
     .filter(r => {
+      // Period scope filter
+      if (periodTab === 'DAILY' && r.dueDate !== today) return false;
+      if (periodTab === 'WEEKLY' && !isThisWeek(r.dueDate)) return false;
+      if (periodTab === 'MONTHLY' && !r.dueDate.startsWith(today.slice(0, 7))) return false;
+      if (periodTab === 'YEARLY' && !r.dueDate.startsWith(today.slice(0, 4))) return false;
+
       // Search query filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
@@ -668,6 +685,31 @@ export const PlannerScreen: React.FC = () => {
           })}
         </div>
 
+        {/* Period Scope Filter Bar (Daily, Weekly, Monthly, Yearly, All) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', marginBottom: '12px' }}>
+          {(['ALL', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'] as const).map(p => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPeriodTab(p)}
+              style={{
+                padding: '8px 2px',
+                borderRadius: '12px',
+                border: periodTab === p ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
+                backgroundColor: periodTab === p ? 'rgba(99, 102, 241, 0.18)' : 'var(--bg-card)',
+                color: periodTab === p ? 'var(--accent)' : 'var(--text-secondary)',
+                fontSize: '11px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                textAlign: 'center',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {p === 'ALL' ? 'All' : p === 'DAILY' ? 'Daily' : p === 'WEEKLY' ? 'Weekly' : p === 'MONTHLY' ? 'Monthly' : 'Yearly'}
+            </button>
+          ))}
+        </div>
+
       {/* Reminders & Todo Checklist Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', padding: '0 2px' }}>
         <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
@@ -685,7 +727,10 @@ export const PlannerScreen: React.FC = () => {
             <div
               key={r.id}
               className="glass-panel"
-              onClick={() => handleTaskClick(r.id)}
+              onClick={() => {
+                triggerHaptic(12);
+                setSelectedReminderForDetail(r);
+              }}
               style={{
                 padding: '14px 16px',
                 borderRadius: '20px',
@@ -703,6 +748,11 @@ export const PlannerScreen: React.FC = () => {
               {/* Left Checkbox & Info */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, overflow: 'hidden' }}>
                 <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerHaptic(12);
+                    toggleReminder(r.id);
+                  }}
                   style={{
                     width: '22px',
                     height: '22px',
@@ -714,6 +764,7 @@ export const PlannerScreen: React.FC = () => {
                     justifyContent: 'center',
                     color: '#141416',
                     flexShrink: 0,
+                    cursor: 'pointer',
                     transition: 'all 0.15s ease',
                   }}
                 >
