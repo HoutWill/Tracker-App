@@ -22,10 +22,6 @@ export const PLANNER_QUICK_PRESETS: PlannerPreset[] = [
   { id: 'p-3', title: 'Meeting', category: 'MEETING', level: 'FLAGGED', icon: 'users', color: '#4A99E9' },
   { id: 'p-4', title: 'Study', category: 'STUDY', level: 'SIMPLE', icon: 'book-open', color: '#6C5CE7' },
   { id: 'p-5', title: 'Doctor', category: 'HEALTH', level: 'URGENT', icon: 'heart', color: '#30D158' },
-  { id: 'p-6', title: 'Shopping', category: 'FUN', level: 'SIMPLE', icon: 'shopping-bag', color: '#FF9F0A' },
-  { id: 'p-7', title: 'Work', category: 'WORK', level: 'SIMPLE', icon: 'briefcase', color: '#6C7B8A' },
-  { id: 'p-8', title: 'Water', category: 'HEALTH', level: 'SIMPLE', icon: 'droplets', color: '#64D2FF' },
-  { id: 'p-9', title: 'Groceries', category: 'FUN', level: 'SIMPLE', icon: 'shopping-cart', color: '#A060FF' },
 ];
 
 export const QUICK_PRESETS = [...EXPENSE_QUICK_PRESETS, ...SAVING_QUICK_PRESETS];

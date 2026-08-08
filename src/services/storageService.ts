@@ -321,11 +321,19 @@ export const StorageService = {
 
   getPlannerPresetsList(defaultList: PlannerPreset[]): PlannerPreset[] {
     const guestId = getGuestId();
-    const key = `planner_presets_custom_${guestId}`;
+    const key = `planner_presets_v2_${guestId}`;
     try {
-      const local = localStorage.getItem(key) || localStorage.getItem('planner_presets_custom');
-      if (!local) return defaultList;
-      return JSON.parse(local);
+      const local = localStorage.getItem(key);
+      if (!local) {
+        localStorage.setItem(key, JSON.stringify(defaultList));
+        return defaultList;
+      }
+      const parsed: PlannerPreset[] = JSON.parse(local);
+      if (Array.isArray(parsed) && parsed.length === 5) {
+        return parsed;
+      }
+      localStorage.setItem(key, JSON.stringify(defaultList));
+      return defaultList;
     } catch (e) {
       return defaultList;
     }
@@ -528,134 +536,15 @@ export const StorageService = {
 
   getReminders(): ReminderItem[] {
     const guestId = getGuestId();
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    const inTwoDays = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0];
-    const inThreeDays = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
-
-    const defaultDemoReminders: ReminderItem[] = [
-      {
-        id: 'rem-bills-1',
-        title: 'Electricity',
-        notes: 'Pay monthly power bill',
-        dueDate: getTodayDateString(),
-        dueTime: '18:00',
-        category: 'BILLS',
-        priority: 'HIGH',
-        level: 'URGENT',
-        completed: false,
-        alertEnabled: true,
-        createdAt: Date.now(),
-      },
-      {
-        id: 'rem-meeting-1',
-        title: 'Team Briefing',
-        notes: 'Project sprint review',
-        dueDate: getTodayDateString(),
-        dueTime: '14:30',
-        category: 'MEETING',
-        priority: 'HIGH',
-        level: 'URGENT',
-        completed: false,
-        alertEnabled: true,
-        createdAt: Date.now() - 500,
-      },
-      {
-        id: 'rem-study-1',
-        title: 'Algorithm Study',
-        notes: 'Chapter 4 data structures',
-        dueDate: getTodayDateString(),
-        dueTime: '20:00',
-        category: 'STUDY',
-        priority: 'MEDIUM',
-        level: 'SIMPLE',
-        completed: false,
-        alertEnabled: false,
-        createdAt: Date.now() - 1000,
-      },
-      {
-        id: 'rem-sport-1',
-        title: 'Gym Workout',
-        notes: 'Leg day session',
-        dueDate: tomorrow,
-        dueTime: '07:00',
-        category: 'SPORT',
-        priority: 'MEDIUM',
-        level: 'SIMPLE',
-        completed: false,
-        alertEnabled: true,
-        createdAt: Date.now() - 1500,
-      },
-      {
-        id: 'rem-fun-1',
-        title: 'Cinema Night',
-        notes: 'Watch new sci-fi movie',
-        dueDate: inTwoDays,
-        dueTime: '19:30',
-        category: 'FUN',
-        priority: 'LOW',
-        level: 'SIMPLE',
-        completed: false,
-        alertEnabled: false,
-        createdAt: Date.now() - 2000,
-      },
-      {
-        id: 'rem-saving-1',
-        title: 'Emergency Deposit',
-        notes: 'Transfer $200 to Vault',
-        dueDate: inThreeDays,
-        dueTime: '09:00',
-        category: 'SAVINGS',
-        priority: 'HIGH',
-        level: 'URGENT',
-        completed: false,
-        alertEnabled: true,
-        createdAt: Date.now() - 2500,
-      },
-      {
-        id: 'rem-task-1',
-        title: 'Groceries',
-        notes: 'Milk, eggs & fruits',
-        dueDate: getTodayDateString(),
-        dueTime: '10:00',
-        category: 'TASK',
-        priority: 'LOW',
-        level: 'SIMPLE',
-        completed: true,
-        alertEnabled: false,
-        createdAt: Date.now() - 3000,
-      },
-      {
-        id: 'rem-health-1',
-        title: 'Dental Checkup',
-        notes: 'Routine cleaning appointment',
-        dueDate: getTodayDateString(),
-        dueTime: '11:00',
-        category: 'HEALTH',
-        priority: 'HIGH',
-        level: 'URGENT',
-        completed: true,
-        alertEnabled: false,
-        createdAt: Date.now() - 3500,
-      },
-    ];
     try {
-      const userKey = `reminders_${guestId}`;
+      const userKey = `reminders_v2_${guestId}`;
       const local = localStorage.getItem(userKey);
       if (local) {
         return JSON.parse(local);
       }
-      if (guestId.startsWith('usr_')) {
-        return [];
-      }
-      const fallback = localStorage.getItem('pitrack_reminders_data');
-      if (fallback) {
-        return JSON.parse(fallback);
-      }
-      localStorage.setItem('pitrack_reminders_data', JSON.stringify(defaultDemoReminders));
-      localStorage.setItem(userKey, JSON.stringify(defaultDemoReminders));
-      return defaultDemoReminders;
+      return [];
     } catch (e) {
-      return defaultDemoReminders;
+      return [];
     }
   },
 
