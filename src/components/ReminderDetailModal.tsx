@@ -19,9 +19,10 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
   const [editDueDate, setEditDueDate] = useState<string>('');
   const [editDueTime, setEditDueTime] = useState<string>('');
   const [editEndTime, setEditEndTime] = useState<string>('');
+  const [editAlertDate, setEditAlertDate] = useState<string>('');
+  const [editAlertTime, setEditAlertTime] = useState<string>('');
   const [editCategory, setEditCategory] = useState<ReminderCategory>('TASK');
   const [editLevel, setEditLevel] = useState<'URGENT' | 'FLAGGED' | 'SIMPLE'>('SIMPLE');
-  const [editPeriodScope, setEditPeriodScope] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'>('DAILY');
 
   useEffect(() => {
     if (reminder) {
@@ -30,9 +31,10 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       setEditDueDate(reminder.dueDate || '');
       setEditDueTime(reminder.dueTime || '09:00');
       setEditEndTime(reminder.endTime || '');
+      setEditAlertDate(reminder.alertDate || reminder.dueDate || '');
+      setEditAlertTime(reminder.alertTime || reminder.dueTime || '09:00');
       setEditCategory(reminder.category || 'TASK');
       setEditLevel(reminder.level || 'SIMPLE');
-      setEditPeriodScope(reminder.periodScope || 'DAILY');
       setIsEditing(false);
     }
   }, [reminder]);
@@ -56,10 +58,11 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       dueDate: editDueDate,
       dueTime: editDueTime,
       endTime: editEndTime,
+      alertDate: editAlertDate,
+      alertTime: editAlertTime,
       category: editCategory,
       level: editLevel,
       priority: editLevel === 'URGENT' ? 'HIGH' : 'MEDIUM',
-      periodScope: editPeriodScope,
     });
 
     setIsEditing(false);
@@ -72,6 +75,8 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       dueDate: editDueDate || reminder.dueDate,
       dueTime: editDueTime || reminder.dueTime,
       endTime: editEndTime || reminder.endTime,
+      alertDate: editAlertDate || reminder.alertDate,
+      alertTime: editAlertTime || reminder.alertTime,
       category: editCategory || reminder.category,
     });
   };
@@ -83,6 +88,8 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       dueDate: editDueDate || reminder.dueDate,
       dueTime: editDueTime || reminder.dueTime,
       endTime: editEndTime || reminder.endTime,
+      alertDate: editAlertDate || reminder.alertDate,
+      alertTime: editAlertTime || reminder.alertTime,
       category: editCategory || reminder.category,
     });
   };
@@ -263,6 +270,48 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
               />
             </div>
 
+            {/* Dedicated Alert Date & Alert Time Section */}
+            <div style={{ padding: '10px 12px', borderRadius: '12px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Bell size={13} color="#F3A85B" />
+                <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)' }}>Alert Time</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <input
+                  type="date"
+                  value={editAlertDate}
+                  onChange={e => setEditAlertDate(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-glass)',
+                    backgroundColor: 'var(--bg-card)',
+                    color: 'var(--text-primary)',
+                    fontSize: '11px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <input
+                  type="time"
+                  value={editAlertTime}
+                  onChange={e => setEditAlertTime(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-glass)',
+                    backgroundColor: 'var(--bg-card)',
+                    color: 'var(--text-primary)',
+                    fontSize: '11px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <div>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Category</label>
@@ -434,10 +483,31 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Clock size={15} style={{ color: 'var(--text-secondary)' }} />
                 <div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>Time</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>Event Time</div>
                   <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {reminder.dueTime || 'Task'}{reminder.endTime ? ` - ${reminder.endTime}` : ''}
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Alert Alarm Time Box */}
+            <div
+              style={{
+                padding: '10px 12px',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(243, 168, 91, 0.12)',
+                border: '1px solid rgba(243, 168, 91, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <Bell size={15} color="#F3A85B" />
+              <div>
+                <div style={{ fontSize: '10px', color: '#F3A85B', fontWeight: 700 }}>Alert Alarm Time</div>
+                <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  {reminder.alertDate || reminder.dueDate} @ {reminder.alertTime || reminder.dueTime || '09:00'}
                 </div>
               </div>
             </div>

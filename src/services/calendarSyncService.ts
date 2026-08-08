@@ -2,10 +2,12 @@ export interface CalendarEventPayload {
   title: string;
   notes?: string;
   dueDate: string; // YYYY-MM-DD
-  dueTime?: string; // HH:mm
-  endTime?: string; // HH:mm
+  dueTime?: string; // HH:mm (Start Time)
+  endTime?: string; // HH:mm (End Time)
+  alertDate?: string; // YYYY-MM-DD (Alert Date)
+  alertTime?: string; // HH:mm (Alert Time)
   category?: string;
-  alarmOffsetMinutes?: number; // 0 = exact time, 15 = 15m before, 30 = 30m before
+  alarmOffsetMinutes?: number;
 }
 
 export const syncToAppleCalendar = async (event: CalendarEventPayload) => {
@@ -38,12 +40,25 @@ export const syncToAppleCalendar = async (event: CalendarEventPayload) => {
     const now = new Date();
     const stampStr = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}00Z`;
 
-    const offset = event.alarmOffsetMinutes || 0;
-    const triggerStr = offset === 0 ? '-PT0M' : `-PT${offset}M`;
+    // Dedicated Alert Date and Alert Time calculation
+    const targetAlertDate = event.alertDate || event.dueDate;
+    const targetAlertTime = event.alertTime || event.dueTime || '09:00';
 
-    const diffMs = endDate.getTime() - startDate.getTime();
-    const diffMinutes = Math.max(1, Math.round(diffMs / (60 * 1000)));
-    const endTriggerStr = `+PT${diffMinutes}M`;
+    const [alertYear, alertMonth, alertDay] = targetAlertDate.split('-').map(Number);
+    const [alertHour, alertMinute] = targetAlertTime.split(':').map(Number);
+    const alertDateObj = new Date(alertYear, alertMonth - 1, alertDay, alertHour, alertMinute, 0);
+
+    const alertDiffMs = alertDateObj.getTime() - startDate.getTime();
+    const alertDiffMinutes = Math.round(alertDiffMs / (60 * 1000));
+
+    let alertTriggerStr = '-PT0M';
+    if (alertDiffMinutes === 0) {
+      alertTriggerStr = '-PT0M';
+    } else if (alertDiffMinutes > 0) {
+      alertTriggerStr = `+PT${alertDiffMinutes}M`;
+    } else {
+      alertTriggerStr = `-PT${Math.abs(alertDiffMinutes)}M`;
+    }
 
     const icsLines = [
       'BEGIN:VCALENDAR',
@@ -58,26 +73,15 @@ export const syncToAppleCalendar = async (event: CalendarEventPayload) => {
       `DTEND:${endStr}`,
       `SUMMARY:[PiTrack] ${event.title}`,
       `DESCRIPTION:${event.notes || 'Scheduled reminder from Tracker App'}`,
-      // Start Time Alert
+      // Dedicated Alert Time Trigger
       'BEGIN:VALARM',
       'ACTION:DISPLAY',
-      `DESCRIPTION:Start Alert: ${event.title}`,
-      `TRIGGER:${triggerStr}`,
+      `DESCRIPTION:Alert: ${event.title}`,
+      `TRIGGER:${alertTriggerStr}`,
       'END:VALARM',
       'BEGIN:VALARM',
       'ACTION:AUDIO',
-      `TRIGGER:${triggerStr}`,
-      'ATTACH;VALUE=URI:Basso',
-      'END:VALARM',
-      // End Time Alert (Exact minute offset relative to start time)
-      'BEGIN:VALARM',
-      'ACTION:DISPLAY',
-      `DESCRIPTION:End Due Alert: ${event.title}`,
-      `TRIGGER:${endTriggerStr}`,
-      'END:VALARM',
-      'BEGIN:VALARM',
-      'ACTION:AUDIO',
-      `TRIGGER:${endTriggerStr}`,
+      `TRIGGER:${alertTriggerStr}`,
       'ATTACH;VALUE=URI:Basso',
       'END:VALARM',
       'END:VEVENT',

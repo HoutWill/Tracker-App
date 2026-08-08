@@ -34,6 +34,8 @@ export const AddReminderModal: React.FC = () => {
   const [dueDate, setDueDate] = useState(getTodayDateString());
   const [dueTime, setDueTime] = useState(getFutureTimeString(5));
   const [endTime, setEndTime] = useState(getFutureTimeString(35));
+  const [alertDate, setAlertDate] = useState(getTodayDateString());
+  const [alertTime, setAlertTime] = useState(getFutureTimeString(5));
   const [alertEnabled, setAlertEnabled] = useState(true);
   const [syncCalendar, setSyncCalendar] = useState(true);
   const [activeField, setActiveField] = useState<'title' | 'notes' | null>(null);
@@ -83,6 +85,8 @@ export const AddReminderModal: React.FC = () => {
       setDueDate(getTodayDateString());
       setDueTime(getFutureTimeString(5));
       setEndTime(getFutureTimeString(35));
+      setAlertDate(getTodayDateString());
+      setAlertTime(getFutureTimeString(5));
 
       if (presetDraft) {
         setTitle(presetDraft.title || '');
@@ -112,6 +116,9 @@ export const AddReminderModal: React.FC = () => {
       level,
       dueDate,
       dueTime,
+      endTime,
+      alertDate,
+      alertTime,
       alertEnabled,
     });
 
@@ -122,6 +129,8 @@ export const AddReminderModal: React.FC = () => {
         dueDate,
         dueTime,
         endTime,
+        alertDate,
+        alertTime,
         category,
       });
     }
@@ -427,6 +436,48 @@ export const AddReminderModal: React.FC = () => {
                 fontSize: '12px',
                 outline: 'none',
                 colorScheme: 'inherit',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Dedicated Alert Date & Alert Time Section */}
+        <div style={{ padding: '12px', borderRadius: '16px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Bell size={14} color="#F3A85B" />
+            <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-primary)' }}>Alert Time</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <input
+              type="date"
+              value={alertDate}
+              onChange={e => setAlertDate(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                borderRadius: '10px',
+                border: '1px solid var(--border-glass)',
+                backgroundColor: 'var(--bg-card)',
+                color: 'var(--text-primary)',
+                fontSize: '11px',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+            <input
+              type="time"
+              value={alertTime}
+              onChange={e => setAlertTime(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                borderRadius: '10px',
+                border: '1px solid var(--border-glass)',
+                backgroundColor: 'var(--bg-card)',
+                color: 'var(--text-primary)',
+                fontSize: '11px',
+                outline: 'none',
                 boxSizing: 'border-box',
               }}
             />

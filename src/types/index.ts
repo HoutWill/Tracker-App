@@ -70,6 +70,8 @@ export interface ReminderItem {
   level: 'URGENT' | 'FLAGGED' | 'SIMPLE';
   completed: boolean;
   alertEnabled?: boolean;
+  alertDate?: string; // YYYY-MM-DD
+  alertTime?: string; // HH:mm
   periodScope?: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
   createdAt: number;
 }
