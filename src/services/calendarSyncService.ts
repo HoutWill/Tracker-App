@@ -8,7 +8,7 @@ export interface CalendarEventPayload {
   alarmOffsetMinutes?: number; // 0 = exact time, 15 = 15m before, 30 = 30m before
 }
 
-export const syncToAppleCalendar = (event: CalendarEventPayload) => {
+export const syncToAppleCalendar = async (event: CalendarEventPayload) => {
   try {
     const [year, month, day] = event.dueDate.split('-').map(Number);
     const [hour, minute] = (event.dueTime || '09:00').split(':').map(Number);
@@ -62,12 +62,14 @@ export const syncToAppleCalendar = (event: CalendarEventPayload) => {
     ];
 
     const icsContent = icsLines.join('\r\n');
-    const isIOS = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+    const fileName = `${event.title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
+    const file = new File([icsContent], fileName, { type: 'text/calendar' });
 
-    if (isIOS) {
-      // Data URI triggers native iOS Calendar import popup directly without "Safari cannot download this file" error
-      const dataUri = 'data:text/calendar;charset=utf8,' + encodeURIComponent(icsContent);
-      window.location.href = dataUri;
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: `[PiTrack] ${event.title}`,
+        files: [file],
+      });
       return true;
     }
 
@@ -76,7 +78,7 @@ export const syncToAppleCalendar = (event: CalendarEventPayload) => {
 
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${event.title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -127,7 +129,13 @@ export const shareToAppleReminders = async (event: CalendarEventPayload): Promis
     const fileName = `${event.title.replace(/[^a-zA-Z0-9]/g, '_')}_reminder.ics`;
     const file = new File([icsContent], fileName, { type: 'text/calendar' });
 
-    if (navigator.share) {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: `[PiTrack] ${event.title}`,
+        files: [file],
+      });
+      return true;
+    } else if (navigator.share) {
       const timeStr = event.dueTime ? ` at ${event.dueTime}` : '';
       const notesStr = event.notes ? `\nNotes: ${event.notes}` : '';
       await navigator.share({
