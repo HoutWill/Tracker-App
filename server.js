@@ -172,79 +172,77 @@ app.post('/api/auth/register', authRateLimit, (req, res) => {
   }
 
   if (!password || typeof password !== 'string' || password.length < 6 || password.length > 64) {
-    return res.status(400).json({ error: 'Password must be between 6 and 64 characters' });
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
 
   const users = readUsers();
   const existing = users.find(u => u.email === cleanEmail);
   if (existing) {
-    // Generic non-disclosing error response to prevent account enumeration
-    return res.status(400).json({ error: 'Unable to process registration with these credentials' });
+    return res.status(400).json({ error: 'Account already exists. Please log in.' });
   }
 
-  // Deterministic accountId: same email always maps to same ID on any device/server
-  const accountId = 'usr_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
+  // Deterministic pkid: same email always maps to same ID on any device/server
+  const pkid = 'usr_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
+  const now = Date.now();
   const newUser = {
-    accountId,
+    pkid,
+    accountId: pkid,
     email: cleanEmail,
     passwordHash: hashPassword(password),
     name: (name || cleanEmail.split('@')[0]).trim(),
-    createdAt: Date.now(),
+    createdAt: now,
+    updatedAt: now,
   };
 
   users.push(newUser);
   writeUsers(users);
 
-  // If user has existing guest data, migrate/bind it to accountId
+  // If user has existing guest data, migrate/bind it to pkid
   if (guestId) {
     const guestFile = path.join(DATA_DIR, `expenses_${String(guestId).replace(/[^a-zA-Z0-9_-]/g, '_')}.json`);
-    const userFile = path.join(DATA_DIR, `expenses_${accountId}.json`);
+    const userFile = path.join(DATA_DIR, `expenses_${pkid}.json`);
     if (fs.existsSync(guestFile) && !fs.existsSync(userFile)) {
       fs.copyFileSync(guestFile, userFile);
     }
   }
 
   res.status(201).json({
-    user: { accountId: newUser.accountId, email: newUser.email, name: newUser.name },
-    token: 'jwt-' + newUser.accountId,
+    user: { pkid: newUser.pkid, accountId: newUser.pkid, email: newUser.email, name: newUser.name },
+    token: 'jwt-' + newUser.pkid,
   });
 });
 
-// Auth API: Login (Rate Limited: 6 req/min & Non-Disclosing Security Error)
+// Auth API: Login (Rate Limited: 6 req/min)
 app.post('/api/auth/login', authRateLimit, (req, res) => {
   const { email, password } = req.body;
   const cleanEmail = (email || '').trim().toLowerCase();
 
   if (!cleanEmail || !password) {
-    return res.status(400).json({ error: 'Invalid credentials' });
+    return res.status(400).json({ error: 'Email and password are required' });
   }
 
   const users = readUsers();
   const pwdHash = hashPassword(password);
 
-  // Find by email first, then verify password
   const user = users.find(u => u.email === cleanEmail && (u.passwordHash === pwdHash || u.password === password));
 
   if (!user) {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
 
-  // Ensure accountId is always the deterministic email-derived one
-  // (migrates old random IDs to deterministic ones transparently)
-  const deterministicId = 'usr_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
-  const accountId = user.accountId || deterministicId;
+  const pkid = user.pkid || user.accountId || ('usr_' + cleanEmail.replace(/[^a-z0-9]/g, '_'));
 
   res.json({
-    user: { accountId, email: user.email, name: user.name },
-    token: 'jwt-' + accountId,
+    user: { pkid, accountId: pkid, email: user.email, name: user.name },
+    token: 'jwt-' + pkid,
   });
 });
 
-// Universal Account Cloud Sync Endpoint (Auto Cross-Device Instant Sync)
+// Universal Account Cloud Sync Endpoint
 app.get('/api/sync', (req, res) => {
-  const accountId = req.query.accountId || req.headers['x-guest-id'];
-  if (!accountId) return res.status(400).json({ error: 'Account ID required' });
-  const cleanId = String(accountId).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const pkid = req.query.pkid || req.query.accountId || req.headers['x-guest-id'];
+  if (!pkid) return res.status(400).json({ error: 'pkid parameter is required' });
+  const cleanId = String(pkid).replace(/[^a-zA-Z0-9_-]/g, '_');
   const accountFile = path.join(DATA_DIR, `account_${cleanId}.json`);
 
   if (fs.existsSync(accountFile)) {
