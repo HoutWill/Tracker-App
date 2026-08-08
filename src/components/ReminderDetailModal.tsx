@@ -207,41 +207,43 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
 
 
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Start Time</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
+              <div style={{ minWidth: 0 }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Start</label>
                 <input
                   type="time"
                   value={editDueTime}
                   onChange={e => setEditDueTime(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '8px 10px',
+                    minWidth: 0,
+                    padding: '8px 6px',
                     borderRadius: '10px',
                     backgroundColor: 'var(--pill-bg)',
                     border: '1px solid var(--border-glass)',
                     color: 'var(--text-primary)',
-                    fontSize: '12px',
+                    fontSize: '11px',
                     outline: 'none',
                     boxSizing: 'border-box',
                   }}
                 />
               </div>
 
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>End Time</label>
+              <div style={{ minWidth: 0 }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>End</label>
                 <input
                   type="time"
                   value={editEndTime}
                   onChange={e => setEditEndTime(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '8px 10px',
+                    minWidth: 0,
+                    padding: '8px 6px',
                     borderRadius: '10px',
                     backgroundColor: 'var(--pill-bg)',
                     border: '1px solid var(--border-glass)',
                     color: 'var(--text-primary)',
-                    fontSize: '12px',
+                    fontSize: '11px',
                     outline: 'none',
                     boxSizing: 'border-box',
                   }}
@@ -258,7 +260,8 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                 required
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  minWidth: 0,
+                  padding: '9px 10px',
                   borderRadius: '10px',
                   backgroundColor: 'var(--pill-bg)',
                   border: '1px solid var(--border-glass)',
@@ -271,44 +274,50 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
             </div>
 
             {/* Dedicated Alert Date & Alert Time Section */}
-            <div style={{ padding: '10px 12px', borderRadius: '12px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ padding: '10px 12px', borderRadius: '14px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)', display: 'flex', flexDirection: 'column', gap: '6px', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Bell size={13} color="#F3A85B" />
-                <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)' }}>Alert Time</span>
+                <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)' }}>Alert</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <input
-                  type="date"
-                  value={editAlertDate}
-                  onChange={e => setEditAlertDate(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-glass)',
-                    backgroundColor: 'var(--bg-card)',
-                    color: 'var(--text-primary)',
-                    fontSize: '11px',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                <input
-                  type="time"
-                  value={editAlertTime}
-                  onChange={e => setEditAlertTime(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-glass)',
-                    backgroundColor: 'var(--bg-card)',
-                    color: 'var(--text-primary)',
-                    fontSize: '11px',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
+                <div style={{ minWidth: 0 }}>
+                  <input
+                    type="date"
+                    value={editAlertDate}
+                    onChange={e => setEditAlertDate(e.target.value)}
+                    style={{
+                      width: '100%',
+                      minWidth: 0,
+                      padding: '7px 6px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-glass)',
+                      backgroundColor: 'var(--bg-card)',
+                      color: 'var(--text-primary)',
+                      fontSize: '11px',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <input
+                    type="time"
+                    value={editAlertTime}
+                    onChange={e => setEditAlertTime(e.target.value)}
+                    style={{
+                      width: '100%',
+                      minWidth: 0,
+                      padding: '7px 6px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-glass)',
+                      backgroundColor: 'var(--bg-card)',
+                      color: 'var(--text-primary)',
+                      fontSize: '11px',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
               </div>
             </div>
 

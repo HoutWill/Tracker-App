@@ -153,49 +153,59 @@ export const AddReminderModal: React.FC = () => {
         inset: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.75)',
         backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        zIndex: 150,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '16px',
-        zIndex: 1000,
+        boxSizing: 'border-box',
       }}
       onClick={handleClose}
     >
-      <form
-        onSubmit={handleSubmit}
-        onClick={e => e.stopPropagation()}
+      <div
         className="glass-panel"
+        onClick={e => e.stopPropagation()}
         style={{
-          width: '100%',
-          maxWidth: '380px',
-          padding: '24px',
+          width: 'calc(100vw - 32px)',
+          maxWidth: '420px',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          padding: '20px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: '14px',
           borderRadius: '24px',
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-glass)',
-          boxShadow: 'var(--shadow-card)',
-          color: 'var(--text-primary)',
+          boxSizing: 'border-box',
         }}
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Bell size={18} color="#4A99E9" />
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>Reminder</h3>
+            <Bell size={18} style={{ color: 'var(--accent)' }} />
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
+              Reminder
+            </h3>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Title Input Pill with Voice & Cancel */}
+        {/* Title Input with Voice Support */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Title</label>
@@ -205,18 +215,17 @@ export const AddReminderModal: React.FC = () => {
               style={{
                 background: 'none',
                 border: 'none',
-                color: activeField === 'title' ? '#EC668C' : '#4A99E9',
+                color: activeField === 'title' ? '#EC668C' : 'var(--accent)',
+                fontSize: '11px',
+                fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '11px',
-                fontWeight: 700,
               }}
-              title="Speak to dictate title"
             >
-              {activeField === 'title' ? <Square size={13} fill="currentColor" /> : <Mic size={14} />}
-              <span>{activeField === 'title' ? 'Cancel' : 'Voice'}</span>
+              <Mic size={12} />
+              <span>{activeField === 'title' ? 'Listening' : 'Voice'}</span>
             </button>
           </div>
           <input
@@ -224,22 +233,23 @@ export const AddReminderModal: React.FC = () => {
             required
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder={activeField === 'title' ? 'Listening... Speak now' : 'Bills, Workout...'}
+            placeholder={activeField === 'title' ? 'Listening...' : 'Title'}
             style={{
               width: '100%',
-              padding: '12px 16px',
-              borderRadius: '16px',
-              border: activeField === 'title' ? '1.5px solid #4A99E9' : '1px solid var(--border-glass)',
+              padding: '12px 14px',
+              borderRadius: '14px',
+              border: activeField === 'title' ? '1.5px solid #EC668C' : '1px solid var(--border-glass)',
               backgroundColor: 'var(--pill-bg)',
               color: 'var(--text-primary)',
               fontSize: '14px',
-              outline: 'none',
               fontWeight: 600,
+              outline: 'none',
+              boxSizing: 'border-box',
             }}
           />
         </div>
 
-        {/* Notes Input Pill with Voice & Cancel */}
+        {/* Notes Input with Voice Support */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Notes</label>
@@ -249,55 +259,52 @@ export const AddReminderModal: React.FC = () => {
               style={{
                 background: 'none',
                 border: 'none',
-                color: activeField === 'notes' ? '#EC668C' : '#4A99E9',
+                color: activeField === 'notes' ? '#EC668C' : 'var(--accent)',
+                fontSize: '11px',
+                fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '11px',
-                fontWeight: 700,
               }}
-              title="Speak to dictate notes"
             >
-              {activeField === 'notes' ? <Square size={13} fill="currentColor" /> : <Mic size={14} />}
-              <span>{activeField === 'notes' ? 'Cancel' : 'Voice'}</span>
+              <Mic size={12} />
+              <span>{activeField === 'notes' ? 'Listening' : 'Voice'}</span>
             </button>
           </div>
           <textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            rows={3}
-            placeholder={activeField === 'notes' ? 'Listening... Speak now' : 'Details'}
+            placeholder={activeField === 'notes' ? 'Listening...' : 'Details'}
+            rows={2}
             style={{
               width: '100%',
-              minHeight: '76px',
-              padding: '12px 16px',
-              borderRadius: '16px',
-              border: activeField === 'notes' ? '1.5px solid #4A99E9' : '1px solid var(--border-glass)',
+              padding: '10px 14px',
+              borderRadius: '14px',
+              border: activeField === 'notes' ? '1.5px solid #EC668C' : '1px solid var(--border-glass)',
               backgroundColor: 'var(--pill-bg)',
               color: 'var(--text-primary)',
               fontSize: '13px',
               outline: 'none',
               resize: 'none',
-              fontFamily: 'inherit',
+              boxSizing: 'border-box',
             }}
           />
         </div>
 
-        {/* Level Switcher (Simple, Flagged, Urgent) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {/* Type / Level Selector */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Type</label>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
             <button
               type="button"
               onClick={() => setLevel('SIMPLE')}
               style={{
-                flex: 1,
-                padding: '9px 0',
+                padding: '10px',
                 borderRadius: '14px',
-                border: level === 'SIMPLE' ? '1.5px solid #6C7B8A' : '1px solid var(--border-glass)',
-                backgroundColor: level === 'SIMPLE' ? '#6C7B8A' : 'var(--pill-bg)',
-                color: level === 'SIMPLE' ? '#FFF' : 'var(--text-primary)',
+                border: level === 'SIMPLE' ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
+                backgroundColor: level === 'SIMPLE' ? 'var(--pill-bg)' : 'var(--pill-bg)',
+                color: level === 'SIMPLE' ? 'var(--text-primary)' : 'var(--text-secondary)',
                 fontSize: '12px',
                 fontWeight: 800,
                 cursor: 'pointer',
@@ -311,12 +318,11 @@ export const AddReminderModal: React.FC = () => {
               type="button"
               onClick={() => setLevel('FLAGGED')}
               style={{
-                flex: 1,
-                padding: '9px 0',
+                padding: '10px',
                 borderRadius: '14px',
                 border: level === 'FLAGGED' ? '1.5px solid #F3A85B' : '1px solid var(--border-glass)',
-                backgroundColor: level === 'FLAGGED' ? '#F3A85B' : 'var(--pill-bg)',
-                color: level === 'FLAGGED' ? '#FFF' : 'var(--text-primary)',
+                backgroundColor: level === 'FLAGGED' ? 'rgba(243, 168, 91, 0.15)' : 'var(--pill-bg)',
+                color: level === 'FLAGGED' ? '#F3A85B' : 'var(--text-secondary)',
                 fontSize: '12px',
                 fontWeight: 800,
                 cursor: 'pointer',
@@ -330,12 +336,11 @@ export const AddReminderModal: React.FC = () => {
               type="button"
               onClick={() => setLevel('URGENT')}
               style={{
-                flex: 1,
-                padding: '9px 0',
+                padding: '10px',
                 borderRadius: '14px',
                 border: level === 'URGENT' ? '1.5px solid #EC668C' : '1px solid var(--border-glass)',
                 backgroundColor: level === 'URGENT' ? '#EC668C' : 'var(--pill-bg)',
-                color: level === 'URGENT' ? '#FFF' : 'var(--text-primary)',
+                color: level === 'URGENT' ? '#FFF' : 'var(--text-secondary)',
                 fontSize: '12px',
                 fontWeight: 800,
                 cursor: 'pointer',
@@ -374,7 +379,7 @@ export const AddReminderModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Date Row */}
+        {/* Date Input */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Date</label>
           <input
@@ -384,12 +389,14 @@ export const AddReminderModal: React.FC = () => {
             onChange={e => setDueDate(e.target.value)}
             style={{
               width: '100%',
-              padding: '10px 14px',
+              minWidth: 0,
+              padding: '10px 12px',
               borderRadius: '14px',
               border: '1px solid var(--border-glass)',
               backgroundColor: 'var(--pill-bg)',
               color: 'var(--text-primary)',
-              fontSize: '13px',
+              fontSize: '12px',
+              fontWeight: 600,
               outline: 'none',
               colorScheme: 'inherit',
               boxSizing: 'border-box',
@@ -397,22 +404,24 @@ export const AddReminderModal: React.FC = () => {
           />
         </div>
 
-        {/* Start Time & End Time Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Start Time</label>
+        {/* Start Time & End Time Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Start</label>
             <input
               type="time"
               value={dueTime}
               onChange={e => setDueTime(e.target.value)}
               style={{
                 width: '100%',
-                padding: '10px 12px',
+                minWidth: 0,
+                padding: '9px 8px',
                 borderRadius: '14px',
                 border: '1px solid var(--border-glass)',
                 backgroundColor: 'var(--pill-bg)',
                 color: 'var(--text-primary)',
-                fontSize: '12px',
+                fontSize: '11px',
+                fontWeight: 600,
                 outline: 'none',
                 colorScheme: 'inherit',
                 boxSizing: 'border-box',
@@ -420,20 +429,22 @@ export const AddReminderModal: React.FC = () => {
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>End Time</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>End</label>
             <input
               type="time"
               value={endTime}
               onChange={e => setEndTime(e.target.value)}
               style={{
                 width: '100%',
-                padding: '10px 12px',
+                minWidth: 0,
+                padding: '9px 8px',
                 borderRadius: '14px',
                 border: '1px solid var(--border-glass)',
                 backgroundColor: 'var(--pill-bg)',
                 color: 'var(--text-primary)',
-                fontSize: '12px',
+                fontSize: '11px',
+                fontWeight: 600,
                 outline: 'none',
                 colorScheme: 'inherit',
                 boxSizing: 'border-box',
@@ -442,93 +453,114 @@ export const AddReminderModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Dedicated Alert Date & Alert Time Section */}
-        <div style={{ padding: '12px', borderRadius: '16px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {/* Dedicated Alert Card Container */}
+        <div
+          style={{
+            padding: '12px 14px',
+            borderRadius: '18px',
+            backgroundColor: 'var(--pill-bg)',
+            border: '1px solid var(--border-glass)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            boxSizing: 'border-box',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Bell size={14} color="#F3A85B" />
-            <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-primary)' }}>Alert Time</span>
+            <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-primary)' }}>Alert</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <input
-              type="date"
-              value={alertDate}
-              onChange={e => setAlertDate(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 10px',
-                borderRadius: '10px',
-                border: '1px solid var(--border-glass)',
-                backgroundColor: 'var(--bg-card)',
-                color: 'var(--text-primary)',
-                fontSize: '11px',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-            <input
-              type="time"
-              value={alertTime}
-              onChange={e => setAlertTime(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 10px',
-                borderRadius: '10px',
-                border: '1px solid var(--border-glass)',
-                backgroundColor: 'var(--bg-card)',
-                color: 'var(--text-primary)',
-                fontSize: '11px',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
+            <div style={{ minWidth: 0 }}>
+              <input
+                type="date"
+                value={alertDate}
+                onChange={e => setAlertDate(e.target.value)}
+                style={{
+                  width: '100%',
+                  minWidth: 0,
+                  padding: '8px 6px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--border-glass)',
+                  backgroundColor: 'var(--bg-card)',
+                  color: 'var(--text-primary)',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <input
+                type="time"
+                value={alertTime}
+                onChange={e => setAlertTime(e.target.value)}
+                style={{
+                  width: '100%',
+                  minWidth: 0,
+                  padding: '8px 6px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--border-glass)',
+                  backgroundColor: 'var(--bg-card)',
+                  color: 'var(--text-primary)',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
           </div>
         </div>
 
         {/* Apple Calendar Toggle */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '2px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Calendar size={14} color="#30D158" />
-              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>Apple Calendar</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setSyncCalendar(!syncCalendar)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: '12px',
-                border: 'none',
-                backgroundColor: syncCalendar ? '#30D158' : 'var(--pill-bg)',
-                color: syncCalendar ? '#141416' : 'var(--text-primary)',
-                fontSize: '11px',
-                fontWeight: 800,
-                cursor: 'pointer',
-              }}
-            >
-              {syncCalendar ? 'Sync' : 'Off'}
-            </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Calendar size={14} color="#30D158" />
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>Sync</span>
           </div>
+          <button
+            type="button"
+            onClick={() => setSyncCalendar(!syncCalendar)}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: syncCalendar ? '#30D158' : 'var(--pill-bg)',
+              color: syncCalendar ? '#141416' : 'var(--text-primary)',
+              fontSize: '11px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            {syncCalendar ? 'Sync' : 'Off'}
+          </button>
         </div>
 
-        {/* Save Button */}
+        {/* Submit Action Button */}
         <button
-          type="submit"
+          type="button"
+          onClick={handleSubmit}
           style={{
             width: '100%',
-            padding: '12px',
+            padding: '14px',
             borderRadius: '16px',
-            border: 'none',
-            backgroundColor: '#6C5CE7',
-            color: '#FFF',
+            backgroundColor: 'var(--accent)',
+            color: '#FFFFFF',
             fontWeight: 800,
             fontSize: '14px',
+            border: 'none',
             cursor: 'pointer',
-            marginTop: '6px',
+            boxShadow: '0 4px 16px rgba(108, 92, 231, 0.35)',
+            marginTop: '4px',
           }}
         >
           Save
         </button>
-      </form>
+      </div>
     </div>
   );
 };
