@@ -230,6 +230,30 @@ export const SettingsScreen: React.FC = () => {
         </div>
       </div>
 
+      {/* App Version Info Card */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Version</h4>
+            <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>PiTrack PWA Stable Build</p>
+          </div>
+
+          <span
+            style={{
+              fontSize: '12px',
+              fontWeight: 800,
+              padding: '4px 10px',
+              borderRadius: '8px',
+              backgroundColor: 'var(--pill-bg)',
+              border: '1px solid var(--border-glass)',
+              color: 'var(--accent)',
+            }}
+          >
+            v1.0.0
+          </span>
+        </div>
+      </div>
+
       {/* Danger Zone: Clear Data */}
       <div className="glass-panel" style={{ padding: '16px', borderColor: 'rgba(255, 123, 114, 0.3)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
