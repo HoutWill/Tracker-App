@@ -685,30 +685,7 @@ export const PlannerScreen: React.FC = () => {
           })}
         </div>
 
-        {/* Period Scope Filter Bar (Daily, Weekly, Monthly, Yearly, All) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', marginBottom: '12px' }}>
-          {(['ALL', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'] as const).map(p => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setPeriodTab(p)}
-              style={{
-                padding: '8px 2px',
-                borderRadius: '12px',
-                border: periodTab === p ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
-                backgroundColor: periodTab === p ? 'rgba(99, 102, 241, 0.18)' : 'var(--bg-card)',
-                color: periodTab === p ? 'var(--accent)' : 'var(--text-secondary)',
-                fontSize: '11px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                textAlign: 'center',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {p === 'ALL' ? 'All' : p === 'DAILY' ? 'Daily' : p === 'WEEKLY' ? 'Weekly' : p === 'MONTHLY' ? 'Monthly' : 'Yearly'}
-            </button>
-          ))}
-        </div>
+
 
       {/* Reminders & Todo Checklist Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', padding: '0 2px' }}>
@@ -783,18 +760,6 @@ export const PlannerScreen: React.FC = () => {
                       }}
                     >
                       {r.title}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: '9px',
-                        fontWeight: 700,
-                        padding: '2px 6px',
-                        borderRadius: '6px',
-                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                        color: 'var(--accent)',
-                      }}
-                    >
-                      {r.periodScope === 'WEEKLY' ? 'Weekly' : r.periodScope === 'MONTHLY' ? 'Monthly' : r.periodScope === 'YEARLY' ? 'Yearly' : 'Daily'}
                     </span>
                     {r.level === 'URGENT' && !r.completed && (
                       <span
