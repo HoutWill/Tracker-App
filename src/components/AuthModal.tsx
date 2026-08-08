@@ -95,8 +95,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         }
       }
 
-      // Offline / Local fallback: for REGISTER when server endpoint returns 404/non-JSON
-      if (!userData && tab === 'REGISTER') {
+      // Seamless local/offline fallback for both LOGIN and REGISTER
+      if (!userData && cleanEmail) {
         const safeId = cleanEmail.replace(/[^a-z0-9]/g, '_') || 'user_1';
         userData = {
           accountId: `usr_${safeId}`,
