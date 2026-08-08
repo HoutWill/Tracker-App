@@ -6,14 +6,63 @@ export interface HolidayTheme {
   emoji: string;
   description: string;
   bgMain: string;
+  bgCard: string;
+  bgCardHover: string;
+  bgMainLight: string;
+  bgCardLight: string;
+  bgCardHoverLight: string;
 }
 
 export const HOLIDAY_THEMES: HolidayTheme[] = [
-  { id: 'DEFAULT', name: 'Default', emoji: '✨', description: 'Liquid Glass Dark', bgMain: '#0B131E' },
-  { id: 'CHRISTMAS', name: 'Christmas', emoji: '❄️', description: 'Falling Snow & Pines', bgMain: '#0E1E19' },
-  { id: 'CHINESE', name: 'Chinese', emoji: '🏮', description: 'Spring Lanterns & Gold', bgMain: '#240A0F' },
-  { id: 'KHMER', name: 'Khmer', emoji: '🏛️', description: 'Sangkranta Temple Glow', bgMain: '#1D170A' },
-  { id: 'HALLOWEEN', name: 'Halloween', emoji: '🎃', description: 'Spooky Embers & Fog', bgMain: '#1A0C22' },
+  {
+    id: 'DEFAULT',
+    name: 'Default',
+    emoji: '✨',
+    description: 'Liquid Glass Dark',
+    bgMain: '#0B131E',
+    bgCard: '#151720',
+    bgCardHover: '#1C1E2B',
+    bgMainLight: '#F8FAFC',
+    bgCardLight: '#FFFFFF',
+    bgCardHoverLight: '#F1F5F9',
+  },
+  {
+    id: 'CHRISTMAS',
+    name: 'Christmas',
+    emoji: '❄️',
+    description: 'Falling Snow & Pines',
+    bgMain: '#0B1A15',
+    bgCard: '#142721',
+    bgCardHover: '#1A332B',
+    bgMainLight: '#EBF7F4',
+    bgCardLight: '#FFFFFF',
+    bgCardHoverLight: '#DFF0EC',
+  },
+  {
+    id: 'CHINESE',
+    name: 'Chinese',
+    emoji: '🏮',
+    description: 'Spring Lanterns & Gold',
+    bgMain: '#1C0B0E',
+    bgCard: '#2F1117',
+    bgCardHover: '#3C161E',
+    bgMainLight: '#FDF2F4',
+    bgCardLight: '#FFFFFF',
+    bgCardHoverLight: '#FBE4E7',
+  },
+
+  {
+    id: 'HALLOWEEN',
+    name: 'Halloween',
+    emoji: '🎃',
+    description: 'Spooky Embers & Fog',
+    bgMain: '#140A1A',
+    bgCard: '#24132F',
+    bgCardHover: '#2E193C',
+    bgMainLight: '#F5EFF9',
+    bgCardLight: '#FFFFFF',
+    bgCardHoverLight: '#EDE1F4',
+  },
 ];
 
 export interface ColorPack {
@@ -192,22 +241,49 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     if (isDark) {
       document.body.classList.remove('light-theme');
+      document.documentElement.classList.remove('light-theme');
     } else {
       document.body.classList.add('light-theme');
+      document.documentElement.classList.add('light-theme');
     }
-  }, [isDark]);
 
-  // Update background when activeThemeId changes
-  useEffect(() => {
+    const root = document.documentElement;
     const theme = HOLIDAY_THEMES.find(t => t.id === activeThemeId) || HOLIDAY_THEMES[0];
-    document.documentElement.style.setProperty('--bg-main', theme.bgMain);
-  }, [activeThemeId]);
-
-  // Update accent when activePackId changes
-  useEffect(() => {
     const pack = COLOR_PACKS.find(p => p.id === activePackId) || COLOR_PACKS[0];
-    document.documentElement.style.setProperty('--accent', pack.accent);
-  }, [activePackId]);
+
+    const bgToUse = isDark ? theme.bgMain : theme.bgMainLight;
+    const cardToUse = isDark ? theme.bgCard : theme.bgCardLight;
+    const cardHoverToUse = isDark ? theme.bgCardHover : theme.bgCardHoverLight;
+
+    document.body.style.backgroundColor = bgToUse;
+    document.documentElement.style.backgroundColor = bgToUse;
+
+    root.style.setProperty('--bg-main', bgToUse);
+    root.style.setProperty('--bg-card', cardToUse);
+    root.style.setProperty('--bg-card-hover', cardHoverToUse);
+
+    if (isDark) {
+      root.style.setProperty('--text-primary', '#F9FAFB');
+      root.style.setProperty('--text-secondary', '#9CA3AF');
+      root.style.setProperty('--text-muted', '#6B7280');
+      root.style.setProperty('--border-glass', 'rgba(255, 255, 255, 0.08)');
+      root.style.setProperty('--border-subtle', 'rgba(255, 255, 255, 0.04)');
+      root.style.setProperty('--pill-bg', 'rgba(255, 255, 255, 0.04)');
+      root.style.setProperty('--pill-hover', 'rgba(255, 255, 255, 0.08)');
+    } else {
+      root.style.setProperty('--text-primary', '#0F172A');
+      root.style.setProperty('--text-secondary', '#475569');
+      root.style.setProperty('--text-muted', '#94A3B8');
+      root.style.setProperty('--border-glass', 'rgba(0, 0, 0, 0.08)');
+      root.style.setProperty('--border-subtle', 'rgba(0, 0, 0, 0.04)');
+      root.style.setProperty('--pill-bg', 'rgba(0, 0, 0, 0.03)');
+      root.style.setProperty('--pill-hover', 'rgba(0, 0, 0, 0.06)');
+    }
+
+    root.style.setProperty('--accent', pack.accent);
+    root.style.setProperty('--accent-expenses', pageColors.EXPENSES || pack.expensesColor);
+    root.style.setProperty('--accent-saving', pageColors.SAVING || pack.savingColor);
+  }, [isDark, activeThemeId, activePackId, pageColors]);
 
   const toggleTheme = () => setIsDark(prev => !prev);
 

@@ -7,8 +7,8 @@ import { TripFolderBar } from '../components/TripFolderBar';
 import { ArtPresetGrid } from '../components/ArtPresetGrid';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { SAVING_QUICK_PRESETS } from '../constants/presets';
-import { formatCurrency, StorageService, getTodayDateString } from '../services/storageService';
-import { PaymentMethod, QuickPreset } from '../types';
+import { formatCurrency, StorageService, getTodayDateString, getStartOfWeekDateString, getEndOfWeekDateString } from '../services/storageService';
+import { PaymentMethod, QuickPreset, BudgetPeriod } from '../types';
 import { Plus, Zap, CheckCircle2, Layers, SearchX, X, Check, PiggyBank, Target, TrendingUp, Trash2, CreditCard } from 'lucide-react';
 
 const SAVING_PRESET_ICONS = [
@@ -18,7 +18,7 @@ const SAVING_PRESET_ICONS = [
 ];
 
 interface SavingsScreenProps {
-  onSwitchTab?: (tab: any) => void;
+  onSwitchTab?: (tab: 'EXPENSES' | 'SAVINGS') => void;
 }
 
 export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => {
@@ -32,6 +32,12 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
     categories,
     savingGoal,
     setSavingGoal,
+    savingGoals,
+    setSavingGoalTarget,
+    savingPeriod,
+    setSavingPeriod,
+    cycleHistory,
+    archiveCycleSnapshot,
     hideBalances,
     addExpense,
     setIsAddSavingOpen,
@@ -51,6 +57,8 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
   // Edit Savings Goal Target state
   const [isEditingGoal, setIsEditingGoal] = useState<boolean>(false);
   const [customGoalInput, setCustomGoalInput] = useState<string>(savingGoal.toString());
+  const [editSavingPeriod, setEditSavingPeriod] = useState<BudgetPeriod>(savingPeriod);
+  const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
 
   // New Preset Modal state
   const [isCreatingPreset, setIsCreatingPreset] = useState<boolean>(false);
@@ -78,8 +86,25 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
   const totalSavingUSD = savingItems.reduce((sum, e) => sum + e.amount, 0);
   const averageSavingUSD = savingItems.length > 0 ? totalSavingUSD / savingItems.length : 0;
 
-  const currentGoal = savingGoal || 2000;
-  const goalProgressPct = Math.min(100, Math.round((totalSavingUSD / currentGoal) * 100));
+  // Period Savings Calculation for Multi-Period Goals (Daily / Weekly / Monthly)
+  const getActivePeriodSavingUSD = () => {
+    const todayStr = getTodayDateString();
+    if (savingPeriod === 'DAILY') {
+      return savingItems.filter(e => e.date === todayStr).reduce((sum, e) => sum + e.amount, 0);
+    }
+    if (savingPeriod === 'WEEKLY') {
+      const startW = getStartOfWeekDateString();
+      const endW = getEndOfWeekDateString();
+      return savingItems.filter(e => e.date >= startW && e.date <= endW).reduce((sum, e) => sum + e.amount, 0);
+    }
+    const monthPrefix = todayStr.substring(0, 7);
+    return savingItems.filter(e => e.date.startsWith(monthPrefix)).reduce((sum, e) => sum + e.amount, 0);
+  };
+
+  const activePeriodSavingUSD = getActivePeriodSavingUSD();
+  const currentGoal = savingGoal || (savingPeriod === 'DAILY' ? 50 : savingPeriod === 'WEEKLY' ? 500 : 2000);
+  const goalProgressPct = Math.min(100, Math.round((activePeriodSavingUSD / currentGoal) * 100));
+
 
   const handleOpenPresetModal = (preset: QuickPreset) => {
     setActivePreset(preset);
@@ -154,9 +179,10 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
       alert('Please enter a valid goal amount.');
       return;
     }
-    setSavingGoal(val);
+    setSavingGoalTarget(editSavingPeriod, val);
     setIsEditingGoal(false);
-    setToastMsg(`Saving goal updated to ${formatCurrency(val, currency)}!`);
+    const periodLabel = editSavingPeriod === 'DAILY' ? 'Day' : editSavingPeriod === 'WEEKLY' ? 'Week' : 'Month';
+    setToastMsg(`${periodLabel} savings goal updated to ${formatCurrency(val, currency)}!`);
     setTimeout(() => setToastMsg(null), 2500);
   };
 
@@ -190,7 +216,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
       type: 'SAVING',
     };
 
-    const updatedList = [...presetsList, newPreset];
+    const updatedList = [newPreset, ...presetsList];
     setPresetsList(updatedList);
     StorageService.savePresetsList('SAVING', updatedList);
 
@@ -200,6 +226,12 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
     setToastMsg(`Added preset "${newPreset.title}"!`);
     setTimeout(() => setToastMsg(null), 2500);
   };
+
+  const handleReorderPresets = (updatedList: QuickPreset[]) => {
+    setPresetsList(updatedList);
+    StorageService.savePresetsList('SAVING', updatedList);
+  };
+
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
@@ -284,10 +316,33 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            {/* Multi-Period Cycle Dropdown Select */}
+            <select
+              value={savingPeriod}
+              onChange={e => setSavingPeriod(e.target.value as BudgetPeriod)}
+              style={{
+                padding: '3px 8px',
+                fontSize: '11px',
+                fontWeight: 700,
+                borderRadius: '8px',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-glass)',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+              title="Select Saving Cycle"
+            >
+              <option value="DAILY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Day</option>
+              <option value="WEEKLY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Week</option>
+              <option value="MONTHLY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Month</option>
+            </select>
+
             <button
               type="button"
               onClick={() => {
                 setCustomGoalInput(currentGoal.toString());
+                setEditSavingPeriod(savingPeriod);
                 setIsEditingGoal(true);
               }}
               style={{
@@ -310,21 +365,21 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
               <span>Goal: {formatCurrency(currentGoal, currency)}</span>
             </button>
 
-            <span
+            <button
+              type="button"
+              className="glass-pill"
+              onClick={() => setIsHistoryOpen(true)}
               style={{
-                fontSize: '10px',
-                fontWeight: 600,
-                padding: '2px 8px',
-                borderRadius: '6px',
-                backgroundColor: 'var(--pill-bg)',
+                fontSize: '11px',
+                padding: '3px 8px',
                 color: 'var(--text-secondary)',
-                border: '1px solid var(--border-glass)',
-                flexShrink: 0,
+                borderColor: 'var(--border-glass)',
                 whiteSpace: 'nowrap',
+                flexShrink: 0,
               }}
             >
-              {savingItems.length}
-            </span>
+              History
+            </button>
           </div>
         </div>
 
@@ -346,11 +401,28 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
         <div style={{ marginBottom: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontWeight: 500, marginBottom: '6px' }}>
             <span style={{ color: 'var(--text-muted)' }}>
-              Target: {formatCurrency(currentGoal, currency)}
+              {savingPeriod === 'DAILY' ? 'Daily' : savingPeriod === 'WEEKLY' ? 'Weekly' : 'Monthly'} Goal ({formatCurrency(currentGoal, currency)})
             </span>
-            <span style={{ color: pageAccent, fontWeight: 600 }}>
-              {goalProgressPct}% Completed
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: pageAccent, fontWeight: 700 }}>
+                {goalProgressPct}% achieved
+              </span>
+              {goalProgressPct >= 100 && (
+                <span
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 800,
+                    padding: '1px 6px',
+                    borderRadius: '5px',
+                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    color: 'var(--accent-success)',
+                  }}
+                >
+                  Milestone
+                </span>
+              )}
+            </div>
           </div>
 
           <div
@@ -496,7 +568,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Target size={16} style={{ color: pageAccent }} />
-                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>Savings Goal</h3>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Goal</h3>
               </div>
               <button
                 type="button"
@@ -508,12 +580,46 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
             </div>
 
             <div>
-              <label style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                Target Goal Amount
+              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+                Cycle
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                {(['DAILY', 'WEEKLY', 'MONTHLY'] as const).map(p => {
+                  const label = p === 'DAILY' ? 'Day' : p === 'WEEKLY' ? 'Week' : 'Month';
+                  const isActive = editSavingPeriod === p;
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => {
+                        setEditSavingPeriod(p);
+                        setCustomGoalInput(savingGoals[p].toString());
+                      }}
+                      style={{
+                        padding: '8px',
+                        borderRadius: '10px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        border: isActive ? `1.5px solid ${pageAccent}` : '1px solid var(--border-glass)',
+                        backgroundColor: isActive ? hexToRgba(pageAccent, 0.15) : 'var(--pill-bg)',
+                        color: isActive ? pageAccent : 'var(--text-secondary)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {label} (${savingGoals[p]})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+                Target Amount
               </label>
               <input
                 type="number"
-                step="100"
+                step="50"
                 value={customGoalInput}
                 onChange={e => setCustomGoalInput(e.target.value)}
                 placeholder="2000"
@@ -528,14 +634,13 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                   color: 'var(--text-primary)',
                   fontSize: '15px',
                   fontWeight: 600,
-                  marginTop: '4px',
                   outline: 'none',
                 }}
               />
             </div>
 
             <div style={{ display: 'flex', gap: '6px' }}>
-              {[1000, 2000, 3000, 5000].map(amt => (
+              {[250, 500, 1000, 2000].map(amt => (
                 <button
                   key={amt}
                   type="button"
@@ -560,26 +665,131 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
 
             <button
               type="submit"
+              className="glass-pill"
               style={{
-                display: 'flex',
-                alignItems: 'center',
                 justifyContent: 'center',
-                gap: '6px',
                 padding: '10px',
-                borderRadius: '10px',
-                border: 'none',
                 backgroundColor: pageAccent,
+                borderColor: pageAccent,
                 color: '#FFF',
                 fontWeight: 600,
-                fontSize: '13px',
-                cursor: 'pointer',
                 marginTop: '4px',
               }}
             >
-              <Check size={16} />
               <span>Save</span>
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Cycle History Modal */}
+      {isHistoryOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 100,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+          onClick={() => setIsHistoryOpen(false)}
+        >
+          <div
+            className="glass-panel"
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '420px',
+              maxHeight: '80vh',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              borderColor: hexToRgba(pageAccent, 0.35),
+              overflowY: 'auto',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <PiggyBank size={18} color={pageAccent} />
+                <h3 style={{ fontSize: '16px', fontWeight: 800 }}>History</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsHistoryOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {cycleHistory.filter(c => c.type === 'SAVING').length === 0 ? (
+                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                  Empty History
+                </div>
+              ) : (
+                cycleHistory
+                  .filter(c => c.type === 'SAVING')
+                  .map(snap => (
+                    <div
+                      key={snap.id}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid var(--border-glass)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {snap.period === 'DAILY' ? 'Day' : snap.period === 'WEEKLY' ? 'Week' : 'Month'} ({snap.periodKey})
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          Saved {formatCurrency(snap.actualAmount, currency)} / Goal {formatCurrency(snap.targetAmount, currency)}
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                          color: 'var(--accent-success)',
+                        }}
+                      >
+                        Milestone
+                      </span>
+                    </div>
+                  ))
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsHistoryOpen(false)}
+              style={{
+                padding: '10px',
+                borderRadius: '10px',
+                border: 'none',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-primary)',
+                fontWeight: 700,
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
 
@@ -593,6 +803,8 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
         pageAccent={pageAccent}
         onSelectPreset={handleOpenPresetModal}
         onAddPreset={() => setIsCreatingPreset(true)}
+        onDeletePreset={handleDeletePreset}
+        onReorderPresets={handleReorderPresets}
         colorOffset={1}
       />
 

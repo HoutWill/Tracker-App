@@ -100,6 +100,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       localStorage.setItem('pitrack_expenses_initialized', 'true');
       setGuestId(userData.accountId);
 
+      // Auto-migrate guest entries into user account if first time on this device
+      const userExpKey = `pitrack_expenses_${userData.accountId}`;
+      if (!localStorage.getItem(userExpKey)) {
+        const guestExp = localStorage.getItem('pitrack_expenses_data') || localStorage.getItem('pitrack_expenses');
+        if (guestExp) localStorage.setItem(userExpKey, guestExp);
+      }
+
+      const userRemKey = `reminders_${userData.accountId}`;
+      if (!localStorage.getItem(userRemKey)) {
+        const guestRem = localStorage.getItem('pitrack_reminders_data');
+        if (guestRem) localStorage.setItem(userRemKey, guestRem);
+      }
+
+      const userTripsKey = `trip_folders_${userData.accountId}`;
+      if (!localStorage.getItem(userTripsKey)) {
+        const guestTrips = localStorage.getItem('pitrack_trips_data');
+        if (guestTrips) localStorage.setItem(userTripsKey, guestTrips);
+      }
+
       // Auto-restore full account data backup from cloud database
       try {
         const syncRes = await fetch(`/api/sync?accountId=${userData.accountId}`);
@@ -108,12 +127,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           if (contentType.includes('application/json')) {
             const syncData = await syncRes.json();
             if (syncData && syncData.expenses) {
-              localStorage.setItem('pitrack_expenses', JSON.stringify(syncData.expenses));
-              localStorage.setItem('pitrack_expenses_data', JSON.stringify(syncData.expenses));
               localStorage.setItem(`pitrack_expenses_${userData.accountId}`, JSON.stringify(syncData.expenses));
-              if (syncData.savings) localStorage.setItem('pitrack_savings', JSON.stringify(syncData.savings));
-              if (syncData.reminders) localStorage.setItem('pitrack_reminders', JSON.stringify(syncData.reminders));
-              if (syncData.trips) localStorage.setItem('pitrack_trips', JSON.stringify(syncData.trips));
+              if (syncData.reminders) localStorage.setItem(`reminders_${userData.accountId}`, JSON.stringify(syncData.reminders));
+              if (syncData.trips) localStorage.setItem(`trip_folders_${userData.accountId}`, JSON.stringify(syncData.trips));
+              if (syncData.targets) localStorage.setItem(`budget_targets_${userData.accountId}`, JSON.stringify(syncData.targets));
             }
           }
         }

@@ -4,6 +4,8 @@ export type PaymentMethod = 'Cash' | 'Bank';
 
 export type TransactionType = 'EXPENSE' | 'SAVING' | 'INCOME';
 
+export type BudgetPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY';
+
 export interface Category {
   id: string;
   name: string;
@@ -70,3 +72,26 @@ export interface ReminderItem {
   alertEnabled?: boolean;
   createdAt: number;
 }
+
+export interface PlannerPreset {
+  id: string;
+  title: string;
+  category: ReminderCategory;
+  level: 'URGENT' | 'FLAGGED' | 'SIMPLE';
+  icon: string;
+  color?: string;
+}
+
+export interface CycleSnapshot {
+  id: string;
+  type: 'BUDGET' | 'SAVING';
+  period: BudgetPeriod;
+  periodKey: string; // e.g. "2026-08-08" or "2026-W32" or "2026-08"
+  targetAmount: number;
+  actualAmount: number;
+  status: 'COMPLETED' | 'SURPLUS' | 'OVERRUN';
+  surplusAmount: number;
+  archivedAt: number;
+}
+
+

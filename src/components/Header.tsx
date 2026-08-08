@@ -102,26 +102,6 @@ export const Header: React.FC = () => {
           {isDark ? <Sun size={15} color="var(--accent)" /> : <Moon size={15} color="var(--accent)" />}
         </button>
 
-        {/* Agent Button Pill */}
-        <button
-          className="glass-pill"
-          onClick={() => setIsAiChatOpen(true)}
-          style={{
-            backgroundColor: 'rgba(108, 92, 231, 0.15)',
-            borderColor: 'rgba(108, 92, 231, 0.35)',
-            color: 'var(--accent)',
-            height: '34px',
-            padding: '0 10px',
-            fontSize: '11px',
-            fontWeight: 800,
-            gap: '4px',
-          }}
-          title="Open Agent Chat"
-        >
-          <Sparkles size={14} />
-          <span>Agent</span>
-        </button>
-
         {/* Account Link / Login Pill (Positioned at Far Right) */}
         <button
           className="glass-pill"
@@ -148,7 +128,10 @@ export const Header: React.FC = () => {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         currentUser={userAccount}
-        onAuthSuccess={u => setUserAccount(u)}
+        onAuthSuccess={u => {
+          setUserAccount(u);
+          window.location.reload();
+        }}
         onLogout={handleLogout}
         isPopover={true}
       />

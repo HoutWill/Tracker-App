@@ -55,7 +55,7 @@ export const AiChatModal: React.FC = () => {
     }
   }, [messages, isProcessing]);
 
-  if (!isAiChatOpen) return null;
+  return null;
 
   const handleSendPrompt = async (textToSend?: string) => {
     const query = textToSend || promptText;

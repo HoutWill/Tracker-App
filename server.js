@@ -222,15 +222,66 @@ app.post('/api/auth/login', authRateLimit, (req, res) => {
   const pwdHash = hashPassword(password);
   const user = users.find(u => u.email === cleanEmail && (u.passwordHash === pwdHash || u.password === password));
 
-  // Non-disclosing generic error response
-  if (!user) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
   res.json({
     user: { accountId: user.accountId, email: user.email, name: user.name },
     token: 'jwt-' + user.accountId,
   });
+});
+
+// Universal Account Cloud Sync Endpoint (Auto Cross-Device Instant Sync)
+app.get('/api/sync', (req, res) => {
+  const accountId = req.query.accountId || req.headers['x-guest-id'];
+  if (!accountId) return res.status(400).json({ error: 'Account ID required' });
+  const cleanId = String(accountId).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const accountFile = path.join(DATA_DIR, `account_${cleanId}.json`);
+
+  if (fs.existsSync(accountFile)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(accountFile, 'utf8'));
+      return res.json(data);
+    } catch (e) {}
+  }
+
+  // Fallback to individual expenses file if account file doesn't exist yet
+  const expFile = path.join(DATA_DIR, `expenses_${cleanId}.json`);
+  let expenses = [];
+  if (fs.existsSync(expFile)) {
+    try { expenses = JSON.parse(fs.readFileSync(expFile, 'utf8')); } catch (e) {}
+  }
+
+  res.json({ expenses, reminders: [], trips: [], targets: null, goals: null, cycleHistory: [] });
+});
+
+app.post('/api/sync', (req, res) => {
+  const accountId = req.body.accountId || req.headers['x-guest-id'];
+  if (!accountId) return res.status(400).json({ error: 'Account ID required' });
+  const cleanId = String(accountId).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const accountFile = path.join(DATA_DIR, `account_${cleanId}.json`);
+
+  try {
+    let existing = {};
+    if (fs.existsSync(accountFile)) {
+      try { existing = JSON.parse(fs.readFileSync(accountFile, 'utf8')); } catch (e) {}
+    }
+
+    const updated = {
+      ...existing,
+      ...req.body,
+      updatedAt: Date.now(),
+    };
+
+    fs.writeFileSync(accountFile, JSON.stringify(updated, null, 2));
+
+    // Also write expenses to expenses_ clean file for backwards compatibility
+    if (req.body.expenses && Array.isArray(req.body.expenses)) {
+      const expFile = path.join(DATA_DIR, `expenses_${cleanId}.json`);
+      fs.writeFileSync(expFile, JSON.stringify(req.body.expenses, null, 2));
+    }
+
+    res.json({ success: true, updatedAt: updated.updatedAt });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to sync data' });
+  }
 });
 
 // Serve static frontend bundle from dist/

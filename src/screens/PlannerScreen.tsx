@@ -1,10 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useReminders } from '../context/ReminderContext';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
-import { getTodayDateString } from '../services/storageService';
+import { getTodayDateString, StorageService } from '../services/storageService';
 import { ReminderDetailModal } from '../components/ReminderDetailModal';
 import { PlannerDayAgendaModal } from '../components/PlannerDayAgendaModal';
-import { ReminderItem, ReminderCategory } from '../types';
+import { PlannerPresetGrid } from '../components/PlannerPresetGrid';
+import { ReminderItem, ReminderCategory, PlannerPreset } from '../types';
+import { PLANNER_QUICK_PRESETS } from '../constants/presets';
+import { triggerHaptic } from '../services/soundService';
 import { startVoiceRecognition } from '../services/speechService';
 import {
   Bell,
@@ -60,6 +63,66 @@ export const PlannerScreen: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<FilterTab>('ALL');
   const [selectedReminderForDetail, setSelectedReminderForDetail] = useState<ReminderItem | null>(null);
 
+  // Dynamic Planner Presets State
+  const [plannerPresets, setPlannerPresets] = useState<PlannerPreset[]>([]);
+  const [isCreatingPreset, setIsCreatingPreset] = useState<boolean>(false);
+  const [newPresetTitle, setNewPresetTitle] = useState<string>('');
+  const [newPresetCategory, setNewPresetCategory] = useState<ReminderCategory>('TASK');
+  const [newPresetLevel, setNewPresetLevel] = useState<'URGENT' | 'FLAGGED' | 'SIMPLE'>('SIMPLE');
+  const [newPresetIcon, setNewPresetIcon] = useState<string>('bell');
+
+  useEffect(() => {
+    const list = StorageService.getPlannerPresetsList(PLANNER_QUICK_PRESETS);
+    setPlannerPresets(list);
+  }, []);
+
+  const handleSelectPreset = (preset: PlannerPreset) => {
+    triggerHaptic(12);
+    openAddReminderWithPreset({
+      title: preset.title,
+      category: preset.category,
+      level: preset.level,
+    });
+  };
+
+  const handleReorderPresets = (updated: PlannerPreset[]) => {
+    setPlannerPresets(updated);
+    StorageService.savePlannerPresetsList(updated);
+  };
+
+  const handleDeletePreset = (presetId: string) => {
+    if (window.confirm('Delete this preset?')) {
+      const updated = plannerPresets.filter(p => p.id !== presetId);
+      setPlannerPresets(updated);
+      StorageService.savePlannerPresetsList(updated);
+    }
+  };
+
+  const handleCreateNewPreset = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPresetTitle.trim()) {
+      alert('Please enter a preset title');
+      return;
+    }
+
+    const newPreset: PlannerPreset = {
+      id: 'p-custom-' + Date.now(),
+      title: newPresetTitle.trim(),
+      category: newPresetCategory,
+      level: newPresetLevel,
+      icon: newPresetIcon || 'bell',
+    };
+
+    const updated = [newPreset, ...plannerPresets];
+    setPlannerPresets(updated);
+    StorageService.savePlannerPresetsList(updated);
+
+    setNewPresetTitle('');
+    setIsCreatingPreset(false);
+    triggerHaptic(15);
+  };
+
+
   // Search & Category Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ReminderCategory | 'ALL'>('ALL');
@@ -103,25 +166,32 @@ export const PlannerScreen: React.FC = () => {
   const urgentReminders = reminders.filter(r => r.level === 'URGENT' && !r.completed);
   const completedReminders = reminders.filter(r => r.completed);
 
-  const displayedReminders = reminders.filter(r => {
-    // Search query filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      const matchTitle = r.title.toLowerCase().includes(q);
-      const matchNotes = r.notes ? r.notes.toLowerCase().includes(q) : false;
-      if (!matchTitle && !matchNotes) return false;
-    }
-    // Category pill filter
-    if (categoryFilter !== 'ALL' && r.category !== categoryFilter) return false;
+  const handleTaskClick = (id: string) => {
+    triggerHaptic(12);
+    toggleReminder(id);
+  };
 
-    // Filter tab
-    if (activeFilter === 'TODAY') return r.dueDate === today && !r.completed;
-    if (activeFilter === 'SCHEDULED') return r.dueDate > today && !r.completed;
-    if (activeFilter === 'FLAGGED') return r.priority === 'HIGH' && !r.completed;
-    if (activeFilter === 'URGENT') return r.level === 'URGENT' && !r.completed;
-    if (activeFilter === 'COMPLETED') return r.completed;
-    return true; // ALL
-  });
+  const displayedReminders = reminders
+    .filter(r => {
+      // Search query filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchTitle = r.title.toLowerCase().includes(q);
+        const matchNotes = r.notes ? r.notes.toLowerCase().includes(q) : false;
+        if (!matchTitle && !matchNotes) return false;
+      }
+      // Category pill filter
+      if (categoryFilter !== 'ALL' && r.category !== categoryFilter) return false;
+
+      // Filter tab
+      if (activeFilter === 'TODAY') return r.dueDate === today && !r.completed;
+      if (activeFilter === 'SCHEDULED') return r.dueDate > today && !r.completed;
+      if (activeFilter === 'FLAGGED') return r.priority === 'HIGH' && !r.completed;
+      if (activeFilter === 'URGENT') return r.level === 'URGENT' && !r.completed;
+      if (activeFilter === 'COMPLETED') return r.completed;
+      return true; // ALL
+    })
+    .sort((a, b) => (a.completed === b.completed ? b.createdAt - a.createdAt : a.completed ? 1 : -1));
 
   const completionPct = reminders.length > 0 ? Math.round((completedReminders.length / reminders.length) * 100) : 0;
 
@@ -278,68 +348,160 @@ export const PlannerScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* 2. Quick Presets Bento Grid (Open Add Modal with Pre-populated Info) */}
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', padding: '0 2px' }}>
-            <Zap size={15} color="var(--text-secondary)" />
-            <h3 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>Presets</h3>
-          </div>
+        {/* Dynamic Interactive Planner Preset Grid with Drag-and-Drop Relocate & Move */}
+        <PlannerPresetGrid
+          presetsList={plannerPresets}
+          onSelectPreset={handleSelectPreset}
+          onAddPreset={() => setIsCreatingPreset(true)}
+          onDeletePreset={handleDeletePreset}
+          onReorderPresets={handleReorderPresets}
+        />
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-            {[
-              { id: 'p-1', title: 'Gym', category: 'SPORT', icon: Dumbbell, color: '#EC668C', level: 'FLAGGED' },
-              { id: 'p-2', title: 'Bills', category: 'BILLS', icon: Receipt, color: '#F3A85B', level: 'URGENT' },
-              { id: 'p-3', title: 'Meeting', category: 'MEETING', icon: Users, color: '#4A99E9', level: 'FLAGGED' },
-              { id: 'p-4', title: 'Study', category: 'STUDY', icon: BookOpen, color: '#6C5CE7', level: 'SIMPLE' },
-              { id: 'p-5', title: 'Doctor', category: 'HEALTH', icon: Heart, color: '#30D158', level: 'URGENT' },
-              { id: 'p-6', title: 'Shopping', category: 'FUN', icon: ShoppingBag, color: '#FF9F0A', level: 'SIMPLE' },
-              { id: 'p-7', title: 'Work', category: 'WORK', icon: Briefcase, color: '#6C7B8A', level: 'SIMPLE' },
-              { id: 'p-8', title: 'Water', category: 'HEALTH', icon: Droplets, color: '#64D2FF', level: 'SIMPLE' },
-              { id: 'p-9', title: 'Groceries', category: 'FUN', icon: ShoppingCart, color: '#A060FF', level: 'SIMPLE' },
-            ].map(preset => {
-              const IconComponent = preset.icon;
-              return (
+        {/* Add New Planner Preset Modal */}
+        {isCreatingPreset && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 999,
+              padding: '16px',
+            }}
+          >
+            <div
+              className="glass-panel"
+              style={{
+                width: '100%',
+                maxWidth: '400px',
+                padding: '20px',
+                borderRadius: '24px',
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid var(--border-glass)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Preset</h3>
                 <button
-                  key={preset.id}
                   type="button"
-                  onClick={() => {
-                    openAddReminderWithPreset({
-                      title: preset.title,
-                      category: preset.category as any,
-                      level: preset.level as any,
-                    });
-                  }}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    padding: '10px 12px',
-                    borderRadius: '20px',
-                    border: '1px solid var(--border-glass)',
-                    backgroundColor: 'var(--bg-card)',
-                    color: 'var(--text-primary)',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    minHeight: '66px',
-                    transition: 'all 0.15s ease',
-                  }}
+                  onClick={() => setIsCreatingPreset(false)}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ width: '28px', height: '28px', borderRadius: '10px', backgroundColor: hexToRgba(preset.color, 0.15), border: `1px solid ${hexToRgba(preset.color, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: preset.color }}>
-                      <IconComponent size={15} />
-                    </div>
-                    <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '5px', backgroundColor: hexToRgba(preset.color, 0.15), color: preset.color }}>
-                      {preset.level}
-                    </span>
-                  </div>
-                  <span style={{ fontSize: '12px', fontWeight: 700, marginTop: '6px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {preset.title}
-                  </span>
+                  <X size={18} />
                 </button>
-              );
-            })}
+              </div>
+
+              <form onSubmit={handleCreateNewPreset} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Title</label>
+                  <input
+                    type="text"
+                    value={newPresetTitle}
+                    onChange={e => setNewPresetTitle(e.target.value)}
+                    placeholder="Title"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                      backgroundColor: 'var(--pill-bg)',
+                      border: '1px solid var(--border-glass)',
+                      color: 'var(--text-primary)',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Category</label>
+                  <select
+                    value={newPresetCategory}
+                    onChange={e => setNewPresetCategory(e.target.value as ReminderCategory)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                      backgroundColor: 'var(--pill-bg)',
+                      border: '1px solid var(--border-glass)',
+                      color: 'var(--text-primary)',
+                      fontSize: '13px',
+                      outline: 'none',
+                    }}
+                  >
+                    {['TASK', 'BILLS', 'SAVINGS', 'STUDY', 'MEETING', 'FUN', 'SPORT', 'WORK', 'HEALTH'].map(cat => (
+                      <option key={cat} value={cat} style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Priority</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                    {(['SIMPLE', 'FLAGGED', 'URGENT'] as const).map(lvl => (
+                      <button
+                        key={lvl}
+                        type="button"
+                        onClick={() => setNewPresetLevel(lvl)}
+                        style={{
+                          padding: '8px',
+                          borderRadius: '10px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          border: newPresetLevel === lvl ? '1.5px solid var(--accent)' : '1px solid var(--border-glass)',
+                          backgroundColor: newPresetLevel === lvl ? 'rgba(99, 102, 241, 0.15)' : 'var(--pill-bg)',
+                          color: newPresetLevel === lvl ? 'var(--accent)' : 'var(--text-secondary)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {lvl}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsCreatingPreset(false)}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      borderRadius: '12px',
+                      backgroundColor: 'var(--pill-bg)',
+                      border: '1px solid var(--border-glass)',
+                      color: 'var(--text-secondary)',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      borderRadius: '12px',
+                      backgroundColor: 'var(--accent)',
+                      border: 'none',
+                      color: '#FFFFFF',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 3. Records Section (At Bottom with Single Primary Add Button) */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 2px' }}>
@@ -523,6 +685,7 @@ export const PlannerScreen: React.FC = () => {
             <div
               key={r.id}
               className="glass-panel"
+              onClick={() => handleTaskClick(r.id)}
               style={{
                 padding: '14px 16px',
                 borderRadius: '20px',
@@ -531,38 +694,33 @@ export const PlannerScreen: React.FC = () => {
                 justifyContent: 'space-between',
                 gap: '12px',
                 opacity: r.completed ? 0.55 : 1,
-                border: '1px solid var(--border-glass)',
+                border: r.completed ? '1px solid var(--border-subtle)' : '1px solid var(--border-glass)',
                 backgroundColor: 'var(--bg-card)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
               }}
             >
               {/* Left Checkbox & Info */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, overflow: 'hidden' }}>
-                <button
-                  type="button"
-                  onClick={() => toggleReminder(r.id)}
+                <div
                   style={{
-                    background: 'none',
-                    border: 'none',
-                    color: r.completed ? '#30D158' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                    padding: 0,
+                    width: '22px',
+                    height: '22px',
+                    borderRadius: '7px',
+                    backgroundColor: r.completed ? '#30D158' : 'var(--pill-bg)',
+                    border: r.completed ? 'none' : '1.5px solid var(--border-glass)',
                     display: 'flex',
                     alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#141416',
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  {r.completed ? (
-                    <div style={{ width: '20px', height: '20px', borderRadius: '6px', backgroundColor: '#30D158', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#141416' }}>
-                      <Check size={14} strokeWidth={3} />
-                    </div>
-                  ) : (
-                    <div style={{ width: '20px', height: '20px', borderRadius: '6px', border: '1.5px solid var(--border-glass)', backgroundColor: 'var(--pill-bg)' }} />
-                  )}
-                </button>
+                  {r.completed && <Check size={14} strokeWidth={3} />}
+                </div>
 
-                <div
-                  style={{ flex: 1, overflow: 'hidden', cursor: 'pointer' }}
-                  onClick={() => setSelectedReminderForDetail(r)}
-                >
+                <div style={{ flex: 1, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span
                       style={{
@@ -570,11 +728,12 @@ export const PlannerScreen: React.FC = () => {
                         fontWeight: 700,
                         textDecoration: r.completed ? 'line-through' : 'none',
                         color: r.completed ? 'var(--text-muted)' : 'var(--text-primary)',
+                        transition: 'all 0.2s ease',
                       }}
                     >
                       {r.title}
                     </span>
-                    {r.level === 'URGENT' && (
+                    {r.level === 'URGENT' && !r.completed && (
                       <span
                         style={{
                           fontSize: '9px',
@@ -586,6 +745,20 @@ export const PlannerScreen: React.FC = () => {
                         }}
                       >
                         Urgent
+                      </span>
+                    )}
+                    {r.completed && (
+                      <span
+                        style={{
+                          fontSize: '9px',
+                          fontWeight: 700,
+                          padding: '2px 6px',
+                          borderRadius: '6px',
+                          backgroundColor: 'rgba(48, 209, 88, 0.15)',
+                          color: '#30D158',
+                        }}
+                      >
+                        Done
                       </span>
                     )}
                   </div>
@@ -618,16 +791,19 @@ export const PlannerScreen: React.FC = () => {
               </div>
 
               {/* Right Action Icons */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                 <button
                   type="button"
-                  onClick={() => setSelectedReminderForDetail(r)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedReminderForDetail(r);
+                  }}
                   style={{
                     background: 'none',
                     border: 'none',
                     color: 'var(--text-muted)',
                     cursor: 'pointer',
-                    padding: '4px',
+                    padding: '6px',
                   }}
                   title="View Detail"
                 >
@@ -635,13 +811,16 @@ export const PlannerScreen: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => deleteReminder(r.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteReminder(r.id);
+                  }}
                   style={{
                     background: 'none',
                     border: 'none',
                     color: 'var(--text-muted)',
                     cursor: 'pointer',
-                    padding: '4px',
+                    padding: '6px',
                   }}
                   title="Delete"
                 >

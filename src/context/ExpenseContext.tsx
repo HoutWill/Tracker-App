@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ExpenseItem, CurrencyCode, Category, PaymentMethod, TransactionType, TripFolder } from '../types';
+import { ExpenseItem, CurrencyCode, Category, PaymentMethod, TransactionType, TripFolder, BudgetPeriod, CycleSnapshot } from '../types';
 import { StorageService, getTodayDateString } from '../services/storageService';
 import { DEFAULT_CATEGORIES } from '../constants/categories';
 
@@ -25,6 +25,11 @@ interface ExpenseContextType {
   selectedExpenseForEdit: ExpenseItem | null;
   monthlyBudget: number;
   savingGoal: number;
+  budgetTargets: { DAILY: number; WEEKLY: number; MONTHLY: number };
+  savingGoals: { DAILY: number; WEEKLY: number; MONTHLY: number };
+  budgetPeriod: BudgetPeriod;
+  savingPeriod: BudgetPeriod;
+  cycleHistory: CycleSnapshot[];
   hideBalances: boolean;
   trips: TripFolder[];
   selectedTripId: string | null;
@@ -58,6 +63,12 @@ interface ExpenseContextType {
   setSelectedExpenseForEdit: (item: ExpenseItem | null) => void;
   setMonthlyBudget: (amount: number) => void;
   setSavingGoal: (amount: number) => void;
+  setBudgetTarget: (period: BudgetPeriod, amount: number) => void;
+  setSavingGoalTarget: (period: BudgetPeriod, amount: number) => void;
+  setBudgetPeriod: (period: BudgetPeriod) => void;
+  setSavingPeriod: (period: BudgetPeriod) => void;
+  archiveCycleSnapshot: (snapshot: Omit<CycleSnapshot, 'id' | 'archivedAt'>) => void;
+  depositRolloverToSavings: (amount: number, note?: string) => void;
   setHideBalances: (hide: boolean) => void;
   reloadExpenses: () => Promise<void>;
   clearAllData: () => Promise<void>;
@@ -90,21 +101,65 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isCreateExpenseFolderOpen, setIsCreateExpenseFolderOpen] = useState<boolean>(false);
   const [isCreateSavingFolderOpen, setIsCreateSavingFolderOpen] = useState<boolean>(false);
 
-  const [monthlyBudget, setMonthlyBudgetState] = useState<number>(() => {
-    const saved = localStorage.getItem('monthly_budget_target');
-    return saved ? parseFloat(saved) : 1000;
-  });
+  const [budgetTargets, setBudgetTargetsState] = useState<{ DAILY: number; WEEKLY: number; MONTHLY: number }>(() => StorageService.getBudgetTargets());
+  const [savingGoals, setSavingGoalsState] = useState<{ DAILY: number; WEEKLY: number; MONTHLY: number }>(() => StorageService.getSavingGoals());
 
-  const [savingGoal, setSavingGoalState] = useState<number>(() => {
-    const saved = localStorage.getItem('saving_goal_target');
-    return saved ? parseFloat(saved) : 2000;
-  });
+  const [budgetPeriod, setBudgetPeriodState] = useState<BudgetPeriod>(() => StorageService.getBudgetPeriod('MONTHLY'));
+  const [savingPeriod, setSavingPeriodState] = useState<BudgetPeriod>(() => StorageService.getSavingPeriod('MONTHLY'));
+  const [cycleHistory, setCycleHistory] = useState<CycleSnapshot[]>(() => StorageService.getCycleHistory());
+
+  const monthlyBudget = budgetTargets[budgetPeriod];
+  const savingGoal = savingGoals[savingPeriod];
+
+  const setBudgetTarget = (period: BudgetPeriod, amount: number) => {
+    const updated = { ...budgetTargets, [period]: amount };
+    setBudgetTargetsState(updated);
+    StorageService.saveBudgetTargets(updated);
+  };
+
+  const setSavingGoalTarget = (period: BudgetPeriod, amount: number) => {
+    const updated = { ...savingGoals, [period]: amount };
+    setSavingGoalsState(updated);
+    StorageService.saveSavingGoals(updated);
+  };
+
+  const setMonthlyBudget = (amount: number) => {
+    setBudgetTarget(budgetPeriod, amount);
+  };
+
+  const setSavingGoal = (amount: number) => {
+    setSavingGoalTarget(savingPeriod, amount);
+  };
 
   const [hideBalances, setHideBalances] = useState<boolean>(false);
+
+  const archiveCycleSnapshot = (snapshot: Omit<CycleSnapshot, 'id' | 'archivedAt'>) => {
+    const newSnap = StorageService.addCycleSnapshot(snapshot);
+    setCycleHistory(prev => [newSnap, ...prev]);
+  };
+
+  const depositRolloverToSavings = (amount: number, note?: string) => {
+    if (amount <= 0) return;
+    const cat = categories.find(c => c.type === 'SAVING' || c.id.startsWith('cat-saving')) || categories[0];
+    addExpense({
+      title: 'Rollover',
+      amount,
+      currency: currency,
+      type: 'SAVING',
+      categoryId: cat.id,
+      categoryName: cat.name,
+      categoryIcon: cat.icon || 'piggy-bank',
+      categoryColor: cat.color || '#00B894',
+      date: getTodayDateString(),
+      paymentMethod: 'Bank',
+      notes: note || 'Budget Surplus Rollover Deposit',
+    });
+  };
 
   const reloadExpenses = async () => {
     const list = await StorageService.getExpenses();
     setExpenses(list);
+    setCycleHistory(StorageService.getCycleHistory());
   };
 
   useEffect(() => {
@@ -142,14 +197,14 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setCurrencyState(c);
   };
 
-  const setMonthlyBudget = (amount: number) => {
-    setMonthlyBudgetState(amount);
-    localStorage.setItem('monthly_budget_target', amount.toString());
+  const setBudgetPeriod = (period: BudgetPeriod) => {
+    setBudgetPeriodState(period);
+    StorageService.saveBudgetPeriod(period);
   };
 
-  const setSavingGoal = (amount: number) => {
-    setSavingGoalState(amount);
-    localStorage.setItem('saving_goal_target', amount.toString());
+  const setSavingPeriod = (period: BudgetPeriod) => {
+    setSavingPeriodState(period);
+    StorageService.saveSavingPeriod(period);
   };
 
   const resetAllFilters = () => {
@@ -317,6 +372,11 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         selectedExpenseForEdit,
         monthlyBudget,
         savingGoal,
+        budgetTargets,
+        savingGoals,
+        budgetPeriod,
+        savingPeriod,
+        cycleHistory,
         hideBalances,
         trips,
         selectedTripId,
@@ -350,6 +410,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setSelectedExpenseForEdit,
         setMonthlyBudget,
         setSavingGoal,
+        setBudgetTarget,
+        setSavingGoalTarget,
+        setBudgetPeriod,
+        setSavingPeriod,
+        archiveCycleSnapshot,
+        depositRolloverToSavings,
         setHideBalances,
         reloadExpenses,
         clearAllData,

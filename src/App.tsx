@@ -87,7 +87,6 @@ export const AppContent: React.FC = () => {
       <AddReminderModal />
       <EditExpenseModal />
       <EditSavingModal />
-      <AiChatModal />
       <CreateTripModal />
       <CreateExpenseFolderModal />
       <CreateSavingFolderModal />

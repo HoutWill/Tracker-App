@@ -7,8 +7,8 @@ import { TripFolderBar } from '../components/TripFolderBar';
 import { ArtPresetGrid } from '../components/ArtPresetGrid';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { EXPENSE_QUICK_PRESETS } from '../constants/presets';
-import { formatCurrency, StorageService, getTodayDateString } from '../services/storageService';
-import { PaymentMethod, QuickPreset } from '../types';
+import { formatCurrency, StorageService, getTodayDateString, getStartOfWeekDateString, getEndOfWeekDateString } from '../services/storageService';
+import { PaymentMethod, QuickPreset, BudgetPeriod } from '../types';
 import { Plus, Zap, TrendingUp, Filter, CheckCircle2, Layers, SearchX, X, Check, ArrowDownRight, Trash2, Target, Edit3, CreditCard, PiggyBank } from 'lucide-react';
 
 const PRESET_ICONS = [
@@ -20,7 +20,7 @@ const PRESET_ICONS = [
 ];
 
 interface ExpensesScreenProps {
-  onSwitchTab?: (tab: any) => void;
+  onSwitchTab?: (tab: 'EXPENSES' | 'SAVINGS') => void;
 }
 
 export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) => {
@@ -34,6 +34,13 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
     categories,
     monthlyBudget,
     setMonthlyBudget,
+    budgetTargets,
+    setBudgetTarget,
+    budgetPeriod,
+    setBudgetPeriod,
+    cycleHistory,
+    archiveCycleSnapshot,
+    depositRolloverToSavings,
     hideBalances,
     addExpense,
     setIsAddExpenseOpen,
@@ -53,6 +60,8 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
   // Edit Budget Target state
   const [isEditingBudget, setIsEditingBudget] = useState<boolean>(false);
   const [customBudgetInput, setCustomBudgetInput] = useState<string>(monthlyBudget.toString());
+  const [editBudgetPeriod, setEditBudgetPeriod] = useState<BudgetPeriod>(budgetPeriod);
+  const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
 
   // New Preset Modal state
   const [isCreatingPreset, setIsCreatingPreset] = useState<boolean>(false);
@@ -81,9 +90,25 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
   const totalFilteredUSD = filteredExpenseItems.reduce((sum, e) => sum + e.amount, 0);
   const averageExpenseUSD = expenseItems.length > 0 ? totalExpenseUSD / expenseItems.length : 0;
 
-  const currentBudget = monthlyBudget || 1000;
-  const remainingBudgetUSD = Math.max(0, currentBudget - totalExpenseUSD);
-  const budgetProgress = Math.min(100, Math.round((totalExpenseUSD / currentBudget) * 100));
+  // Period Expense Calculation for Multi-Period Budgeting (Daily / Weekly / Monthly)
+  const getActivePeriodExpenseUSD = () => {
+    const todayStr = getTodayDateString();
+    if (budgetPeriod === 'DAILY') {
+      return expenseItems.filter(e => e.date === todayStr).reduce((sum, e) => sum + e.amount, 0);
+    }
+    if (budgetPeriod === 'WEEKLY') {
+      const startW = getStartOfWeekDateString();
+      const endW = getEndOfWeekDateString();
+      return expenseItems.filter(e => e.date >= startW && e.date <= endW).reduce((sum, e) => sum + e.amount, 0);
+    }
+    const monthPrefix = todayStr.substring(0, 7);
+    return expenseItems.filter(e => e.date.startsWith(monthPrefix)).reduce((sum, e) => sum + e.amount, 0);
+  };
+
+  const activePeriodExpenseUSD = getActivePeriodExpenseUSD();
+  const currentBudget = monthlyBudget || (budgetPeriod === 'DAILY' ? 35 : budgetPeriod === 'WEEKLY' ? 250 : 1000);
+  const remainingBudgetUSD = Math.max(0, currentBudget - activePeriodExpenseUSD);
+  const budgetProgress = Math.min(100, Math.round((activePeriodExpenseUSD / currentBudget) * 100));
 
   const handleOpenPresetModal = (preset: QuickPreset) => {
     setActivePreset(preset);
@@ -158,10 +183,31 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
       alert('Please enter a valid budget amount.');
       return;
     }
-    setMonthlyBudget(val);
+    setBudgetTarget(editBudgetPeriod, val);
     setIsEditingBudget(false);
-    setToastMsg(`Budget target updated to ${formatCurrency(val, currency)}!`);
+    const periodLabel = editBudgetPeriod === 'DAILY' ? 'Day' : editBudgetPeriod === 'WEEKLY' ? 'Week' : 'Month';
+    setToastMsg(`${periodLabel} budget updated to ${formatCurrency(val, currency)}!`);
     setTimeout(() => setToastMsg(null), 2500);
+  };
+
+  const handleRolloverSurplus = () => {
+    if (remainingBudgetUSD <= 0) {
+      alert('No unspent budget surplus available for rollover.');
+      return;
+    }
+    const periodLabel = budgetPeriod === 'DAILY' ? 'Day' : budgetPeriod === 'WEEKLY' ? 'Week' : 'Month';
+    archiveCycleSnapshot({
+      type: 'BUDGET',
+      period: budgetPeriod,
+      periodKey: getTodayDateString(),
+      targetAmount: currentBudget,
+      actualAmount: activePeriodExpenseUSD,
+      status: 'SURPLUS',
+      surplusAmount: remainingBudgetUSD,
+    });
+    depositRolloverToSavings(remainingBudgetUSD, `Budget Surplus (${periodLabel}) Rollover`);
+    setToastMsg(`Rolled over ${formatCurrency(remainingBudgetUSD, currency)} to Vault!`);
+    setTimeout(() => setToastMsg(null), 3000);
   };
 
   const handleCategorySelect = (catId: string) => {
@@ -194,7 +240,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
       type: 'EXPENSE',
     };
 
-    const updatedList = [...presetsList, newPreset];
+    const updatedList = [newPreset, ...presetsList];
     setPresetsList(updatedList);
     StorageService.savePresetsList('EXPENSE', updatedList);
 
@@ -204,6 +250,12 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
     setToastMsg(`Added preset "${newPreset.title}"!`);
     setTimeout(() => setToastMsg(null), 2500);
   };
+
+  const handleReorderPresets = (updatedList: QuickPreset[]) => {
+    setPresetsList(updatedList);
+    StorageService.savePresetsList('EXPENSE', updatedList);
+  };
+
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
@@ -287,11 +339,34 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            {/* Multi-Period Cycle Dropdown Select */}
+            <select
+              value={budgetPeriod}
+              onChange={e => setBudgetPeriod(e.target.value as BudgetPeriod)}
+              style={{
+                padding: '3px 8px',
+                fontSize: '11px',
+                fontWeight: 700,
+                borderRadius: '8px',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-glass)',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+              title="Select Budget Cycle"
+            >
+              <option value="DAILY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Day</option>
+              <option value="WEEKLY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Week</option>
+              <option value="MONTHLY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Month</option>
+            </select>
+
             <button
               type="button"
               className="glass-pill"
               onClick={() => {
                 setCustomBudgetInput(currentBudget.toString());
+                setEditBudgetPeriod(budgetPeriod);
                 setIsEditingBudget(true);
               }}
               style={{
@@ -308,23 +383,24 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               title="Set Target Budget"
             >
               <Target size={12} style={{ flexShrink: 0 }} />
-              <span>Goal: {formatCurrency(currentBudget, currency)}</span>
+              <span>Budget: {formatCurrency(currentBudget, currency)}</span>
             </button>
-            <span
+
+            <button
+              type="button"
+              className="glass-pill"
+              onClick={() => setIsHistoryOpen(true)}
               style={{
                 fontSize: '11px',
-                fontWeight: 600,
-                padding: '2px 8px',
-                borderRadius: '6px',
-                backgroundColor: 'var(--pill-bg)',
+                padding: '3px 8px',
                 color: 'var(--text-secondary)',
-                border: '1px solid var(--border-glass)',
-                flexShrink: 0,
+                borderColor: 'var(--border-glass)',
                 whiteSpace: 'nowrap',
+                flexShrink: 0,
               }}
             >
-              {expenseItems.length} items
-            </span>
+              History
+            </button>
           </div>
         </div>
 
@@ -340,11 +416,32 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
         <div style={{ marginBottom: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontWeight: 500, marginBottom: '6px' }}>
             <span style={{ color: 'var(--text-muted)' }}>
-              Budget: {formatCurrency(currentBudget, currency)}
+              {budgetPeriod === 'DAILY' ? 'Daily' : budgetPeriod === 'WEEKLY' ? 'Weekly' : 'Monthly'} Budget ({formatCurrency(currentBudget, currency)})
             </span>
-            <span style={{ color: budgetProgress > 90 ? 'var(--accent-danger)' : 'var(--text-secondary)', fontWeight: 600 }}>
-              {hideBalances ? '••••' : formatCurrency(remainingBudgetUSD, currency)} remaining
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: budgetProgress > 90 ? 'var(--accent-danger)' : 'var(--text-secondary)', fontWeight: 600 }}>
+                {hideBalances ? '••••' : formatCurrency(remainingBudgetUSD, currency)} remaining
+              </span>
+              {remainingBudgetUSD > 0 && (
+                <button
+                  type="button"
+                  onClick={handleRolloverSurplus}
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    padding: '1px 6px',
+                    borderRadius: '5px',
+                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    color: 'var(--accent-success)',
+                    cursor: 'pointer',
+                  }}
+                  title="Deposit unspent budget surplus to Vault"
+                >
+                  Rollover
+                </button>
+              )}
+            </div>
           </div>
 
           <div
@@ -460,7 +557,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Target size={18} color={pageAccent} />
-                <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Budget Target</h3>
+                <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Budget</h3>
               </div>
               <button
                 type="button"
@@ -472,12 +569,46 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
             </div>
 
             <div>
-              <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+                Cycle
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                {(['DAILY', 'WEEKLY', 'MONTHLY'] as const).map(p => {
+                  const label = p === 'DAILY' ? 'Day' : p === 'WEEKLY' ? 'Week' : 'Month';
+                  const isActive = editBudgetPeriod === p;
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => {
+                        setEditBudgetPeriod(p);
+                        setCustomBudgetInput(budgetTargets[p].toString());
+                      }}
+                      style={{
+                        padding: '8px',
+                        borderRadius: '10px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        border: isActive ? `1.5px solid ${pageAccent}` : '1px solid var(--border-glass)',
+                        backgroundColor: isActive ? hexToRgba(pageAccent, 0.15) : 'var(--pill-bg)',
+                        color: isActive ? pageAccent : 'var(--text-secondary)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {label} (${budgetTargets[p]})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
                 Target Amount
               </label>
               <input
                 type="number"
-                step="50"
+                step="10"
                 value={customBudgetInput}
                 onChange={e => setCustomBudgetInput(e.target.value)}
                 placeholder="1000"
@@ -499,7 +630,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
             </div>
 
             <div style={{ display: 'flex', gap: '6px' }}>
-              {[500, 1000, 1500, 2500].map(amt => (
+              {[100, 250, 500, 1000].map(amt => (
                 <button
                   key={amt}
                   type="button"
@@ -543,6 +674,117 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
         </div>
       )}
 
+      {/* Cycle History Modal */}
+      {isHistoryOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 100,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+          onClick={() => setIsHistoryOpen(false)}
+        >
+          <div
+            className="glass-panel"
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '420px',
+              maxHeight: '80vh',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              borderColor: hexToRgba(pageAccent, 0.35),
+              overflowY: 'auto',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Target size={18} color={pageAccent} />
+                <h3 style={{ fontSize: '16px', fontWeight: 800 }}>History</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsHistoryOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {cycleHistory.filter(c => c.type === 'BUDGET').length === 0 ? (
+                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                  Empty History
+                </div>
+              ) : (
+                cycleHistory
+                  .filter(c => c.type === 'BUDGET')
+                  .map(snap => (
+                    <div
+                      key={snap.id}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid var(--border-glass)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {snap.period === 'DAILY' ? 'Day' : snap.period === 'WEEKLY' ? 'Week' : 'Month'} ({snap.periodKey})
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          Spent {formatCurrency(snap.actualAmount, currency)} / Limit {formatCurrency(snap.targetAmount, currency)}
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          backgroundColor: snap.status === 'SURPLUS' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                          color: snap.status === 'SURPLUS' ? 'var(--accent-success)' : 'var(--accent-danger)',
+                        }}
+                      >
+                        {snap.status === 'SURPLUS' ? 'Surplus' : 'Overrun'}
+                      </span>
+                    </div>
+                  ))
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsHistoryOpen(false)}
+              style={{
+                padding: '10px',
+                borderRadius: '10px',
+                border: 'none',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-primary)',
+                fontWeight: 700,
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Trip Folder Travel & Event Organizer Bar */}
       <TripFolderBar />
 
@@ -553,6 +795,8 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
         pageAccent={pageAccent}
         onSelectPreset={handleOpenPresetModal}
         onAddPreset={() => setIsCreatingPreset(true)}
+        onDeletePreset={handleDeletePreset}
+        onReorderPresets={handleReorderPresets}
       />
 
       {/* Add New Preset Modal with Icon & Category Picker */}

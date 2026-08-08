@@ -125,3 +125,32 @@ input[type="date"], input[type="time"] {
   border-radius: 4px;
 }
 
+/* Apple iOS Home Screen Icon Wiggle Animation for Drag & Relocate Mode */
+@keyframes ios-wiggle {
+  0% {
+    transform: rotate(-1.2deg) translateY(0px);
+  }
+  25% {
+    transform: rotate(1.2deg) translateY(-1px);
+  }
+  50% {
+    transform: rotate(-1deg) translateY(1px);
+  }
+  75% {
+    transform: rotate(1.4deg) translateY(0px);
+  }
+  100% {
+    transform: rotate(-1.2deg) translateY(0px);
+  }
+}
+
+.ios-wiggle {
+  animation: ios-wiggle 0.28s ease-in-out infinite alternate;
+}
+
+.ios-drag-target {
+  border: 2px dashed var(--accent) !important;
+  opacity: 0.6;
+}
+
+

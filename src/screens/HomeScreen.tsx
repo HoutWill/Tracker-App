@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useExpenses, TypeTabOption } from '../context/ExpenseContext';
 import { ExpenseCard } from '../components/ExpenseCard';
 import { FilterControlBar } from '../components/FilterControlBar';
 import { TripFolderBar } from '../components/TripFolderBar';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { EXPENSE_QUICK_PRESETS, SAVING_QUICK_PRESETS, QUICK_PRESETS } from '../constants/presets';
-import { formatCurrency } from '../services/storageService';
-import { PaymentMethod, TransactionType } from '../types';
+import { StorageService, formatCurrency } from '../services/storageService';
+import { PaymentMethod, TransactionType, QuickPreset } from '../types';
 import { Plus, Zap, Filter, CheckCircle2, Layers, SearchX, X, Check, PiggyBank, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 
 export const HomeScreen: React.FC = () => {
@@ -16,6 +16,9 @@ export const HomeScreen: React.FC = () => {
     currency,
     categories,
     monthlyBudget,
+    savingGoal,
+    budgetPeriod,
+    savingPeriod,
     hideBalances,
     activeTypeTab,
     setActiveTypeTab,
@@ -27,11 +30,21 @@ export const HomeScreen: React.FC = () => {
   } = useExpenses();
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const [activePreset, setActivePreset] = useState<typeof QUICK_PRESETS[0] | null>(null);
+  const [activePreset, setActivePreset] = useState<QuickPreset | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('Cash');
   const [selectedType, setSelectedType] = useState<TransactionType>('EXPENSE');
   const [presetAmount, setPresetAmount] = useState<string>('');
   const [presetDate, setPresetDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  const [expensePresets, setExpensePresets] = useState<QuickPreset[]>([]);
+  const [savingPresets, setSavingPresets] = useState<QuickPreset[]>([]);
+
+  useEffect(() => {
+    const ep = StorageService.getPresetsList('EXPENSE', EXPENSE_QUICK_PRESETS);
+    const sp = StorageService.getPresetsList('SAVING', SAVING_QUICK_PRESETS);
+    setExpensePresets(ep);
+    setSavingPresets(sp);
+  }, []);
 
   const expenseItems = expenses.filter(e => e.type === 'EXPENSE' || (!e.type && !e.categoryId.startsWith('cat-saving') && e.categoryId !== 'cat-income'));
   const savingItems = expenses.filter(e => e.type === 'SAVING' || e.categoryId.startsWith('cat-saving'));
@@ -39,17 +52,23 @@ export const HomeScreen: React.FC = () => {
   const totalExpenseUSD = expenseItems.reduce((sum, e) => sum + e.amount, 0);
   const totalSavingUSD = savingItems.reduce((sum, e) => sum + e.amount, 0);
 
-  const budgetProgress = Math.min(100, Math.round((totalExpenseUSD / (monthlyBudget || 1000)) * 100));
+  const currentBudget = monthlyBudget || (budgetPeriod === 'DAILY' ? 35 : budgetPeriod === 'WEEKLY' ? 250 : 1000);
+  const budgetProgress = Math.min(100, Math.round((totalExpenseUSD / currentBudget) * 100));
+
+  const currentGoal = savingGoal || (savingPeriod === 'DAILY' ? 50 : savingPeriod === 'WEEKLY' ? 500 : 2000);
+  const savingProgress = Math.min(100, Math.round((totalSavingUSD / currentGoal) * 100));
+
 
   // Dynamic presets based on active top tab
   const displayedPresets =
     activeTypeTab === 'SAVING'
-      ? SAVING_QUICK_PRESETS
+      ? (savingPresets.length > 0 ? savingPresets : SAVING_QUICK_PRESETS)
       : activeTypeTab === 'EXPENSE'
-      ? EXPENSE_QUICK_PRESETS
-      : QUICK_PRESETS;
+      ? (expensePresets.length > 0 ? expensePresets : EXPENSE_QUICK_PRESETS)
+      : [...(expensePresets.length > 0 ? expensePresets : EXPENSE_QUICK_PRESETS), ...(savingPresets.length > 0 ? savingPresets : SAVING_QUICK_PRESETS)];
 
-  const handleOpenPresetModal = (preset: typeof QUICK_PRESETS[0]) => {
+
+  const handleOpenPresetModal = (preset: QuickPreset) => {
     setActivePreset(preset);
     setPresetAmount(preset.amount.toString());
     setPresetDate(new Date().toISOString().split('T')[0]);
@@ -183,7 +202,7 @@ export const HomeScreen: React.FC = () => {
                 <div style={{ height: '100%', width: `${budgetProgress}%`, backgroundColor: budgetProgress > 90 ? 'var(--accent-danger)' : 'var(--accent)', borderRadius: '3px' }} />
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right' }}>
-                {budgetProgress}% of {formatCurrency(monthlyBudget || 1000, currency)} target
+                {budgetProgress}% of {formatCurrency(currentBudget, currency)} ({budgetPeriod === 'DAILY' ? 'Daily' : budgetPeriod === 'WEEKLY' ? 'Weekly' : 'Monthly'}) target
               </div>
             </div>
           </div>
@@ -205,7 +224,7 @@ export const HomeScreen: React.FC = () => {
               {hideBalances ? '••••' : formatCurrency(totalSavingUSD, currency)}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--accent-success)', fontWeight: 700 }}>
-              Dedicated Savings & Emergency Vault Funds
+              {savingProgress}% of {formatCurrency(currentGoal, currency)} ({savingPeriod === 'DAILY' ? 'Daily' : savingPeriod === 'WEEKLY' ? 'Weekly' : 'Monthly'}) goal
             </div>
           </div>
         )}

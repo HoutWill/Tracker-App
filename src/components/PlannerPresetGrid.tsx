@@ -1,37 +1,79 @@
 import React, { useState } from 'react';
-import { QuickPreset, CurrencyCode } from '../types';
-import { CategoryIconRenderer } from './CategoryIconRenderer';
-import { useTheme, hexToRgba, DEFAULT_PRESET_PALETTE } from '../context/ThemeContext';
-import { formatCurrency } from '../services/storageService';
-import { Plus, Zap, Check, X, Move } from 'lucide-react';
+import { PlannerPreset, ReminderCategory } from '../types';
+import { hexToRgba } from '../context/ThemeContext';
+import { triggerHaptic } from '../services/soundService';
+import {
+  Zap,
+  Plus,
+  Check,
+  X,
+  Move,
+  Trash2,
+  Dumbbell,
+  Receipt,
+  Users,
+  BookOpen,
+  Heart,
+  ShoppingBag,
+  Briefcase,
+  Droplets,
+  ShoppingCart,
+  Bell,
+  Sparkles,
+  ShieldCheck,
+  Clock,
+  Flag,
+} from 'lucide-react';
 
-interface ArtPresetGridProps {
-  presetsList: QuickPreset[];
-  currency: CurrencyCode;
-  pageAccent: string;
-  onSelectPreset: (preset: QuickPreset) => void;
+interface PlannerPresetGridProps {
+  presetsList: PlannerPreset[];
+  onSelectPreset: (preset: PlannerPreset) => void;
   onAddPreset: () => void;
-  onDeletePreset?: (presetId: string) => void;
-  onReorderPresets?: (newPresets: QuickPreset[]) => void;
-  colorOffset?: number;
+  onDeletePreset: (presetId: string) => void;
+  onReorderPresets: (newPresets: PlannerPreset[]) => void;
 }
 
-export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+  dumbbell: Dumbbell,
+  receipt: Receipt,
+  users: Users,
+  'book-open': BookOpen,
+  heart: Heart,
+  'shopping-bag': ShoppingBag,
+  briefcase: Briefcase,
+  droplets: Droplets,
+  'shopping-cart': ShoppingCart,
+  bell: Bell,
+  sparkles: Sparkles,
+  shield: ShieldCheck,
+  clock: Clock,
+  flag: Flag,
+};
+
+const renderIcon = (iconName: string, size = 15, color = 'var(--text-primary)') => {
+  const IconComponent = ICON_MAP[iconName.toLowerCase()] || Bell;
+  return <IconComponent size={size} color={color} />;
+};
+
+const LEVEL_COLORS: Record<string, string> = {
+  URGENT: '#EC668C',
+  FLAGGED: '#F3A85B',
+  SIMPLE: '#4A99E9',
+};
+
+export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
   presetsList,
-  currency,
-  pageAccent,
   onSelectPreset,
   onAddPreset,
   onDeletePreset,
   onReorderPresets,
-  colorOffset = 0,
 }) => {
-  const { presetPalette } = useTheme();
   const [isReordering, setIsReordering] = useState<boolean>(false);
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
+    triggerHaptic(10);
     setDraggedIdx(index);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());
@@ -46,6 +88,7 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
 
   const handleDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
+    triggerHaptic(12);
     if (draggedIdx === null || draggedIdx === targetIndex) {
       setDraggedIdx(null);
       setDragOverIdx(null);
@@ -58,10 +101,7 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
 
     setDraggedIdx(null);
     setDragOverIdx(null);
-
-    if (onReorderPresets) {
-      onReorderPresets(updated);
-    }
+    onReorderPresets(updated);
   };
 
   const handleDragEnd = () => {
@@ -70,21 +110,19 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
   };
 
   const handleMoveItem = (fromIdx: number, direction: 'LEFT' | 'RIGHT') => {
+    triggerHaptic(10);
     const toIdx = direction === 'LEFT' ? fromIdx - 1 : fromIdx + 1;
     if (toIdx < 0 || toIdx >= presetsList.length) return;
 
     const updated = [...presetsList];
     const [movedItem] = updated.splice(fromIdx, 1);
     updated.splice(toIdx, 0, movedItem);
-
-    if (onReorderPresets) {
-      onReorderPresets(updated);
-    }
+    onReorderPresets(updated);
   };
 
   return (
-    <div style={{ marginBottom: '18px' }}>
-      {/* Single-Word Header Bar */}
+    <div style={{ marginBottom: '20px' }}>
+      {/* Single-Word Clean Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Zap size={15} style={{ color: 'var(--text-secondary)' }} />
@@ -95,7 +133,29 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
           <button
             type="button"
             className="glass-pill"
-            onClick={() => setIsReordering(!isReordering)}
+            onClick={() => {
+              triggerHaptic(12);
+              setIsReordering(!isReordering);
+            }}
+            style={{
+              fontSize: '11px',
+              padding: '3px 8px',
+              color: isReordering ? '#EF4444' : 'var(--text-secondary)',
+              borderColor: isReordering ? 'rgba(239, 68, 68, 0.4)' : 'var(--border-glass)',
+              backgroundColor: isReordering ? 'rgba(239, 68, 68, 0.15)' : 'var(--pill-bg)',
+            }}
+          >
+            {isReordering ? <X size={12} /> : <Trash2 size={12} />}
+            <span>{isReordering ? 'Done' : 'Delete'}</span>
+          </button>
+
+          <button
+            type="button"
+            className="glass-pill"
+            onClick={() => {
+              triggerHaptic(12);
+              setIsReordering(!isReordering);
+            }}
             style={{
               fontSize: '11px',
               padding: '3px 8px',
@@ -104,14 +164,17 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
               backgroundColor: isReordering ? 'rgba(99, 102, 241, 0.12)' : 'var(--pill-bg)',
             }}
           >
-            {isReordering ? <Check size={12} /> : <Move size={12} />}
-            {isReordering ? 'Done' : 'Move'}
+            <Move size={12} />
+            <span>Move</span>
           </button>
 
           <button
             type="button"
             className="glass-pill"
-            onClick={onAddPreset}
+            onClick={() => {
+              triggerHaptic(12);
+              onAddPreset();
+            }}
             style={{ fontSize: '11px', padding: '3px 8px', color: 'var(--text-secondary)', borderColor: 'var(--border-glass)' }}
           >
             <Plus size={12} /> Add
@@ -119,7 +182,7 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
         </div>
       </div>
 
-      {/* Reorder Mode Banner Tip */}
+      {/* Reorder Mode Banner */}
       {isReordering && (
         <div
           style={{
@@ -130,21 +193,16 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
             borderRadius: '10px',
             backgroundColor: 'var(--pill-bg)',
             border: '1px solid var(--border-glass)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
           }}
         >
-          <span>Drag preset cards to relocate positions</span>
+          Drag preset cards to relocate positions
         </div>
       )}
 
-      {/* Dynamic Quick Presets Grid (Compact Apple Bento Cards with Drag & Relocate) */}
+      {/* Dynamic Planner Presets Bento Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
         {presetsList.map((preset, idx) => {
-          const rawHex = presetPalette[(idx + colorOffset) % presetPalette.length];
-          const tileHex = (!rawHex || rawHex === '#FFFFFF') ? DEFAULT_PRESET_PALETTE[(idx + colorOffset) % DEFAULT_PRESET_PALETTE.length] : rawHex;
-
+          const badgeColor = preset.color || LEVEL_COLORS[preset.level] || '#4A99E9';
           const isDraggingThis = draggedIdx === idx;
           const isDragOverThis = dragOverIdx === idx;
 
@@ -167,6 +225,7 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                 type="button"
                 onClick={() => {
                   if (isReordering) return;
+                  triggerHaptic(12);
                   onSelectPreset(preset);
                 }}
                 className={isDragOverThis ? 'ios-drag-target' : ''}
@@ -182,8 +241,8 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                   color: 'var(--text-primary)',
                   textAlign: 'left',
                   cursor: isReordering ? 'grab' : 'pointer',
-                  transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
                   minHeight: '66px',
+                  transition: 'all 0.15s ease',
                   userSelect: 'none',
                 }}
                 onMouseEnter={e => {
@@ -193,37 +252,36 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                   if (!isReordering) e.currentTarget.style.backgroundColor = 'var(--bg-card)';
                 }}
               >
-                {/* Top Row: Icon badge left, price count right */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div
                     style={{
                       width: '28px',
                       height: '28px',
                       borderRadius: '10px',
-                      backgroundColor: hexToRgba(tileHex, 0.15),
-                      border: `1px solid ${hexToRgba(tileHex, 0.25)}`,
+                      backgroundColor: hexToRgba(badgeColor, 0.15),
+                      border: `1px solid ${hexToRgba(badgeColor, 0.25)}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: tileHex,
+                      color: badgeColor,
                     }}
                   >
-                    <CategoryIconRenderer icon={preset.icon} size={15} color={tileHex} />
+                    {renderIcon(preset.icon, 15, badgeColor)}
                   </div>
-
                   <span
-                    className="tabular-nums"
                     style={{
-                      fontSize: '12px',
+                      fontSize: '9px',
                       fontWeight: 800,
-                      color: 'var(--text-primary)',
+                      padding: '1px 5px',
+                      borderRadius: '5px',
+                      backgroundColor: hexToRgba(badgeColor, 0.15),
+                      color: badgeColor,
                     }}
                   >
-                    {formatCurrency(preset.amount, currency)}
+                    {preset.level}
                   </span>
                 </div>
 
-                {/* Bottom Row: Single-Word Clean Title */}
                 <span
                   style={{
                     fontSize: '12px',
@@ -239,12 +297,13 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                 </span>
               </button>
 
-              {/* Apple-Style Delete Badge in Edit/Reorder Mode */}
-              {isReordering && onDeletePreset && (
+              {/* Apple-Style Delete Badge */}
+              {isReordering && (
                 <button
                   type="button"
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
+                    triggerHaptic(15);
                     onDeletePreset(preset.id);
                   }}
                   style={{
@@ -269,16 +328,9 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                 </button>
               )}
 
-              {/* Mobile Quick Move Left/Right Controls in Edit Mode */}
+              {/* Mobile Quick Move Left/Right Controls */}
               {isReordering && (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: '4px',
-                    marginTop: '4px',
-                  }}
-                >
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', marginTop: '4px' }}>
                   {idx > 0 && (
                     <button
                       type="button"
@@ -324,4 +376,3 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
     </div>
   );
 };
-

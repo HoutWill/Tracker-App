@@ -1,0 +1,49 @@
+[
+  {
+    "title": "Rollover",
+    "amount": 99.99,
+    "currency": "USD",
+    "type": "SAVING",
+    "categoryId": "cat-saving-vault",
+    "categoryName": "Vault",
+    "categoryIcon": "piggy-bank",
+    "categoryColor": "green",
+    "date": "2026-08-08",
+    "paymentMethod": "Bank",
+    "notes": "Budget Surplus (Month) Rollover",
+    "tripId": "trip-vault-demo",
+    "id": "exp-1786174962320-428",
+    "createdAt": 1786174962320
+  },
+  {
+    "title": "Vault",
+    "amount": 100,
+    "currency": "USD",
+    "type": "SAVING",
+    "categoryId": "cat-saving-vault",
+    "categoryName": "Vault",
+    "categoryIcon": "piggy-bank",
+    "categoryColor": "green",
+    "date": "2026-08-08",
+    "paymentMethod": "Bank",
+    "notes": "Vault deposit via Bank",
+    "tripId": "trip-vault-demo",
+    "id": "exp-1786171329676-170",
+    "createdAt": 1786171329676
+  },
+  {
+    "title": "tech",
+    "amount": 0.01,
+    "currency": "USD",
+    "type": "EXPENSE",
+    "categoryId": "cat-drink",
+    "categoryName": "Drink",
+    "categoryIcon": "coffee",
+    "categoryColor": "brown",
+    "date": "2026-08-08",
+    "paymentMethod": "Cash",
+    "notes": "Quick log via Cash",
+    "id": "exp-1786171315368-369",
+    "createdAt": 1786171315368
+  }
+]

@@ -1,4 +1,4 @@
-import { ExpenseItem, CurrencyCode, QuickPreset, TripFolder, ReminderItem } from '../types';
+import { ExpenseItem, CurrencyCode, QuickPreset, TripFolder, ReminderItem, PlannerPreset, BudgetPeriod, CycleSnapshot } from '../types';
 
 export const KHR_PER_USD = 4000;
 
@@ -16,6 +16,21 @@ export const getTodayDateString = (d: Date = new Date()): string => {
   const day = d.getDate().toString().padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+export const getStartOfWeekDateString = (d: Date = new Date()): string => {
+  const curr = new Date(d);
+  const day = curr.getDay(); // 0 is Sun, 1 is Mon
+  const diff = curr.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+  const monday = new Date(curr.setDate(diff));
+  return getTodayDateString(monday);
+};
+
+export const getEndOfWeekDateString = (d: Date = new Date()): string => {
+  const start = new Date(getStartOfWeekDateString(d));
+  start.setDate(start.getDate() + 6);
+  return getTodayDateString(start);
+};
+
 
 export const getGuestId = (): string => {
   try {
@@ -51,66 +66,7 @@ export const requestPersistentStorage = async (): Promise<boolean> => {
   return false;
 };
 
-const DEFAULT_DEMO_EXPENSES: ExpenseItem[] = [
-  {
-    id: 'exp-demo-1',
-    title: 'Emergency Vault Deposit',
-    amount: 50,
-    currency: 'USD',
-    type: 'SAVING',
-    categoryId: 'cat-saving-vault',
-    categoryName: 'Vault',
-    categoryIcon: 'piggy-bank',
-    categoryColor: '#00E676',
-    date: new Date().toISOString().split('T')[0],
-    paymentMethod: 'Bank',
-    createdAt: Date.now() - 3600000,
-  },
-  {
-    id: 'exp-demo-2',
-    title: 'Iced Coffee',
-    amount: 3.5,
-    currency: 'USD',
-    type: 'EXPENSE',
-    categoryId: 'cat-coffee',
-    categoryName: 'Coffee',
-    categoryIcon: 'cafe-outline',
-    categoryColor: '#6C5CE7',
-    date: new Date().toISOString().split('T')[0],
-    paymentMethod: 'Cash',
-    createdAt: Date.now() - 7200000,
-  },
-  {
-    id: 'exp-demo-3',
-    title: 'Flight Ticket',
-    amount: 120,
-    currency: 'USD',
-    type: 'EXPENSE',
-    categoryId: 'cat-travel',
-    categoryName: 'Travel',
-    categoryIcon: 'plane',
-    categoryColor: '#2EAADC',
-    date: new Date().toISOString().split('T')[0],
-    paymentMethod: 'Bank',
-    createdAt: Date.now() - 1800000,
-    tripId: 'trip-travel-demo',
-  },
-  {
-    id: 'exp-demo-4',
-    title: 'Team Lunch',
-    amount: 45,
-    currency: 'USD',
-    type: 'EXPENSE',
-    categoryId: 'cat-team',
-    categoryName: 'Team',
-    categoryIcon: 'users',
-    categoryColor: '#A855F7',
-    date: new Date().toISOString().split('T')[0],
-    paymentMethod: 'Cash',
-    createdAt: Date.now() - 900000,
-    tripId: 'trip-team-demo',
-  },
-];
+const DEFAULT_DEMO_EXPENSES: ExpenseItem[] = [];
 
 const fetchWithTimeout = (url: string, options: RequestInit = {}) => {
   if (typeof window === 'undefined') return Promise.resolve(null);
@@ -139,30 +95,80 @@ export const StorageService = {
 
     try {
       const masterKey = `pitrack_expenses_${guestId}`;
-      const raw = localStorage.getItem(masterKey) || localStorage.getItem('pitrack_expenses_data') || localStorage.getItem('pitrack_expenses');
-      if (raw) {
-        const parsed: ExpenseItem[] = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+      const userSpecific = localStorage.getItem(masterKey);
+      if (userSpecific) {
+        const parsed: ExpenseItem[] = JSON.parse(userSpecific);
+        if (Array.isArray(parsed)) {
           return parsed.sort((a, b) => b.createdAt - a.createdAt);
         }
       }
 
-      // If logged in or previously initialized, return empty array without injecting demo data
-      const initialized = localStorage.getItem('pitrack_expenses_initialized');
-      if (isUserAccount || initialized) {
+      if (isUserAccount) {
         return [];
       }
 
-      localStorage.setItem('pitrack_expenses_initialized', 'true');
+      const legacyRaw = localStorage.getItem('pitrack_expenses_data') || localStorage.getItem('pitrack_expenses');
+      if (legacyRaw) {
+        const parsed: ExpenseItem[] = JSON.parse(legacyRaw);
+        if (Array.isArray(parsed)) {
+          return parsed.sort((a, b) => b.createdAt - a.createdAt);
+        }
+      }
+
       return [];
     } catch (e) {
       return [];
     }
   },
+  syncAccountToCloud(): void {
+    const guestId = getGuestId();
+    if (!guestId.startsWith('usr_')) return;
+
+    try {
+      const expenses = this.getCachedExpenses();
+      const reminders = this.getReminders();
+      const trips = this.getTrips();
+      const targets = this.getBudgetTargets();
+      const goals = this.getSavingGoals();
+      const cycleHistory = this.getCycleHistory();
+
+      fetchWithTimeout('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-guest-id': guestId },
+        body: JSON.stringify({
+          accountId: guestId,
+          expenses,
+          reminders,
+          trips,
+          targets,
+          goals,
+          cycleHistory,
+        }),
+      });
+    } catch (e) {}
+  },
 
   async getExpenses(): Promise<ExpenseItem[]> {
     const guestId = getGuestId();
     const cached = this.getCachedExpenses();
+
+    if (guestId.startsWith('usr_')) {
+      try {
+        const syncRes = await fetchWithTimeout(`/api/sync?accountId=${guestId}`, {
+          headers: { 'x-guest-id': guestId },
+        });
+
+        if (syncRes && syncRes.expenses && Array.isArray(syncRes.expenses)) {
+          localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(syncRes.expenses));
+          if (syncRes.reminders) localStorage.setItem(`reminders_${guestId}`, JSON.stringify(syncRes.reminders));
+          if (syncRes.trips) localStorage.setItem(`trip_folders_${guestId}`, JSON.stringify(syncRes.trips));
+          if (syncRes.targets) localStorage.setItem(`budget_targets_${guestId}`, JSON.stringify(syncRes.targets));
+          if (syncRes.goals) localStorage.setItem(`saving_goals_${guestId}`, JSON.stringify(syncRes.goals));
+          if (syncRes.cycleHistory) localStorage.setItem(`cycle_history_${guestId}`, JSON.stringify(syncRes.cycleHistory));
+          return syncRes.expenses.sort((a: ExpenseItem, b: ExpenseItem) => b.createdAt - a.createdAt);
+        }
+      } catch (e) {}
+    }
 
     try {
       const serverData = await fetchWithTimeout('/api/expenses', {
@@ -170,7 +176,6 @@ export const StorageService = {
       });
 
       if (Array.isArray(serverData) && serverData.length > 0) {
-        localStorage.setItem('pitrack_expenses_data', JSON.stringify(serverData));
         localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(serverData));
         return serverData.sort((a: ExpenseItem, b: ExpenseItem) => b.createdAt - a.createdAt);
       }
@@ -191,11 +196,13 @@ export const StorageService = {
     try {
       const current = this.getCachedExpenses();
       const updated = [newItem, ...current.filter(e => e.id !== newItem.id)];
-      localStorage.setItem('pitrack_expenses_data', JSON.stringify(updated));
       localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
+      if (!guestId.startsWith('usr_')) {
+        localStorage.setItem('pitrack_expenses_data', JSON.stringify(updated));
+      }
     } catch (e) {}
 
-    // 2. Fast non-blocking sync to API
+    // 2. Fast non-blocking sync to API & account cloud
     fetchWithTimeout('/api/expenses', {
       method: 'POST',
       headers: {
@@ -204,6 +211,8 @@ export const StorageService = {
       },
       body: JSON.stringify(newItem),
     });
+
+    this.syncAccountToCloud();
 
     return newItem;
   },
@@ -284,11 +293,19 @@ export const StorageService = {
 
   getPresetsList(type: 'EXPENSE' | 'SAVING', defaultList: QuickPreset[]): QuickPreset[] {
     const guestId = getGuestId();
-    const key = type === 'EXPENSE' ? `expense_presets_custom_${guestId}` : `saving_presets_custom_${guestId}`;
+    const key = type === 'EXPENSE' ? `expense_presets_v3_${guestId}` : `saving_presets_v3_${guestId}`;
     try {
-      const local = localStorage.getItem(key) || localStorage.getItem(type === 'EXPENSE' ? 'expense_presets_custom' : 'saving_presets_custom');
-      if (!local) return defaultList;
-      return JSON.parse(local);
+      const local = localStorage.getItem(key);
+      if (!local) {
+        localStorage.setItem(key, JSON.stringify(defaultList));
+        return defaultList;
+      }
+      const parsed: QuickPreset[] = JSON.parse(local);
+      if (Array.isArray(parsed) && parsed.length === 5) {
+        return parsed;
+      }
+      localStorage.setItem(key, JSON.stringify(defaultList));
+      return defaultList;
     } catch (e) {
       return defaultList;
     }
@@ -300,6 +317,129 @@ export const StorageService = {
     try {
       localStorage.setItem(key, JSON.stringify(list));
     } catch (e) {}
+  },
+
+  getPlannerPresetsList(defaultList: PlannerPreset[]): PlannerPreset[] {
+    const guestId = getGuestId();
+    const key = `planner_presets_custom_${guestId}`;
+    try {
+      const local = localStorage.getItem(key) || localStorage.getItem('planner_presets_custom');
+      if (!local) return defaultList;
+      return JSON.parse(local);
+    } catch (e) {
+      return defaultList;
+    }
+  },
+
+  savePlannerPresetsList(list: PlannerPreset[]): void {
+    const guestId = getGuestId();
+    const key = `planner_presets_custom_${guestId}`;
+    try {
+      localStorage.setItem(key, JSON.stringify(list));
+    } catch (e) {}
+  },
+
+  getBudgetPeriod(defaultVal: BudgetPeriod = 'MONTHLY'): BudgetPeriod {
+    const guestId = getGuestId();
+    try {
+      const val = localStorage.getItem(`budget_period_${guestId}`) || localStorage.getItem('budget_period');
+      if (val === 'DAILY' || val === 'WEEKLY' || val === 'MONTHLY') return val;
+    } catch (e) {}
+    return defaultVal;
+  },
+
+  saveBudgetPeriod(period: BudgetPeriod): void {
+    const guestId = getGuestId();
+    try {
+      localStorage.setItem(`budget_period_${guestId}`, period);
+    } catch (e) {}
+  },
+
+  getSavingPeriod(defaultVal: BudgetPeriod = 'MONTHLY'): BudgetPeriod {
+    const guestId = getGuestId();
+    try {
+      const val = localStorage.getItem(`saving_period_${guestId}`) || localStorage.getItem('saving_period');
+      if (val === 'DAILY' || val === 'WEEKLY' || val === 'MONTHLY') return val;
+    } catch (e) {}
+    return defaultVal;
+  },
+
+  saveSavingPeriod(period: BudgetPeriod): void {
+    const guestId = getGuestId();
+    try {
+      localStorage.setItem(`saving_period_${guestId}`, period);
+    } catch (e) {}
+  },
+
+  getBudgetTargets(): { DAILY: number; WEEKLY: number; MONTHLY: number } {
+    const guestId = getGuestId();
+    const defaults = { DAILY: 35, WEEKLY: 250, MONTHLY: 1000 };
+    try {
+      const saved = localStorage.getItem(`budget_targets_${guestId}`) || localStorage.getItem('budget_targets');
+      if (saved) return { ...defaults, ...JSON.parse(saved) };
+      const legacyMonthly = localStorage.getItem('monthly_budget_target');
+      if (legacyMonthly) defaults.MONTHLY = parseFloat(legacyMonthly);
+    } catch (e) {}
+    return defaults;
+  },
+
+  saveBudgetTargets(targets: { DAILY: number; WEEKLY: number; MONTHLY: number }): void {
+    const guestId = getGuestId();
+    try {
+      localStorage.setItem(`budget_targets_${guestId}`, JSON.stringify(targets));
+    } catch (e) {}
+    this.syncAccountToCloud();
+  },
+
+  getSavingGoals(): { DAILY: number; WEEKLY: number; MONTHLY: number } {
+    const guestId = getGuestId();
+    const defaults = { DAILY: 15, WEEKLY: 100, MONTHLY: 500 };
+    try {
+      const saved = localStorage.getItem(`saving_goals_${guestId}`) || localStorage.getItem('saving_goals');
+      if (saved) return { ...defaults, ...JSON.parse(saved) };
+      const legacyMonthly = localStorage.getItem('saving_goal_target');
+      if (legacyMonthly) defaults.MONTHLY = parseFloat(legacyMonthly);
+    } catch (e) {}
+    return defaults;
+  },
+
+  saveSavingGoals(goals: { DAILY: number; WEEKLY: number; MONTHLY: number }): void {
+    const guestId = getGuestId();
+    try {
+      localStorage.setItem(`saving_goals_${guestId}`, JSON.stringify(goals));
+    } catch (e) {}
+    this.syncAccountToCloud();
+  },
+
+  getCycleHistory(): CycleSnapshot[] {
+    const guestId = getGuestId();
+    try {
+      const local = localStorage.getItem(`cycle_history_${guestId}`) || localStorage.getItem('cycle_history');
+      if (!local) return [];
+      return JSON.parse(local);
+    } catch (e) {
+      return [];
+    }
+  },
+
+  saveCycleHistory(history: CycleSnapshot[]): void {
+    const guestId = getGuestId();
+    try {
+      localStorage.setItem(`cycle_history_${guestId}`, JSON.stringify(history));
+    } catch (e) {}
+    this.syncAccountToCloud();
+  },
+
+  addCycleSnapshot(snapshot: Omit<CycleSnapshot, 'id' | 'archivedAt'>): CycleSnapshot {
+    const current = this.getCycleHistory();
+    const newSnapshot: CycleSnapshot = {
+      ...snapshot,
+      id: 'snap-' + Date.now(),
+      archivedAt: Date.now(),
+    };
+    const updated = [newSnapshot, ...current];
+    this.saveCycleHistory(updated);
+    return newSnapshot;
   },
 
   getTrips(): TripFolder[] {
@@ -355,15 +495,21 @@ export const StorageService = {
       },
     ];
     try {
-      const local =
-        localStorage.getItem('pitrack_trips_data') ||
-        localStorage.getItem(`trip_folders_${guestId}`);
-      if (!local) {
-        localStorage.setItem('pitrack_trips_data', JSON.stringify(defaultDemoTrips));
-        localStorage.setItem(`trip_folders_${guestId}`, JSON.stringify(defaultDemoTrips));
-        return defaultDemoTrips;
+      const userKey = `trip_folders_${guestId}`;
+      const local = localStorage.getItem(userKey);
+      if (local) {
+        return JSON.parse(local);
       }
-      return JSON.parse(local);
+      if (guestId.startsWith('usr_')) {
+        return [];
+      }
+      const fallback = localStorage.getItem('pitrack_trips_data');
+      if (fallback) {
+        return JSON.parse(fallback);
+      }
+      localStorage.setItem('pitrack_trips_data', JSON.stringify(defaultDemoTrips));
+      localStorage.setItem(userKey, JSON.stringify(defaultDemoTrips));
+      return defaultDemoTrips;
     } catch (e) {
       return defaultDemoTrips;
     }
@@ -372,9 +518,12 @@ export const StorageService = {
   saveTrips(trips: TripFolder[]): void {
     const guestId = getGuestId();
     try {
-      localStorage.setItem('pitrack_trips_data', JSON.stringify(trips));
       localStorage.setItem(`trip_folders_${guestId}`, JSON.stringify(trips));
+      if (!guestId.startsWith('usr_')) {
+        localStorage.setItem('pitrack_trips_data', JSON.stringify(trips));
+      }
     } catch (e) {}
+    this.syncAccountToCloud();
   },
 
   getReminders(): ReminderItem[] {
@@ -490,30 +639,21 @@ export const StorageService = {
       },
     ];
     try {
-      const local =
-        localStorage.getItem('pitrack_reminders_data') ||
-        localStorage.getItem(`reminders_${guestId}`);
-      if (!local) {
-        localStorage.setItem('pitrack_reminders_data', JSON.stringify(defaultDemoReminders));
-        localStorage.setItem(`reminders_${guestId}`, JSON.stringify(defaultDemoReminders));
-        return defaultDemoReminders;
+      const userKey = `reminders_${guestId}`;
+      const local = localStorage.getItem(userKey);
+      if (local) {
+        return JSON.parse(local);
       }
-      const existing: ReminderItem[] = JSON.parse(local);
-      const map = new Map<string, ReminderItem>();
-      if (Array.isArray(existing)) {
-        existing.forEach(r => map.set(r.id, r));
+      if (guestId.startsWith('usr_')) {
+        return [];
       }
-      defaultDemoReminders.forEach(d => {
-        if (!map.has(d.id)) {
-          map.set(d.id, d);
-        }
-      });
-      const merged = Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
-      try {
-        localStorage.setItem('pitrack_reminders_data', JSON.stringify(merged));
-        localStorage.setItem(`reminders_${guestId}`, JSON.stringify(merged));
-      } catch (e) {}
-      return merged;
+      const fallback = localStorage.getItem('pitrack_reminders_data');
+      if (fallback) {
+        return JSON.parse(fallback);
+      }
+      localStorage.setItem('pitrack_reminders_data', JSON.stringify(defaultDemoReminders));
+      localStorage.setItem(userKey, JSON.stringify(defaultDemoReminders));
+      return defaultDemoReminders;
     } catch (e) {
       return defaultDemoReminders;
     }
@@ -522,8 +662,11 @@ export const StorageService = {
   saveReminders(reminders: ReminderItem[]): void {
     const guestId = getGuestId();
     try {
-      localStorage.setItem('pitrack_reminders_data', JSON.stringify(reminders));
       localStorage.setItem(`reminders_${guestId}`, JSON.stringify(reminders));
+      if (!guestId.startsWith('usr_')) {
+        localStorage.setItem('pitrack_reminders_data', JSON.stringify(reminders));
+      }
     } catch (e) {}
+    this.syncAccountToCloud();
   },
 };
