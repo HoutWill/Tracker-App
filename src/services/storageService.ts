@@ -295,7 +295,7 @@ export const StorageService = {
   },
 
   getPresetsList(type: 'EXPENSE' | 'SAVING', defaultList: QuickPreset[]): QuickPreset[] {
-    const guestId = getGuestId();
+    const guestId = String(getGuestId());
     const key = type === 'EXPENSE' ? `expense_presets_v3_${guestId}` : `saving_presets_v3_${guestId}`;
     try {
       const local = localStorage.getItem(key);
@@ -304,7 +304,7 @@ export const StorageService = {
         return defaultList;
       }
       const parsed: QuickPreset[] = JSON.parse(local);
-      if (Array.isArray(parsed) && parsed.length === 5) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed;
       }
       localStorage.setItem(key, JSON.stringify(defaultList));
@@ -315,7 +315,7 @@ export const StorageService = {
   },
 
   savePresetsList(type: 'EXPENSE' | 'SAVING', list: QuickPreset[]): void {
-    const guestId = getGuestId();
+    const guestId = String(getGuestId());
     const key = type === 'EXPENSE' ? `expense_presets_v3_${guestId}` : `saving_presets_v3_${guestId}`;
     try {
       localStorage.setItem(key, JSON.stringify(list));
@@ -323,7 +323,7 @@ export const StorageService = {
   },
 
   getPlannerPresetsList(defaultList: PlannerPreset[]): PlannerPreset[] {
-    const guestId = getGuestId();
+    const guestId = String(getGuestId());
     const key = `planner_presets_v2_${guestId}`;
     try {
       const local = localStorage.getItem(key);
@@ -332,7 +332,7 @@ export const StorageService = {
         return defaultList;
       }
       const parsed: PlannerPreset[] = JSON.parse(local);
-      if (Array.isArray(parsed) && parsed.length === 5) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed;
       }
       localStorage.setItem(key, JSON.stringify(defaultList));
