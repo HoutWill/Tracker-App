@@ -89,10 +89,21 @@ const fetchWithTimeout = (url: string, options: RequestInit = {}) => {
     });
 };
 
+export const isUserAccount = (): boolean => {
+  try {
+    const userAcc = localStorage.getItem('user_account');
+    if (userAcc) return true;
+    const gid = getGuestId();
+    return gid.startsWith('usr_') || (!isNaN(Number(gid)) && Number(gid) > 0);
+  } catch (e) {
+    return false;
+  }
+};
+
 export const StorageService = {
   getCachedExpenses(): ExpenseItem[] {
     const guestId = String(getGuestId());
-    const isUserAccount = !!localStorage.getItem('user_account') || guestId.startsWith('usr_');
+    const isUser = isUserAccount();
 
     try {
       const masterKey = `pitrack_expenses_${guestId}`;
@@ -104,7 +115,7 @@ export const StorageService = {
         }
       }
 
-      if (isUserAccount) {
+      if (isUser) {
         return [];
       }
 
@@ -123,8 +134,7 @@ export const StorageService = {
   },
   syncAccountToCloud(): void {
     const guestId = String(getGuestId());
-    const isUserAccount = !!localStorage.getItem('user_account') || guestId.startsWith('usr_');
-    if (!isUserAccount) return;
+    if (!isUserAccount()) return;
 
     try {
       const expenses = this.getCachedExpenses();
@@ -152,12 +162,12 @@ export const StorageService = {
   },
 
   async getExpenses(): Promise<ExpenseItem[]> {
-    const guestId = getGuestId();
+    const guestId = String(getGuestId());
     const cached = this.getCachedExpenses();
 
-    if (guestId.startsWith('usr_')) {
+    if (isUserAccount()) {
       try {
-        const syncRes = await fetchWithTimeout(`/api/sync?accountId=${guestId}`, {
+        const syncRes = await fetchWithTimeout(`/api/sync?pkid=${guestId}`, {
           headers: { 'x-guest-id': guestId },
         });
 
@@ -188,7 +198,7 @@ export const StorageService = {
   },
 
   async addExpense(item: ExpenseItem | Omit<ExpenseItem, 'id' | 'createdAt'>): Promise<ExpenseItem> {
-    const guestId = getGuestId();
+    const guestId = String(getGuestId());
     const newItem: ExpenseItem = {
       ...item,
       id: ('id' in item && item.id) ? item.id : 'exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
@@ -200,7 +210,7 @@ export const StorageService = {
       const current = this.getCachedExpenses();
       const updated = [newItem, ...current.filter(e => e.id !== newItem.id)];
       localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
-      if (!guestId.startsWith('usr_')) {
+      if (!isUserAccount()) {
         localStorage.setItem('pitrack_expenses_data', JSON.stringify(updated));
       }
     } catch (e) {}
@@ -511,7 +521,7 @@ export const StorageService = {
       if (local) {
         return JSON.parse(local);
       }
-      if (guestId.startsWith('usr_')) {
+      if (isUserAccount()) {
         return [];
       }
       const fallback = localStorage.getItem('pitrack_trips_data');
@@ -527,10 +537,10 @@ export const StorageService = {
   },
 
   saveTrips(trips: TripFolder[]): void {
-    const guestId = getGuestId();
+    const guestId = String(getGuestId());
     try {
       localStorage.setItem(`trip_folders_${guestId}`, JSON.stringify(trips));
-      if (!guestId.startsWith('usr_')) {
+      if (!isUserAccount()) {
         localStorage.setItem('pitrack_trips_data', JSON.stringify(trips));
       }
     } catch (e) {}
