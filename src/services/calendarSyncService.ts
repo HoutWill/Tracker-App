@@ -25,8 +25,15 @@ export const syncToAppleCalendar = async (event: CalendarEventPayload) => {
       endDate = new Date(startDate.getTime() + 30 * 60 * 1000);
     }
 
-    const startStr = `${startDate.getUTCFullYear()}${pad(startDate.getUTCMonth() + 1)}${pad(startDate.getUTCDate())}T${pad(startDate.getUTCHours())}${pad(startDate.getUTCMinutes())}00Z`;
-    const endStr = `${endDate.getUTCFullYear()}${pad(endDate.getUTCMonth() + 1)}${pad(endDate.getUTCDate())}T${pad(endDate.getUTCHours())}${pad(endDate.getUTCMinutes())}00Z`;
+    const startStr = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
+    let endStr: string;
+    if (event.endTime) {
+      const [endHour, endMinute] = event.endTime.split(':').map(Number);
+      endStr = `${year}${pad(month)}${pad(day)}T${pad(endHour)}${pad(endMinute)}00`;
+    } else {
+      const endDate = new Date(startDate.getTime() + 30 * 60 * 1000);
+      endStr = `${endDate.getFullYear()}${pad(endDate.getMonth() + 1)}${pad(endDate.getDate())}T${pad(endDate.getHours())}${pad(endDate.getMinutes())}00`;
+    }
 
     const now = new Date();
     const stampStr = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}00Z`;
@@ -37,7 +44,7 @@ export const syncToAppleCalendar = async (event: CalendarEventPayload) => {
     const icsLines = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//Apple Inc.//Mac OS X 10.15//EN',
+      'PRODID:-//Apple Inc.//iOS 18.0//EN',
       'CALSCALE:GREGORIAN',
       'BEGIN:VEVENT',
       'TRANSP:OPAQUE',
@@ -95,7 +102,7 @@ export const shareToAppleReminders = async (event: CalendarEventPayload): Promis
 
     const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
     const dueDateObj = new Date(year, month - 1, day, hour, minute, 0);
-    const dueStr = `${dueDateObj.getUTCFullYear()}${pad(dueDateObj.getUTCMonth() + 1)}${pad(dueDateObj.getUTCDate())}T${pad(dueDateObj.getUTCHours())}${pad(dueDateObj.getUTCMinutes())}00Z`;
+    const dueStr = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
 
     const now = new Date();
     const stampStr = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}00Z`;
