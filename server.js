@@ -182,7 +182,8 @@ app.post('/api/auth/register', authRateLimit, (req, res) => {
     return res.status(400).json({ error: 'Unable to process registration with these credentials' });
   }
 
-  const accountId = 'usr_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+  // Deterministic accountId: same email always maps to same ID on any device/server
+  const accountId = 'usr_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
   const newUser = {
     accountId,
     email: cleanEmail,
@@ -220,15 +221,22 @@ app.post('/api/auth/login', authRateLimit, (req, res) => {
 
   const users = readUsers();
   const pwdHash = hashPassword(password);
+
+  // Find by email first, then verify password
   const user = users.find(u => u.email === cleanEmail && (u.passwordHash === pwdHash || u.password === password));
 
   if (!user) {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
 
+  // Ensure accountId is always the deterministic email-derived one
+  // (migrates old random IDs to deterministic ones transparently)
+  const deterministicId = 'usr_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
+  const accountId = user.accountId || deterministicId;
+
   res.json({
-    user: { accountId: user.accountId, email: user.email, name: user.name },
-    token: 'jwt-' + user.accountId,
+    user: { accountId, email: user.email, name: user.name },
+    token: 'jwt-' + accountId,
   });
 });
 

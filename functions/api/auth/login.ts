@@ -1,6 +1,7 @@
 /**
  * Cloudflare Pages Function: POST /api/auth/login
- * Handles Cloud Database User Account Login Verification
+ * Deterministic accountId: usr_<email_cleaned>
+ * Same email = same accountId on any device, any server, forever.
  */
 
 export async function onRequestPost(context: { request: Request; env: any }) {
@@ -16,13 +17,14 @@ export async function onRequestPost(context: { request: Request; env: any }) {
       });
     }
 
+    // Deterministic accountId: same email always maps to same ID on any device/server
     const accountId = `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`;
 
     if (context.env?.TRACKER_DB) {
       const userRaw = await context.env.TRACKER_DB.get(`user:${cleanEmail}`);
       if (!userRaw) {
-        return new Response(JSON.stringify({ error: 'Account does not exist. Please register first.' }), {
-          status: 400,
+        return new Response(JSON.stringify({ error: 'Account not found. Please register first.' }), {
+          status: 401,
           headers: { 'Content-Type': 'application/json' },
         });
       }
@@ -30,7 +32,7 @@ export async function onRequestPost(context: { request: Request; env: any }) {
       const userRecord = JSON.parse(userRaw);
       if (userRecord.password !== password) {
         return new Response(JSON.stringify({ error: 'Invalid email or password' }), {
-          status: 400,
+          status: 401,
           headers: { 'Content-Type': 'application/json' },
         });
       }
@@ -38,25 +40,20 @@ export async function onRequestPost(context: { request: Request; env: any }) {
       return new Response(
         JSON.stringify({
           success: true,
-          user: { accountId: userRecord.accountId, email: userRecord.email, name: userRecord.name },
+          user: {
+            accountId: userRecord.accountId || accountId,
+            email: userRecord.email,
+            name: userRecord.name,
+          },
         }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Default Cloud Response
+    // KV not configured — return error (no silent fallback that produces wrong IDs)
     return new Response(
-      JSON.stringify({
-        success: true,
-        user: { accountId, email: cleanEmail, name: cleanEmail.split('@')[0] },
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ error: 'Authentication service not configured. Contact support.' }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (e: any) {
     return new Response(JSON.stringify({ error: 'Server authentication error: ' + e.message }), {
@@ -65,3 +62,4 @@ export async function onRequestPost(context: { request: Request; env: any }) {
     });
   }
 }
+
