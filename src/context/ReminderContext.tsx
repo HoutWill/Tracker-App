@@ -137,10 +137,12 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const nowTime = new Date().toTimeString().slice(0, 5); // HH:mm
 
       reminders.forEach(r => {
-        if (!r.completed && r.alertEnabled && r.dueDate === today && r.dueTime === nowTime) {
+        const isStartDue = r.dueTime === nowTime;
+        const isEndDue = r.endTime === nowTime;
+        if (!r.completed && r.alertEnabled && r.dueDate === today && (isStartDue || isEndDue)) {
           try {
-            new Notification(`Due Alert: ${r.title}`, {
-              body: `Reminder for ${r.category} is due right now!`,
+            new Notification(`${isEndDue ? 'End Alert' : 'Start Alert'}: ${r.title}`, {
+              body: `${r.title} (${r.category}) ${isEndDue ? 'is due right now!' : 'is starting now!'}`,
               icon: '/assets/icon-192.png',
             });
           } catch (e) {}
