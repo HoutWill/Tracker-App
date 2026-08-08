@@ -222,6 +222,10 @@ app.post('/api/auth/login', authRateLimit, (req, res) => {
   const pwdHash = hashPassword(password);
   const user = users.find(u => u.email === cleanEmail && (u.passwordHash === pwdHash || u.password === password));
 
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+
   res.json({
     user: { accountId: user.accountId, email: user.email, name: user.name },
     token: 'jwt-' + user.accountId,

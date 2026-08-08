@@ -160,7 +160,7 @@ export const StorageService = {
 
         if (syncRes && syncRes.expenses && Array.isArray(syncRes.expenses)) {
           localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(syncRes.expenses));
-          if (syncRes.reminders) localStorage.setItem(`reminders_${guestId}`, JSON.stringify(syncRes.reminders));
+          if (syncRes.reminders) localStorage.setItem(`reminders_v2_${guestId}`, JSON.stringify(syncRes.reminders));
           if (syncRes.trips) localStorage.setItem(`trip_folders_${guestId}`, JSON.stringify(syncRes.trips));
           if (syncRes.targets) localStorage.setItem(`budget_targets_${guestId}`, JSON.stringify(syncRes.targets));
           if (syncRes.goals) localStorage.setItem(`saving_goals_${guestId}`, JSON.stringify(syncRes.goals));
@@ -313,7 +313,7 @@ export const StorageService = {
 
   savePresetsList(type: 'EXPENSE' | 'SAVING', list: QuickPreset[]): void {
     const guestId = getGuestId();
-    const key = type === 'EXPENSE' ? `expense_presets_custom_${guestId}` : `saving_presets_custom_${guestId}`;
+    const key = type === 'EXPENSE' ? `expense_presets_v3_${guestId}` : `saving_presets_v3_${guestId}`;
     try {
       localStorage.setItem(key, JSON.stringify(list));
     } catch (e) {}
@@ -341,7 +341,7 @@ export const StorageService = {
 
   savePlannerPresetsList(list: PlannerPreset[]): void {
     const guestId = getGuestId();
-    const key = `planner_presets_custom_${guestId}`;
+    const key = `planner_presets_v2_${guestId}`;
     try {
       localStorage.setItem(key, JSON.stringify(list));
     } catch (e) {}
@@ -551,10 +551,7 @@ export const StorageService = {
   saveReminders(reminders: ReminderItem[]): void {
     const guestId = getGuestId();
     try {
-      localStorage.setItem(`reminders_${guestId}`, JSON.stringify(reminders));
-      if (!guestId.startsWith('usr_')) {
-        localStorage.setItem('pitrack_reminders_data', JSON.stringify(reminders));
-      }
+      localStorage.setItem(`reminders_v2_${guestId}`, JSON.stringify(reminders));
     } catch (e) {}
     this.syncAccountToCloud();
   },

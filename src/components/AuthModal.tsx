@@ -80,11 +80,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           if (data.user) {
             userData = data.user;
           }
+        } else if (!res.ok) {
+          // Server responded with an error (wrong password, not found, etc.)
+          const errData = contentType.includes('application/json') ? await res.json() : null;
+          throw new Error(errData?.error || (tab === 'LOGIN' ? 'Invalid email or password' : 'Registration failed'));
         }
-      } catch (e) {}
+      } catch (e: any) {
+        // Re-throw server errors so they surface to the user
+        if (e?.message && e.message !== 'Failed to fetch') throw e;
+        // Network/fetch failure — only allow offline fallback for REGISTER (not LOGIN)
+        if (tab === 'LOGIN') {
+          throw new Error('Cannot reach server. Check your connection and try again.');
+        }
+      }
 
-      // Fallback: Generate user account ID from email if server API is unavailable
-      if (!userData) {
+      // Offline fallback: only for REGISTER when server is unreachable
+      if (!userData && tab === 'REGISTER') {
         const safeId = cleanEmail.replace(/[^a-z0-9]/g, '_') || 'user_1';
         userData = {
           accountId: `usr_${safeId}`,
@@ -92,6 +103,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           name: name.trim() || cleanEmail.split('@')[0],
         };
       }
+
+      if (!userData) throw new Error('Authentication failed. Please try again.');
 
       // Bind user accountId & JWT token as active session
       const authToken = `jwt_${userData.accountId}_${Date.now()}`;
@@ -107,7 +120,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         if (guestExp) localStorage.setItem(userExpKey, guestExp);
       }
 
-      const userRemKey = `reminders_${userData.accountId}`;
+      // Use reminders_v2_ key to match storageService.getReminders()
+      const userRemKey = `reminders_v2_${userData.accountId}`;
       if (!localStorage.getItem(userRemKey)) {
         const guestRem = localStorage.getItem('pitrack_reminders_data');
         if (guestRem) localStorage.setItem(userRemKey, guestRem);
@@ -128,9 +142,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             const syncData = await syncRes.json();
             if (syncData && syncData.expenses) {
               localStorage.setItem(`pitrack_expenses_${userData.accountId}`, JSON.stringify(syncData.expenses));
-              if (syncData.reminders) localStorage.setItem(`reminders_${userData.accountId}`, JSON.stringify(syncData.reminders));
+              // Use reminders_v2_ key to match storageService.getReminders()
+              if (syncData.reminders) localStorage.setItem(`reminders_v2_${userData.accountId}`, JSON.stringify(syncData.reminders));
               if (syncData.trips) localStorage.setItem(`trip_folders_${userData.accountId}`, JSON.stringify(syncData.trips));
               if (syncData.targets) localStorage.setItem(`budget_targets_${userData.accountId}`, JSON.stringify(syncData.targets));
+              if (syncData.goals) localStorage.setItem(`saving_goals_${userData.accountId}`, JSON.stringify(syncData.goals));
+              if (syncData.cycleHistory) localStorage.setItem(`cycle_history_${userData.accountId}`, JSON.stringify(syncData.cycleHistory));
             }
           }
         }
