@@ -157,7 +157,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onClose();
       window.location.reload();
     } catch (err: any) {
-      setError(tab === 'LOGIN' ? 'Invalid email or password' : (err.message || 'Authentication error'));
+      setError(err?.message || (tab === 'LOGIN' ? 'Invalid email or password' : 'Authentication error'));
     } finally {
       setLoading(false);
     }
