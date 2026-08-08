@@ -181,12 +181,12 @@ app.post('/api/auth/register', authRateLimit, (req, res) => {
     return res.status(400).json({ error: 'Account already exists. Please log in.' });
   }
 
-  // Deterministic pkid: same email always maps to same ID on any device/server
-  const pkid = 'usr_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
+  // Numeric Auto-Increment pkid (1, 2, 3...)
+  const nextPkid = users.reduce((max, u) => (typeof u.pkid === 'number' && u.pkid > max ? u.pkid : max), 0) + 1;
   const now = Date.now();
   const newUser = {
-    pkid,
-    accountId: pkid,
+    pkid: nextPkid,
+    accountId: nextPkid.toString(),
     email: cleanEmail,
     passwordHash: hashPassword(password),
     name: (name || cleanEmail.split('@')[0]).trim(),

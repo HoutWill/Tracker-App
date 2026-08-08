@@ -3,7 +3,7 @@ import { getGuestId, setGuestId } from '../services/storageService';
 import { X, User, Lock, Mail, LogIn, UserPlus, LogOut, CheckCircle2, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 export interface UserAccount {
-  pkid: string;
+  pkid: number | string;
   accountId: string;
   email: string;
   name: string;
@@ -121,7 +121,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       localStorage.setItem('auth_token', authToken);
       localStorage.setItem('user_account', JSON.stringify(userData));
       localStorage.setItem('pitrack_expenses_initialized', 'true');
-      setGuestId(activePkid);
+      setGuestId(String(activePkid));
 
       // Auto-migrate guest entries into user account if first time on this device
       const userExpKey = `pitrack_expenses_${userData.accountId}`;

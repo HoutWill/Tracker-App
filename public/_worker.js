@@ -1,7 +1,6 @@
 /**
  * Cloudflare Worker & Pages Service: _worker.js
- * Comprehensive User Database & Authentication System (Best Practices Rework)
- * Primary Key: pkid (e.g., usr_email_sanitized)
+ * Best Practices User Database System with Numeric Auto-Increment pkid (1, 2, 3...)
  */
 
 const CORS_HEADERS = {
@@ -22,9 +21,17 @@ async function hashPassword(password) {
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-function generatePkid(email) {
-  const sanitized = email.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
-  return `usr_${sanitized}`;
+async function getNextPkid(env) {
+  if (!env?.TRACKER_DB) return Date.now();
+  try {
+    const rawCount = await env.TRACKER_DB.get('sys:user_counter');
+    const current = rawCount ? parseInt(rawCount, 10) : 0;
+    const next = current + 1;
+    await env.TRACKER_DB.put('sys:user_counter', next.toString());
+    return next;
+  } catch (e) {
+    return Date.now();
+  }
 }
 
 export default {
@@ -57,13 +64,20 @@ export default {
           return new Response(JSON.stringify({ error: 'Password must be at least 6 characters' }), { status: 400, headers: CORS_HEADERS });
         }
 
-        const pkid = generatePkid(cleanEmail);
+        if (env?.TRACKER_DB) {
+          const existing = await env.TRACKER_DB.get(`user:${cleanEmail}`);
+          if (existing) {
+            return new Response(JSON.stringify({ error: 'Account already exists. Please log in.' }), { status: 400, headers: CORS_HEADERS });
+          }
+        }
+
+        const pkid = await getNextPkid(env);
         const passwordHash = await hashPassword(password);
         const now = Date.now();
 
         const userRecord = {
           pkid,
-          accountId: pkid,
+          accountId: pkid.toString(),
           email: cleanEmail,
           passwordHash,
           name,
@@ -73,19 +87,14 @@ export default {
         };
 
         if (env?.TRACKER_DB) {
-          const existing = await env.TRACKER_DB.get(`user:${cleanEmail}`);
-          if (existing) {
-            return new Response(JSON.stringify({ error: 'Account already exists. Please log in.' }), { status: 400, headers: CORS_HEADERS });
-          }
           await env.TRACKER_DB.put(`user:${cleanEmail}`, JSON.stringify(userRecord));
           await env.TRACKER_DB.put(`pkid:${pkid}`, JSON.stringify(userRecord));
-          await env.TRACKER_DB.put(`account:${pkid}`, JSON.stringify(userRecord));
         }
 
         return new Response(
           JSON.stringify({
             success: true,
-            user: { pkid, accountId: pkid, email: cleanEmail, name, createdAt: now },
+            user: { pkid, accountId: pkid.toString(), email: cleanEmail, name, createdAt: now },
           }),
           { status: 200, headers: CORS_HEADERS }
         );
@@ -109,8 +118,6 @@ export default {
           return new Response(JSON.stringify({ error: 'Email and password are required' }), { status: 400, headers: CORS_HEADERS });
         }
 
-        const pkid = generatePkid(cleanEmail);
-
         if (env?.TRACKER_DB) {
           const userRaw = await env.TRACKER_DB.get(`user:${cleanEmail}`);
           if (!userRaw) {
@@ -131,13 +138,13 @@ export default {
           userRecord.lastLoginAt = Date.now();
           await env.TRACKER_DB.put(`user:${cleanEmail}`, JSON.stringify(userRecord));
 
-          const activePkid = userRecord.pkid || pkid;
+          const activePkid = userRecord.pkid || userRecord.accountId || 1;
           return new Response(
             JSON.stringify({
               success: true,
               user: {
                 pkid: activePkid,
-                accountId: activePkid,
+                accountId: activePkid.toString(),
                 email: userRecord.email,
                 name: userRecord.name,
               },
