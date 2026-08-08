@@ -26,3 +26,7 @@
 4. **No Blur Glowing Colors Directive**:
    - DO NOT use blurry glowing colors, radial glow backdrops, backdrop blur effects, or heavy neon box-shadow glows anywhere in the application UI.
    - Use clean, crisp, solid matte cards with subtle clean borders (`1px solid rgba(255, 255, 255, 0.08)`) and high-contrast typography.
+
+5. **Timezone Directive — Cambodia (ICT / UTC+7)**:
+   - Always remember that the user and primary application environment operates in **Cambodia Timezone (Asia/Phnom_Penh, ICT, UTC+7)**.
+   - All date/time calculations, calendar ICS exports, notifications, and reminders must explicitly align with UTC+7 Cambodia Timezone.
