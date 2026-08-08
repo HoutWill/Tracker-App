@@ -127,17 +127,12 @@ export const shareToAppleReminders = async (event: CalendarEventPayload): Promis
     const fileName = `${event.title.replace(/[^a-zA-Z0-9]/g, '_')}_reminder.ics`;
     const file = new File([icsContent], fileName, { type: 'text/calendar' });
 
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    if (navigator.share) {
+      const timeStr = event.dueTime ? ` at ${event.dueTime}` : '';
+      const notesStr = event.notes ? `\nNotes: ${event.notes}` : '';
       await navigator.share({
-        title: event.title,
-        text: `Reminder: ${event.title}`,
-        files: [file],
-      });
-      return true;
-    } else if (navigator.share) {
-      await navigator.share({
-        title: event.title,
-        text: `[PiTrack] Reminder: ${event.title}\nDate: ${event.dueDate} ${event.dueTime || ''}\n${event.notes || ''}`,
+        title: `[PiTrack] ${event.title}`,
+        text: `[PiTrack] ${event.title}\nDue: ${event.dueDate}${timeStr}${notesStr}`,
       });
       return true;
     } else {
