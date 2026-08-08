@@ -4,17 +4,28 @@
  * POST /api/sync → save account data to KV (flat body, no payload wrapper)
  */
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-guest-id',
+  'Content-Type': 'application/json',
+};
+
 export async function onRequest(context: { request: Request; env: any }) {
   try {
     const { request, env } = context;
     const url = new URL(request.url);
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders, status: 204 });
+    }
 
     if (request.method === 'GET') {
       const accountId = url.searchParams.get('accountId') || '';
       if (!accountId) {
         return new Response(JSON.stringify({ error: 'accountId required' }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: corsHeaders,
         });
       }
 
@@ -23,7 +34,7 @@ export async function onRequest(context: { request: Request; env: any }) {
         if (dataRaw) {
           return new Response(dataRaw, {
             status: 200,
-            headers: { 'Content-Type': 'application/json' },
+            headers: corsHeaders,
           });
         }
       }
@@ -31,7 +42,7 @@ export async function onRequest(context: { request: Request; env: any }) {
       // No data found yet — return empty structure
       return new Response(
         JSON.stringify({ expenses: [], reminders: [], trips: [], targets: null, goals: null, cycleHistory: [] }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
+        { status: 200, headers: corsHeaders }
       );
     }
 
@@ -42,7 +53,7 @@ export async function onRequest(context: { request: Request; env: any }) {
       if (!accountId) {
         return new Response(JSON.stringify({ error: 'accountId required' }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: corsHeaders,
         });
       }
 
@@ -63,19 +74,20 @@ export async function onRequest(context: { request: Request; env: any }) {
 
       return new Response(
         JSON.stringify({ success: true, timestamp: dataToStore.updatedAt }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
+        { status: 200, headers: corsHeaders }
       );
     }
 
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
     });
   } catch (e: any) {
     return new Response(JSON.stringify({ error: 'Sync error: ' + e.message }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
     });
   }
 }
+
 
