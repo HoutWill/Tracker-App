@@ -210,23 +210,51 @@ export default {
           return new Response(JSON.stringify({ error: 'pkid parameter is required' }), { status: 400, headers: CORS_HEADERS });
         }
 
-        const dataToStore = {
-          pkid,
-          expenses: body.expenses || [],
-          reminders: body.reminders || [],
-          trips: body.trips || [],
-          targets: body.targets || null,
-          goals: body.goals || null,
-          cycleHistory: body.cycleHistory || [],
-          updatedAt: Date.now(),
-        };
+        let mergedExpenses = body.expenses || [];
+        let mergedReminders = body.reminders || [];
+        let mergedTrips = body.trips || [];
+        let mergedTargets = body.targets || null;
+        let mergedGoals = body.goals || null;
+        let mergedCycleHistory = body.cycleHistory || [];
 
         if (env?.TRACKER_DB) {
+          const existingRaw = await env.TRACKER_DB.get(`sync:${pkid}`);
+          if (existingRaw) {
+            try {
+              const existingData = JSON.parse(existingRaw);
+              if ((!mergedExpenses || mergedExpenses.length === 0) && existingData.expenses) {
+                mergedExpenses = existingData.expenses;
+              }
+              if ((!mergedReminders || mergedReminders.length === 0) && existingData.reminders) {
+                mergedReminders = existingData.reminders;
+              }
+              if ((!mergedTrips || mergedTrips.length === 0) && existingData.trips) {
+                mergedTrips = existingData.trips;
+              }
+              if (!mergedTargets && existingData.targets) mergedTargets = existingData.targets;
+              if (!mergedGoals && existingData.goals) mergedGoals = existingData.goals;
+              if ((!mergedCycleHistory || mergedCycleHistory.length === 0) && existingData.cycleHistory) {
+                mergedCycleHistory = existingData.cycleHistory;
+              }
+            } catch (e) {}
+          }
+
+          const dataToStore = {
+            pkid,
+            expenses: mergedExpenses,
+            reminders: mergedReminders,
+            trips: mergedTrips,
+            targets: mergedTargets,
+            goals: mergedGoals,
+            cycleHistory: mergedCycleHistory,
+            updatedAt: Date.now(),
+          };
+
           await env.TRACKER_DB.put(`sync:${pkid}`, JSON.stringify(dataToStore));
         }
 
         return new Response(
-          JSON.stringify({ success: true, timestamp: dataToStore.updatedAt }),
+          JSON.stringify({ success: true, timestamp: Date.now() }),
           { status: 200, headers: CORS_HEADERS }
         );
       }
