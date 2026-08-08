@@ -62,6 +62,15 @@ export const syncToAppleCalendar = (event: CalendarEventPayload) => {
     ];
 
     const icsContent = icsLines.join('\r\n');
+    const isIOS = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+    if (isIOS) {
+      // Data URI triggers native iOS Calendar import popup directly without "Safari cannot download this file" error
+      const dataUri = 'data:text/calendar;charset=utf8,' + encodeURIComponent(icsContent);
+      window.location.href = dataUri;
+      return true;
+    }
+
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
 
