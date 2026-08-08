@@ -115,29 +115,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       if (!userData) throw new Error('Authentication failed. Please try again.');
 
-      const activePkid = userData.pkid || userData.accountId;
-      // Bind user pkid & JWT token as active session
-      const authToken = `jwt_${activePkid}_${Date.now()}`;
+      const activeId = String(userData.pkid || userData.accountId);
+      const authToken = `jwt_${activeId}_${Date.now()}`;
       localStorage.setItem('auth_token', authToken);
       localStorage.setItem('user_account', JSON.stringify(userData));
       localStorage.setItem('pitrack_expenses_initialized', 'true');
-      setGuestId(String(activePkid));
+      setGuestId(activeId);
 
       // Auto-migrate guest entries into user account if first time on this device
-      const userExpKey = `pitrack_expenses_${userData.accountId}`;
+      const userExpKey = `pitrack_expenses_${activeId}`;
       if (!localStorage.getItem(userExpKey)) {
         const guestExp = localStorage.getItem('pitrack_expenses_data') || localStorage.getItem('pitrack_expenses');
         if (guestExp) localStorage.setItem(userExpKey, guestExp);
       }
 
       // Use reminders_v2_ key to match storageService.getReminders()
-      const userRemKey = `reminders_v2_${userData.accountId}`;
+      const userRemKey = `reminders_v2_${activeId}`;
       if (!localStorage.getItem(userRemKey)) {
         const guestRem = localStorage.getItem('pitrack_reminders_data');
         if (guestRem) localStorage.setItem(userRemKey, guestRem);
       }
 
-      const userTripsKey = `trip_folders_${userData.accountId}`;
+      const userTripsKey = `trip_folders_${activeId}`;
       if (!localStorage.getItem(userTripsKey)) {
         const guestTrips = localStorage.getItem('pitrack_trips_data');
         if (guestTrips) localStorage.setItem(userTripsKey, guestTrips);
@@ -145,19 +144,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       // Auto-restore full account data backup from cloud database
       try {
-        const syncRes = await fetch(`/api/sync?accountId=${userData.accountId}`);
+        const syncRes = await fetch(`/api/sync?pkid=${activeId}`);
         if (syncRes.ok) {
           const contentType = syncRes.headers.get('content-type') || '';
           if (contentType.includes('application/json')) {
             const syncData = await syncRes.json();
             if (syncData && syncData.expenses) {
-              localStorage.setItem(`pitrack_expenses_${userData.accountId}`, JSON.stringify(syncData.expenses));
+              localStorage.setItem(`pitrack_expenses_${activeId}`, JSON.stringify(syncData.expenses));
               // Use reminders_v2_ key to match storageService.getReminders()
-              if (syncData.reminders) localStorage.setItem(`reminders_v2_${userData.accountId}`, JSON.stringify(syncData.reminders));
-              if (syncData.trips) localStorage.setItem(`trip_folders_${userData.accountId}`, JSON.stringify(syncData.trips));
-              if (syncData.targets) localStorage.setItem(`budget_targets_${userData.accountId}`, JSON.stringify(syncData.targets));
-              if (syncData.goals) localStorage.setItem(`saving_goals_${userData.accountId}`, JSON.stringify(syncData.goals));
-              if (syncData.cycleHistory) localStorage.setItem(`cycle_history_${userData.accountId}`, JSON.stringify(syncData.cycleHistory));
+              if (syncData.reminders) localStorage.setItem(`reminders_v2_${activeId}`, JSON.stringify(syncData.reminders));
+              if (syncData.trips) localStorage.setItem(`trip_folders_${activeId}`, JSON.stringify(syncData.trips));
+              if (syncData.targets) localStorage.setItem(`budget_targets_${activeId}`, JSON.stringify(syncData.targets));
+              if (syncData.goals) localStorage.setItem(`saving_goals_${activeId}`, JSON.stringify(syncData.goals));
+              if (syncData.cycleHistory) localStorage.setItem(`cycle_history_${activeId}`, JSON.stringify(syncData.cycleHistory));
             }
           }
         }
