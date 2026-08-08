@@ -15,19 +15,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// Completely Unregister & Purge PWA Service Worker to remove offline caching
+// Register Service Worker for outside/background Lock Screen Push Notifications
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    for (let registration of registrations) {
-      registration.unregister();
-    }
-  });
-
-  if ('caches' in window) {
-    caches.keys().then(keys => {
-      for (let key of keys) {
-        caches.delete(key);
-      }
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => {
+      console.warn('Service worker registration failed:', err);
     });
-  }
+  });
 }
