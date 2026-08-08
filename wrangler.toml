@@ -1,4 +1,5 @@
 name = "tracker-app"
+main = "./functions/_worker.js"
 compatibility_date = "2026-08-05"
 
 [assets]
@@ -8,4 +9,5 @@ not_found_handling = "single-page-application"
 [[kv_namespaces]]
 binding = "TRACKER_DB"
 id = "b2ad5dd08b5046b9b0ebf207e5f289ef"
+
 
