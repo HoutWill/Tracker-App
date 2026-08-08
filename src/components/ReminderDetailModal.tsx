@@ -1,8 +1,8 @@
 import React from 'react';
 import { ReminderItem } from '../types';
 import { useReminders } from '../context/ReminderContext';
-import { X, Bell, Calendar, Clock, CheckSquare, Square, Trash2, Tag } from 'lucide-react';
-import { syncToAppleCalendar } from '../services/calendarSyncService';
+import { X, Bell, Calendar, Clock, CheckSquare, Square, Trash2, Tag, Share2 } from 'lucide-react';
+import { syncToAppleCalendar, shareToAppleReminders } from '../services/calendarSyncService';
 
 interface ReminderDetailModalProps {
   reminder: ReminderItem | null;
@@ -16,6 +16,16 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
 
   const handleToggle = () => {
     toggleReminder(reminder.id);
+  };
+
+  const handleShareAppleReminders = async () => {
+    await shareToAppleReminders({
+      title: reminder.title,
+      notes: reminder.notes,
+      dueDate: reminder.dueDate,
+      dueTime: reminder.dueTime,
+      category: reminder.category,
+    });
   };
 
   const handleSyncAppleCalendar = () => {
@@ -207,6 +217,30 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
           <button
             type="button"
+            onClick={handleShareAppleReminders}
+            style={{
+              width: '100%',
+              padding: '11px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: '#FF9500',
+              color: '#FFFFFF',
+              fontWeight: 800,
+              fontSize: '12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              boxShadow: '0 4px 14px rgba(255, 149, 0, 0.3)',
+            }}
+          >
+            <Share2 size={15} />
+            <span>Way 1: Share to Apple Reminders</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleSyncAppleCalendar}
             style={{
               width: '100%',
@@ -226,7 +260,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
             }}
           >
             <Calendar size={15} />
-            <span>Add to Apple Calendar</span>
+            <span>Way 2: Add to Apple Calendar</span>
           </button>
 
           <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
