@@ -63,27 +63,24 @@ export const syncToAppleCalendar = async (event: CalendarEventPayload) => {
 
     const icsContent = icsLines.join('\r\n');
     const fileName = `${event.title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
-    const file = new File([icsContent], fileName, { type: 'text/calendar' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        title: `[PiTrack] ${event.title}`,
-        files: [file],
-      });
-      return true;
-    }
-
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // On iOS Safari / Apple devices, navigating to text/calendar blob URL instantly opens native Apple Calendar Add Event popup
+    const isIOS = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    if (isIOS) {
+      window.location.href = url;
+    } else {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
     return true;
   } catch (e) {
     console.error('Calendar sync error:', e);
