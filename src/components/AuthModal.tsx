@@ -122,45 +122,91 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       localStorage.setItem('pitrack_expenses_initialized', 'true');
       setGuestId(activeId);
 
-      // Auto-migrate guest entries into user account if first time on this device
-      const userExpKey = `pitrack_expenses_${activeId}`;
-      if (!localStorage.getItem(userExpKey)) {
-        const guestExp = localStorage.getItem('pitrack_expenses_data') || localStorage.getItem('pitrack_expenses');
-        if (guestExp) localStorage.setItem(userExpKey, guestExp);
-      }
+      // Master restore & merge: gather expenses from all possible local and cloud keys
+      const expKeysToMerge = [`pitrack_expenses_${activeId}`, 'pitrack_expenses_data', 'pitrack_expenses', 'pitrack_expenses_usr_default', 'pitrack_expenses_1', 'pitrack_expenses_usr_hout_gmail_com'];
+      let mergedExp: any[] = [];
+      expKeysToMerge.forEach(k => {
+        try {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr)) {
+              arr.forEach(item => {
+                if (item && item.id && !mergedExp.some(e => e.id === item.id)) {
+                  mergedExp.push(item);
+                }
+              });
+            }
+          }
+        } catch (e) {}
+      });
 
-      // Use reminders_v2_ key to match storageService.getReminders()
-      const userRemKey = `reminders_v2_${activeId}`;
-      if (!localStorage.getItem(userRemKey)) {
-        const guestRem = localStorage.getItem('pitrack_reminders_data');
-        if (guestRem) localStorage.setItem(userRemKey, guestRem);
-      }
+      // Master restore & merge: gather reminders from all possible local and cloud keys
+      const remKeysToMerge = [`reminders_v2_${activeId}`, 'pitrack_reminders_backup', 'reminders_v2_usr_default', 'reminders_v2_1', 'pitrack_reminders_data'];
+      let mergedRem: any[] = [];
+      remKeysToMerge.forEach(k => {
+        try {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr)) {
+              arr.forEach(item => {
+                if (item && item.id && !mergedRem.some(r => r.id === item.id)) {
+                  mergedRem.push(item);
+                }
+              });
+            }
+          }
+        } catch (e) {}
+      });
 
-      const userTripsKey = `trip_folders_${activeId}`;
-      if (!localStorage.getItem(userTripsKey)) {
-        const guestTrips = localStorage.getItem('pitrack_trips_data');
-        if (guestTrips) localStorage.setItem(userTripsKey, guestTrips);
-      }
-
-      // Auto-restore full account data backup from cloud database
+      // Fetch cloud data from /api/sync?pkid=1 or activeId and merge
       try {
         const syncRes = await fetch(`/api/sync?pkid=${activeId}`);
         if (syncRes.ok) {
           const contentType = syncRes.headers.get('content-type') || '';
           if (contentType.includes('application/json')) {
             const syncData = await syncRes.json();
-            if (syncData && syncData.expenses) {
-              localStorage.setItem(`pitrack_expenses_${activeId}`, JSON.stringify(syncData.expenses));
-              // Use reminders_v2_ key to match storageService.getReminders()
-              if (syncData.reminders) localStorage.setItem(`reminders_v2_${activeId}`, JSON.stringify(syncData.reminders));
-              if (syncData.trips) localStorage.setItem(`trip_folders_${activeId}`, JSON.stringify(syncData.trips));
+            if (syncData) {
+              if (Array.isArray(syncData.expenses)) {
+                syncData.expenses.forEach((item: any) => {
+                  if (item && item.id && !mergedExp.some(e => e.id === item.id)) {
+                    mergedExp.push(item);
+                  }
+                });
+              }
+              if (Array.isArray(syncData.reminders)) {
+                syncData.reminders.forEach((item: any) => {
+                  if (item && item.id && !mergedRem.some(r => r.id === item.id)) {
+                    mergedRem.push(item);
+                  }
+                });
+              }
+              if (syncData.trips && Array.isArray(syncData.trips)) {
+                localStorage.setItem(`trip_folders_${activeId}`, JSON.stringify(syncData.trips));
+              }
               if (syncData.targets) localStorage.setItem(`budget_targets_${activeId}`, JSON.stringify(syncData.targets));
               if (syncData.goals) localStorage.setItem(`saving_goals_${activeId}`, JSON.stringify(syncData.goals));
-              if (syncData.cycleHistory) localStorage.setItem(`cycle_history_${activeId}`, JSON.stringify(syncData.cycleHistory));
             }
           }
         }
       } catch (e) {}
+
+      // Save restored master data to active user key and cloud
+      localStorage.setItem(`pitrack_expenses_${activeId}`, JSON.stringify(mergedExp));
+      localStorage.setItem(`reminders_v2_${activeId}`, JSON.stringify(mergedRem));
+
+      // Push master restored data to Cloudflare KV
+      fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pkid: activeId,
+          accountId: activeId,
+          expenses: mergedExp,
+          reminders: mergedRem,
+        }),
+      }).catch(() => {});
 
       onAuthSuccess(userData);
       onClose();
