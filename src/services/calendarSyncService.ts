@@ -41,6 +41,10 @@ export const syncToAppleCalendar = async (event: CalendarEventPayload) => {
     const offset = event.alarmOffsetMinutes || 0;
     const triggerStr = offset === 0 ? '-PT0M' : `-PT${offset}M`;
 
+    const diffMs = endDate.getTime() - startDate.getTime();
+    const diffMinutes = Math.max(1, Math.round(diffMs / (60 * 1000)));
+    const endTriggerStr = `+PT${diffMinutes}M`;
+
     const icsLines = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
@@ -65,15 +69,15 @@ export const syncToAppleCalendar = async (event: CalendarEventPayload) => {
       `TRIGGER:${triggerStr}`,
       'ATTACH;VALUE=URI:Basso',
       'END:VALARM',
-      // End Time Alert
+      // End Time Alert (Exact minute offset relative to start time)
       'BEGIN:VALARM',
       'ACTION:DISPLAY',
       `DESCRIPTION:End Due Alert: ${event.title}`,
-      'TRIGGER;RELATED=END:-PT0M',
+      `TRIGGER:${endTriggerStr}`,
       'END:VALARM',
       'BEGIN:VALARM',
       'ACTION:AUDIO',
-      'TRIGGER;RELATED=END:-PT0M',
+      `TRIGGER:${endTriggerStr}`,
       'ATTACH;VALUE=URI:Basso',
       'END:VALARM',
       'END:VEVENT',
