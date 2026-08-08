@@ -37,8 +37,9 @@ export const getGuestId = (): string => {
     const userAcc = localStorage.getItem('user_account');
     if (userAcc) {
       const parsed = JSON.parse(userAcc);
-      if (parsed && (parsed.pkid || parsed.accountId)) {
-        return parsed.pkid || parsed.accountId;
+      if (parsed && (parsed.pkid !== undefined || parsed.accountId !== undefined)) {
+        const rawId = parsed.pkid !== undefined && parsed.pkid !== null ? parsed.pkid : parsed.accountId;
+        return String(rawId);
       }
     }
     let gid = localStorage.getItem('guest_device_id');
@@ -46,15 +47,15 @@ export const getGuestId = (): string => {
       gid = 'usr_session_' + Math.random().toString(36).substring(2, 10);
       localStorage.setItem('guest_device_id', gid);
     }
-    return gid;
+    return String(gid);
   } catch (e) {
     return 'usr_default';
   }
 };
 
-export const setGuestId = (newId: string): void => {
+export const setGuestId = (newId: string | number): void => {
   try {
-    localStorage.setItem('guest_device_id', newId.trim());
+    localStorage.setItem('guest_device_id', String(newId).trim());
   } catch (e) {}
 };
 
@@ -90,8 +91,8 @@ const fetchWithTimeout = (url: string, options: RequestInit = {}) => {
 
 export const StorageService = {
   getCachedExpenses(): ExpenseItem[] {
-    const guestId = getGuestId();
-    const isUserAccount = guestId.startsWith('usr_');
+    const guestId = String(getGuestId());
+    const isUserAccount = !!localStorage.getItem('user_account') || guestId.startsWith('usr_');
 
     try {
       const masterKey = `pitrack_expenses_${guestId}`;
@@ -121,8 +122,9 @@ export const StorageService = {
     }
   },
   syncAccountToCloud(): void {
-    const guestId = getGuestId();
-    if (!guestId.startsWith('usr_')) return;
+    const guestId = String(getGuestId());
+    const isUserAccount = !!localStorage.getItem('user_account') || guestId.startsWith('usr_');
+    if (!isUserAccount) return;
 
     try {
       const expenses = this.getCachedExpenses();
@@ -136,6 +138,7 @@ export const StorageService = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-guest-id': guestId },
         body: JSON.stringify({
+          pkid: guestId,
           accountId: guestId,
           expenses,
           reminders,
