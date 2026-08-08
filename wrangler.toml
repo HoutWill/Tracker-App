@@ -4,7 +4,3 @@ compatibility_date = "2024-01-01"
 
 [assets]
 directory = "./dist"
-
-[[kv_namespaces]]
-binding = "TRACKER_DB"
-id = "TRACKER_DB_NAMESPACE_ID"
