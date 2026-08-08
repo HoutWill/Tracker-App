@@ -44,9 +44,9 @@ export default {
           return new Response(JSON.stringify({ error: 'Email and password are required' }), { status: 400, headers: corsHeaders });
         }
 
-        const accountId = `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`;
+        const pkid = `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`;
         const passwordHash = await hashPassword(password);
-        const userRecord = { accountId, email: cleanEmail, passwordHash, name };
+        const userRecord = { pkid, accountId: pkid, email: cleanEmail, passwordHash, name };
 
         if (env?.TRACKER_DB) {
           const existing = await env.TRACKER_DB.get(`user:${cleanEmail}`);
@@ -54,11 +54,12 @@ export default {
             return new Response(JSON.stringify({ error: 'Account already exists. Please log in.' }), { status: 400, headers: corsHeaders });
           }
           await env.TRACKER_DB.put(`user:${cleanEmail}`, JSON.stringify(userRecord));
-          await env.TRACKER_DB.put(`account:${accountId}`, JSON.stringify(userRecord));
+          await env.TRACKER_DB.put(`account:${pkid}`, JSON.stringify(userRecord));
+          await env.TRACKER_DB.put(`pkid:${pkid}`, JSON.stringify(userRecord));
         }
 
         return new Response(
-          JSON.stringify({ success: true, user: { accountId, email: cleanEmail, name } }),
+          JSON.stringify({ success: true, user: { pkid, accountId: pkid, email: cleanEmail, name } }),
           { status: 200, headers: corsHeaders }
         );
       } catch (e) {
@@ -80,7 +81,7 @@ export default {
           return new Response(JSON.stringify({ error: 'Email and password required' }), { status: 400, headers: corsHeaders });
         }
 
-        const accountId = `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`;
+        const pkid = `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`;
 
         if (env?.TRACKER_DB) {
           const userRaw = await env.TRACKER_DB.get(`user:${cleanEmail}`);
@@ -99,11 +100,13 @@ export default {
             return new Response(JSON.stringify({ error: 'Invalid email or password' }), { status: 401, headers: corsHeaders });
           }
 
+          const activePkid = userRecord.pkid || userRecord.accountId || pkid;
           return new Response(
             JSON.stringify({
               success: true,
               user: {
-                accountId: userRecord.accountId || accountId,
+                pkid: activePkid,
+                accountId: activePkid,
                 email: userRecord.email,
                 name: userRecord.name,
               },
@@ -121,13 +124,13 @@ export default {
     // 4. Handle /api/sync
     if (pathname === '/api/sync') {
       if (request.method === 'GET') {
-        const accountId = url.searchParams.get('accountId') || '';
-        if (!accountId) {
-          return new Response(JSON.stringify({ error: 'accountId required' }), { status: 400, headers: corsHeaders });
+        const pkid = url.searchParams.get('pkid') || url.searchParams.get('accountId') || '';
+        if (!pkid) {
+          return new Response(JSON.stringify({ error: 'pkid required' }), { status: 400, headers: corsHeaders });
         }
 
         if (env?.TRACKER_DB) {
-          const dataRaw = await env.TRACKER_DB.get(`sync:${accountId}`);
+          const dataRaw = await env.TRACKER_DB.get(`sync:${pkid}`);
           if (dataRaw) {
             return new Response(dataRaw, { status: 200, headers: corsHeaders });
           }
@@ -141,10 +144,10 @@ export default {
 
       if (request.method === 'POST') {
         const body = await request.json();
-        const accountId = body.accountId;
+        const pkid = body.pkid || body.accountId;
 
-        if (!accountId) {
-          return new Response(JSON.stringify({ error: 'accountId required' }), { status: 400, headers: corsHeaders });
+        if (!pkid) {
+          return new Response(JSON.stringify({ error: 'pkid required' }), { status: 400, headers: corsHeaders });
         }
 
         const dataToStore = {
@@ -158,7 +161,7 @@ export default {
         };
 
         if (env?.TRACKER_DB) {
-          await env.TRACKER_DB.put(`sync:${accountId}`, JSON.stringify(dataToStore));
+          await env.TRACKER_DB.put(`sync:${pkid}`, JSON.stringify(dataToStore));
         }
 
         return new Response(

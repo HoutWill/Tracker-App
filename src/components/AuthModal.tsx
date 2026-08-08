@@ -3,6 +3,7 @@ import { getGuestId, setGuestId } from '../services/storageService';
 import { X, User, Lock, Mail, LogIn, UserPlus, LogOut, CheckCircle2, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 export interface UserAccount {
+  pkid: string;
   accountId: string;
   email: string;
   name: string;
@@ -78,7 +79,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         if (res.ok && contentType.includes('application/json')) {
           const data = await res.json();
           if (data.user) {
-            userData = data.user;
+            userData = {
+              pkid: data.user.pkid || data.user.accountId || `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`,
+              accountId: data.user.accountId || data.user.pkid || `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`,
+              email: data.user.email || cleanEmail,
+              name: data.user.name || name || cleanEmail.split('@')[0],
+            };
           }
         } else if (!res.ok) {
           const errData = contentType.includes('application/json') ? await res.json() : null;
@@ -98,8 +104,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       // Seamless local/offline fallback for both LOGIN and REGISTER
       if (!userData && cleanEmail) {
         const safeId = cleanEmail.replace(/[^a-z0-9]/g, '_') || 'user_1';
+        const pkid = `usr_${safeId}`;
         userData = {
-          accountId: `usr_${safeId}`,
+          pkid,
+          accountId: pkid,
           email: cleanEmail,
           name: name.trim() || cleanEmail.split('@')[0],
         };
@@ -107,12 +115,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       if (!userData) throw new Error('Authentication failed. Please try again.');
 
-      // Bind user accountId & JWT token as active session
-      const authToken = `jwt_${userData.accountId}_${Date.now()}`;
+      const activePkid = userData.pkid || userData.accountId;
+      // Bind user pkid & JWT token as active session
+      const authToken = `jwt_${activePkid}_${Date.now()}`;
       localStorage.setItem('auth_token', authToken);
       localStorage.setItem('user_account', JSON.stringify(userData));
       localStorage.setItem('pitrack_expenses_initialized', 'true');
-      setGuestId(userData.accountId);
+      setGuestId(activePkid);
 
       // Auto-migrate guest entries into user account if first time on this device
       const userExpKey = `pitrack_expenses_${userData.accountId}`;

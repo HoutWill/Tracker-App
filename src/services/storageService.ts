@@ -37,8 +37,8 @@ export const getGuestId = (): string => {
     const userAcc = localStorage.getItem('user_account');
     if (userAcc) {
       const parsed = JSON.parse(userAcc);
-      if (parsed && parsed.accountId) {
-        return parsed.accountId;
+      if (parsed && (parsed.pkid || parsed.accountId)) {
+        return parsed.pkid || parsed.accountId;
       }
     }
     let gid = localStorage.getItem('guest_device_id');
