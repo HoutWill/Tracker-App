@@ -4,3 +4,7 @@ compatibility_date = "2024-01-01"
 
 [assets]
 directory = "./dist"
+
+[[kv_namespaces]]
+binding = "TRACKER_DB"
+id = "b2ad5dd08b5046b9b0ebf207e5f289ef"
