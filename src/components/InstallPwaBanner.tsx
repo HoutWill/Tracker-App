@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Share, PlusSquare, X, Smartphone, ArrowRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 export const InstallPwaBanner: React.FC = () => {
   const { pageColors } = useTheme();
-  const accentColor = pageColors?.EXPENSES || '#4A99E9';
   const [visible, setVisible] = useState<boolean>(() => {
     try {
       return !localStorage.getItem('pwa_banner_dismissed');
@@ -12,12 +11,30 @@ export const InstallPwaBanner: React.FC = () => {
       return true;
     }
   });
+  const [fading, setFading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!visible) return;
+
+    // Automatically fade out and disappear after 7 seconds
+    const timer = setTimeout(() => {
+      setFading(true);
+      setTimeout(() => {
+        setVisible(false);
+      }, 450);
+    }, 7000);
+
+    return () => clearTimeout(timer);
+  }, [visible]);
 
   const handleDismiss = () => {
-    setVisible(false);
-    try {
-      localStorage.setItem('pwa_banner_dismissed', 'true');
-    } catch (e) {}
+    setFading(true);
+    setTimeout(() => {
+      setVisible(false);
+      try {
+        localStorage.setItem('pwa_banner_dismissed', 'true');
+      } catch (e) {}
+    }, 400);
   };
 
   if (!visible) return null;
@@ -28,7 +45,8 @@ export const InstallPwaBanner: React.FC = () => {
         position: 'fixed',
         bottom: '82px',
         left: '50%',
-        transform: 'translateX(-50%)',
+        transform: fading ? 'translate(-50%, 16px)' : 'translate(-50%, 0)',
+        opacity: fading ? 0 : 1,
         width: 'calc(100% - 24px)',
         maxWidth: '860px',
         zIndex: 95,
@@ -42,7 +60,7 @@ export const InstallPwaBanner: React.FC = () => {
         justifyContent: 'space-between',
         gap: '12px',
         boxSizing: 'border-box',
-        animation: 'slideUpBanner 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+        transition: 'opacity 0.45s ease, transform 0.45s ease',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
