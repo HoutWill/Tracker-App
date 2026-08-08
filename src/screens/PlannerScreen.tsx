@@ -299,7 +299,7 @@ export const PlannerScreen: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CheckCircle2 size={16} color="#30D158" />
-              <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Overview</span>
+              <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Planner</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '8px', backgroundColor: 'rgba(48, 209, 88, 0.15)', color: '#30D158' }}>

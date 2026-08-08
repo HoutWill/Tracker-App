@@ -335,7 +335,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
             <ArrowDownRight size={16} />
-            <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '-0.1px' }}>Expenses Overview</span>
+            <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '-0.1px' }}>Expenses</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
