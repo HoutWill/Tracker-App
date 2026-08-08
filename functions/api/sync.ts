@@ -1,8 +1,7 @@
 /**
  * Cloudflare Pages Function: /api/sync
- * Cloud Data Backup & Recovery API for User Accounts
- * GET /api/sync?accountId=usr_... -> Fetches full cloud backup of expenses, savings, trips, and reminders
- * POST /api/sync -> Saves user account data payload to cloud database
+ * GET  /api/sync?accountId=usr_... → fetch full account backup
+ * POST /api/sync → save account data to KV (flat body, no payload wrapper)
  */
 
 export async function onRequest(context: { request: Request; env: any }) {
@@ -13,7 +12,7 @@ export async function onRequest(context: { request: Request; env: any }) {
     if (request.method === 'GET') {
       const accountId = url.searchParams.get('accountId') || '';
       if (!accountId) {
-        return new Response(JSON.stringify({ error: 'accountId parameter is required' }), {
+        return new Response(JSON.stringify({ error: 'accountId required' }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
         });
@@ -29,32 +28,43 @@ export async function onRequest(context: { request: Request; env: any }) {
         }
       }
 
-      return new Response(JSON.stringify({ success: true, data: null }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      // No data found yet — return empty structure
+      return new Response(
+        JSON.stringify({ expenses: [], reminders: [], trips: [], targets: null, goals: null, cycleHistory: [] }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     if (request.method === 'POST') {
       const body: any = await request.json();
       const accountId = body.accountId;
-      const payload = body.payload;
 
-      if (!accountId || !payload) {
-        return new Response(JSON.stringify({ error: 'accountId and payload are required' }), {
+      if (!accountId) {
+        return new Response(JSON.stringify({ error: 'accountId required' }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
         });
       }
 
+      // Accept flat body (expenses, reminders, trips, etc.) — no payload wrapper needed
+      const dataToStore = {
+        expenses: body.expenses || [],
+        reminders: body.reminders || [],
+        trips: body.trips || [],
+        targets: body.targets || null,
+        goals: body.goals || null,
+        cycleHistory: body.cycleHistory || [],
+        updatedAt: Date.now(),
+      };
+
       if (env?.TRACKER_DB) {
-        await env.TRACKER_DB.put(`sync:${accountId}`, JSON.stringify(payload));
+        await env.TRACKER_DB.put(`sync:${accountId}`, JSON.stringify(dataToStore));
       }
 
-      return new Response(JSON.stringify({ success: true, timestamp: Date.now() }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ success: true, timestamp: dataToStore.updatedAt }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -62,9 +72,10 @@ export async function onRequest(context: { request: Request; env: any }) {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: 'Sync server error: ' + e.message }), {
+    return new Response(JSON.stringify({ error: 'Sync error: ' + e.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 }
+

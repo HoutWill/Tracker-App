@@ -3,6 +3,14 @@
  * Handles Cloud Database User Account Registration
  */
 
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + 'PITRACK_PEPPER_2026');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export async function onRequestPost(context: { request: Request; env: any }) {
   try {
     const body: any = await context.request.json();
@@ -18,7 +26,8 @@ export async function onRequestPost(context: { request: Request; env: any }) {
     }
 
     const accountId = `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`;
-    const userRecord = { accountId, email: cleanEmail, password, name };
+    const passwordHash = await hashPassword(password);
+    const userRecord = { accountId, email: cleanEmail, passwordHash, name };
 
     // If Cloudflare KV storage is configured
     if (context.env?.TRACKER_DB) {
@@ -50,3 +59,4 @@ export async function onRequestPost(context: { request: Request; env: any }) {
     });
   }
 }
+

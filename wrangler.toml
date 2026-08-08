@@ -4,3 +4,8 @@ compatibility_date = "2026-08-05"
 [assets]
 directory = "./dist"
 not_found_handling = "single-page-application"
+
+[[kv_namespaces]]
+binding = "TRACKER_DB"
+id = "b2ad5dd08b5046b9b0ebf207e5f289ef"
+
