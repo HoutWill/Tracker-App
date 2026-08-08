@@ -1,6 +1,7 @@
 /**
  * Cloudflare Worker & Pages Service: _worker.js
  * Best Practices User Database System with Numeric Auto-Increment pkid (1, 2, 3...)
+ * Includes SPA routing fallback to guarantee dist/index.html delivery.
  */
 
 const CORS_HEADERS = {
@@ -219,9 +220,14 @@ export default {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: CORS_HEADERS });
     }
 
-    // 5. Fallback: Static Asset Delivery
+    // 5. Fallback: Static Asset Delivery with SPA Routing Fallback
     if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
+      const response = await env.ASSETS.fetch(request);
+      if (response.status === 404 && !pathname.includes('.')) {
+        const indexRequest = new Request(new URL('/', request.url), request);
+        return env.ASSETS.fetch(indexRequest);
+      }
+      return response;
     }
 
     return new Response('Not Found', { status: 404 });
