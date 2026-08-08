@@ -115,14 +115,12 @@ export const StorageService = {
         }
       }
 
-      if (isUser) {
-        return [];
-      }
-
       const legacyRaw = localStorage.getItem('pitrack_expenses_data') || localStorage.getItem('pitrack_expenses');
       if (legacyRaw) {
         const parsed: ExpenseItem[] = JSON.parse(legacyRaw);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Auto-migrate guest expenses to user account key so data is never lost on login
+          localStorage.setItem(masterKey, JSON.stringify(parsed));
           return parsed.sort((a, b) => b.createdAt - a.createdAt);
         }
       }
@@ -555,6 +553,15 @@ export const StorageService = {
       if (local) {
         return JSON.parse(local);
       }
+      // Auto-migrate guest reminders into user account key so data is never lost on login
+      const fallback = localStorage.getItem('pitrack_reminders_backup') || localStorage.getItem('reminders_v2_usr_default');
+      if (fallback) {
+        const parsed = JSON.parse(fallback);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          localStorage.setItem(userKey, JSON.stringify(parsed));
+          return parsed;
+        }
+      }
       return [];
     } catch (e) {
       return [];
@@ -565,6 +572,7 @@ export const StorageService = {
     const guestId = getGuestId();
     try {
       localStorage.setItem(`reminders_v2_${guestId}`, JSON.stringify(reminders));
+      localStorage.setItem('pitrack_reminders_backup', JSON.stringify(reminders));
     } catch (e) {}
     this.syncAccountToCloud();
   },
