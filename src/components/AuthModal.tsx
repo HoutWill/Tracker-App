@@ -87,11 +87,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           }
         }
       } catch (e: any) {
-        if (e?.message && (e.message.includes('already exists') || e.message.includes('required') || e.message.includes('Password'))) {
+        if (e?.message) {
           throw e;
         }
         if (tab === 'LOGIN') {
-          throw new Error(e?.message || 'Invalid email or password');
+          throw new Error('Account not found or invalid credentials. Please Sign Up.');
         }
       }
 

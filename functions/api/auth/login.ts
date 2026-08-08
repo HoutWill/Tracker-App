@@ -52,7 +52,7 @@ export async function onRequest(context: { request: Request; env: any }) {
     if (env?.TRACKER_DB) {
       const userRaw = await env.TRACKER_DB.get(`user:${cleanEmail}`);
       if (!userRaw) {
-        return new Response(JSON.stringify({ error: 'Account not found. Please register first.' }), {
+        return new Response(JSON.stringify({ error: 'Account not found. Please click Sign Up below to create your account.' }), {
           status: 401,
           headers: corsHeaders,
         });
