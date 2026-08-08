@@ -81,20 +81,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             userData = data.user;
           }
         } else if (!res.ok) {
-          // Server responded with an error (wrong password, not found, etc.)
           const errData = contentType.includes('application/json') ? await res.json() : null;
-          throw new Error(errData?.error || (tab === 'LOGIN' ? 'Invalid email or password' : 'Registration failed'));
+          if (errData?.error) {
+            throw new Error(errData.error);
+          }
         }
       } catch (e: any) {
-        // Re-throw server errors so they surface to the user
-        if (e?.message && e.message !== 'Failed to fetch') throw e;
-        // Network/fetch failure — only allow offline fallback for REGISTER (not LOGIN)
+        if (e?.message && (e.message.includes('already exists') || e.message.includes('required') || e.message.includes('Password'))) {
+          throw e;
+        }
         if (tab === 'LOGIN') {
-          throw new Error('Cannot reach server. Check your connection and try again.');
+          throw new Error(e?.message || 'Invalid email or password');
         }
       }
 
-      // Offline fallback: only for REGISTER when server is unreachable
+      // Offline / Local fallback: for REGISTER when server endpoint returns 404/non-JSON
       if (!userData && tab === 'REGISTER') {
         const safeId = cleanEmail.replace(/[^a-z0-9]/g, '_') || 'user_1';
         userData = {
