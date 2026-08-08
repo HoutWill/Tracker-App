@@ -16,7 +16,7 @@ const PEPPER = 'PITRACK_PEPPER_2026';
 /**
  * Hash password securely using Web Crypto API SHA-256 + Pepper
  */
-async function hashPassword(password: string): Promise<string> {
+async function hashPassword(password) {
   const encoder = new TextEncoder();
   const data = encoder.encode(password + PEPPER);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -27,7 +27,7 @@ async function hashPassword(password: string): Promise<string> {
 /**
  * Get next auto-increment numeric pkid (1, 2, 3...) from KV counter
  */
-async function getNextPkid(env: any): Promise<number> {
+async function getNextPkid(env) {
   if (!env?.TRACKER_DB) return Date.now();
   try {
     const rawCount = await env.TRACKER_DB.get('sys:user_counter');
@@ -41,7 +41,7 @@ async function getNextPkid(env: any): Promise<number> {
 }
 
 export default {
-  async fetch(request: Request, env: any) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
@@ -57,7 +57,7 @@ export default {
       }
 
       try {
-        const body: any = await request.json();
+        const body = await request.json();
         const cleanEmail = (body.email || '').trim().toLowerCase();
         const password = body.password || '';
         const name = (body.name || '').trim() || cleanEmail.split('@')[0];
@@ -105,7 +105,7 @@ export default {
           }),
           { status: 200, headers: CORS_HEADERS }
         );
-      } catch (e: any) {
+      } catch (e) {
         return new Response(JSON.stringify({ error: 'Registration failed: ' + e.message }), { status: 500, headers: CORS_HEADERS });
       }
     }
@@ -117,7 +117,7 @@ export default {
       }
 
       try {
-        const body: any = await request.json();
+        const body = await request.json();
         const cleanEmail = (body.email || '').trim().toLowerCase();
         const password = body.password || '';
 
@@ -161,7 +161,7 @@ export default {
         }
 
         return new Response(JSON.stringify({ error: 'Database service not configured' }), { status: 503, headers: CORS_HEADERS });
-      } catch (e: any) {
+      } catch (e) {
         return new Response(JSON.stringify({ error: 'Login failed: ' + e.message }), { status: 500, headers: CORS_HEADERS });
       }
     }
@@ -188,7 +188,7 @@ export default {
       }
 
       if (request.method === 'POST') {
-        const body: any = await request.json();
+        const body = await request.json();
         const pkid = body.pkid || body.accountId;
 
         if (!pkid) {
