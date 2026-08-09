@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ReminderItem, ReminderCategory } from '../types';
 import { useReminders } from '../context/ReminderContext';
-import { X, Bell, Calendar, Clock, CheckSquare, Square, Trash2, Tag, Share2, Edit3, Save, Layers } from 'lucide-react';
+import { formatCleanDate } from '../services/storageService';
+import { triggerHaptic } from '../services/soundService';
+import { X, Bell, Calendar, Clock, CheckSquare, Square, Trash2, Tag, Share2, Edit3, Save, CheckCircle2, Circle, Plus, MoreHorizontal } from 'lucide-react';
 import { syncToAppleCalendar, shareToAppleReminders } from '../services/calendarSyncService';
 
 interface ReminderDetailModalProps {
@@ -24,6 +26,11 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
   const [editCategory, setEditCategory] = useState<ReminderCategory>('TASK');
   const [editLevel, setEditLevel] = useState<'URGENT' | 'FLAGGED' | 'SIMPLE'>('SIMPLE');
 
+  // Interactive Checklist Sub-Items State
+  const [checklist, setChecklist] = useState<Array<{ id: string; text: string; done: boolean }>>([]);
+  const [newChecklistItemText, setNewChecklistItemText] = useState<string>('');
+  const [isAddingChecklist, setIsAddingChecklist] = useState<boolean>(false);
+
   useEffect(() => {
     if (reminder) {
       setEditTitle(reminder.title || '');
@@ -35,11 +42,39 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       setEditAlertTime(reminder.alertTime || reminder.dueTime || '09:00');
       setEditCategory(reminder.category || 'TASK');
       setEditLevel(reminder.level || 'SIMPLE');
+      
+      // Default checklist if none exists
+      const initialChecklist = reminder.checklist && reminder.checklist.length > 0
+        ? reminder.checklist
+        : [
+            { id: 'cl-1', text: 'Review scope & objectives', done: true },
+            { id: 'cl-2', text: 'Confirm schedule & timeline', done: false },
+          ];
+      setChecklist(initialChecklist);
       setIsEditing(false);
     }
   }, [reminder]);
 
   if (!reminder) return null;
+
+  const handleToggleChecklistItem = (id: string) => {
+    triggerHaptic(10);
+    const updated = checklist.map(item => item.id === id ? { ...item, done: !item.done } : item);
+    setChecklist(updated);
+    updateReminder(reminder.id, { checklist: updated });
+  };
+
+  const handleAddChecklistItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newChecklistItemText.trim()) return;
+    triggerHaptic(10);
+    const newItem = { id: 'cl-' + Date.now(), text: newChecklistItemText.trim(), done: false };
+    const updated = [...checklist, newItem];
+    setChecklist(updated);
+    setNewChecklistItemText('');
+    setIsAddingChecklist(false);
+    updateReminder(reminder.id, { checklist: updated });
+  };
 
   const handleToggle = () => {
     toggleReminder(reminder.id);
@@ -63,6 +98,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       category: editCategory,
       level: editLevel,
       priority: editLevel === 'URGENT' ? 'HIGH' : 'MEDIUM',
+      checklist,
     });
 
     setIsEditing(false);
@@ -106,8 +142,8 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(12px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backdropFilter: 'blur(16px)',
         zIndex: 140,
         display: 'flex',
         alignItems: 'center',
@@ -121,64 +157,60 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
         onClick={e => e.stopPropagation()}
         style={{
           width: '100%',
-          maxWidth: '400px',
+          maxWidth: '420px',
           maxHeight: '90vh',
           overflowY: 'auto',
-          padding: '20px',
+          padding: '22px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '14px',
-          borderRadius: '20px',
+          gap: '16px',
+          borderRadius: '24px',
           backgroundColor: 'var(--bg-card)',
           borderColor: 'var(--border-glass)',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
         }}
       >
-        {/* Modal Header */}
+        {/* Top Control Bar: Close button right, edit left */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Bell size={16} style={{ color: 'var(--accent)' }} />
-            <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
-              {isEditing ? 'Edit Item' : 'Information'}
-            </h3>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <button
-              type="button"
-              onClick={() => setIsEditing(!isEditing)}
-              style={{
-                padding: '4px 10px',
-                borderRadius: '8px',
-                border: '1px solid var(--border-glass)',
-                backgroundColor: isEditing ? 'rgba(99, 102, 241, 0.2)' : 'var(--pill-bg)',
-                color: isEditing ? 'var(--accent)' : 'var(--text-secondary)',
-                fontSize: '11px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
-            >
-              <Edit3 size={13} />
-              <span>{isEditing ? 'Cancel' : 'Edit'}</span>
-            </button>
+          <button
+            type="button"
+            onClick={() => setIsEditing(!isEditing)}
+            style={{
+              padding: '4px 12px',
+              borderRadius: '10px',
+              border: '1px solid var(--border-glass)',
+              backgroundColor: isEditing ? 'rgba(99, 102, 241, 0.2)' : 'var(--pill-bg)',
+              color: isEditing ? 'var(--accent)' : 'var(--text-secondary)',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <Edit3 size={13} />
+            <span>{isEditing ? 'Cancel' : 'Edit'}</span>
+          </button>
 
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-                padding: '4px',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <X size={18} />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--pill-bg)',
+              border: '1px solid var(--border-glass)',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {isEditing ? (
@@ -194,18 +226,16 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  borderRadius: '10px',
+                  borderRadius: '12px',
                   backgroundColor: 'var(--pill-bg)',
                   border: '1px solid var(--border-glass)',
                   color: 'var(--text-primary)',
-                  fontSize: '13px',
+                  fontSize: '14px',
                   outline: 'none',
                   boxSizing: 'border-box',
                 }}
               />
             </div>
-
-
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
               <div style={{ minWidth: 0 }}>
@@ -216,13 +246,12 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                   onChange={e => setEditDueTime(e.target.value)}
                   style={{
                     width: '100%',
-                    minWidth: 0,
                     padding: '8px 6px',
                     borderRadius: '10px',
                     backgroundColor: 'var(--pill-bg)',
                     border: '1px solid var(--border-glass)',
                     color: 'var(--text-primary)',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     outline: 'none',
                     boxSizing: 'border-box',
                   }}
@@ -237,13 +266,12 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                   onChange={e => setEditEndTime(e.target.value)}
                   style={{
                     width: '100%',
-                    minWidth: 0,
                     padding: '8px 6px',
                     borderRadius: '10px',
                     backgroundColor: 'var(--pill-bg)',
                     border: '1px solid var(--border-glass)',
                     color: 'var(--text-primary)',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     outline: 'none',
                     boxSizing: 'border-box',
                   }}
@@ -260,7 +288,6 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                 required
                 style={{
                   width: '100%',
-                  minWidth: 0,
                   padding: '9px 10px',
                   borderRadius: '10px',
                   backgroundColor: 'var(--pill-bg)',
@@ -271,54 +298,6 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                   boxSizing: 'border-box',
                 }}
               />
-            </div>
-
-            {/* Dedicated Alert Date & Alert Time Section */}
-            <div style={{ padding: '10px 12px', borderRadius: '14px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)', display: 'flex', flexDirection: 'column', gap: '6px', boxSizing: 'border-box' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Bell size={13} color="#F3A85B" />
-                <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)' }}>Alert</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
-                <div style={{ minWidth: 0 }}>
-                  <input
-                    type="date"
-                    value={editAlertDate}
-                    onChange={e => setEditAlertDate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      minWidth: 0,
-                      padding: '7px 6px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-glass)',
-                      backgroundColor: 'var(--bg-card)',
-                      color: 'var(--text-primary)',
-                      fontSize: '11px',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <input
-                    type="time"
-                    value={editAlertTime}
-                    onChange={e => setEditAlertTime(e.target.value)}
-                    style={{
-                      width: '100%',
-                      minWidth: 0,
-                      padding: '7px 6px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-glass)',
-                      backgroundColor: 'var(--bg-card)',
-                      color: 'var(--text-primary)',
-                      fontSize: '11px',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                </div>
-              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -377,7 +356,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                 value={editNotes}
                 onChange={e => setEditNotes(e.target.value)}
                 rows={3}
-                placeholder="Notes or details..."
+                placeholder="Description or notes..."
                 style={{
                   width: '100%',
                   padding: '10px 12px',
@@ -417,223 +396,264 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
             </button>
           </form>
         ) : (
-          /* View Info Mode */
+          /* Remade View Detail Mode Matching Screenshot */
           <>
+            {/* Title & Priority Badge Pill Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+              <h2
+                style={{
+                  fontSize: '20px',
+                  fontWeight: 900,
+                  color: 'var(--text-primary)',
+                  letterSpacing: '-0.4px',
+                  lineHeight: '1.25',
+                  margin: 0,
+                  flex: 1,
+                  textDecoration: reminder.completed ? 'line-through' : 'none',
+                }}
+              >
+                {reminder.title}
+              </h2>
+
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 800,
+                  padding: '4px 12px',
+                  borderRadius: '9999px',
+                  backgroundColor: reminder.level === 'URGENT' ? 'rgba(236, 102, 140, 0.18)' : reminder.level === 'FLAGGED' ? 'rgba(243, 168, 91, 0.18)' : 'rgba(74, 153, 233, 0.18)',
+                  border: `1px solid ${reminder.level === 'URGENT' ? 'rgba(236, 102, 140, 0.35)' : reminder.level === 'FLAGGED' ? 'rgba(243, 168, 91, 0.35)' : 'rgba(74, 153, 233, 0.35)'}`,
+                  color: reminder.level === 'URGENT' ? '#EC668C' : reminder.level === 'FLAGGED' ? '#F3A85B' : '#4A99E9',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  flexShrink: 0,
+                }}
+              >
+                {reminder.level === 'URGENT' ? 'High Priority' : reminder.level === 'FLAGGED' ? 'Flagged' : 'Simple'}
+              </span>
+            </div>
+
+            {/* Metadata Row: Due Date & Category */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', padding: '12px 0', borderTop: '1px solid var(--border-glass)', borderBottom: '1px solid var(--border-glass)' }}>
+              <div>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px', fontWeight: 500 }}>
+                  Due date
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  <Calendar size={15} color="var(--text-secondary)" />
+                  <span>{formatCleanDate(reminder.dueDate)}</span>
+                </div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px', fontWeight: 500 }}>
+                  Category
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  <Tag size={15} color="var(--text-secondary)" />
+                  <span>{reminder.category ? reminder.category.charAt(0) + reminder.category.slice(1).toLowerCase() : 'Task'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Description / Notes Section */}
+            {reminder.notes && (
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', padding: '12px 14px', borderRadius: '14px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)' }}>
+                {reminder.notes}
+              </div>
+            )}
+
+            {/* Check List Section matching user screenshot */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h2
-                  style={{
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    color: 'var(--text-primary)',
-                    textDecoration: reminder.completed ? 'line-through' : 'none',
-                    letterSpacing: '-0.1px',
-                  }}
-                >
-                  {reminder.title}
-                </h2>
-                {reminder.level === 'URGENT' && (
-                  <span
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Check List</h4>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingChecklist(!isAddingChecklist)}
                     style={{
-                      fontSize: '9px',
-                      fontWeight: 700,
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      backgroundColor: 'rgba(239, 68, 68, 0.12)',
-                      color: 'var(--accent-danger)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--accent)',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '2px',
                     }}
                   >
-                    Urgent
-                  </span>
+                    <Plus size={13} /> Add
+                  </button>
+                </div>
+              </div>
+
+              {/* Checklist Items List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {checklist.map(item => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleToggleChecklistItem(item.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '8px 10px',
+                      borderRadius: '12px',
+                      backgroundColor: 'var(--pill-bg)',
+                      border: '1px solid var(--border-glass)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{ color: item.done ? '#00E5FF' : 'var(--text-secondary)', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                      {item.done ? <CheckCircle2 size={18} fill="rgba(0, 229, 255, 0.2)" /> : <Circle size={18} />}
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: item.done ? 'var(--text-muted)' : 'var(--text-primary)',
+                        textDecoration: item.done ? 'line-through' : 'none',
+                        flex: 1,
+                      }}
+                    >
+                      {item.text}
+                    </span>
+                  </div>
+                ))}
+
+                {isAddingChecklist && (
+                  <form onSubmit={handleAddChecklistItem} style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                    <input
+                      type="text"
+                      value={newChecklistItemText}
+                      onChange={e => setNewChecklistItemText(e.target.value)}
+                      placeholder="New checklist item..."
+                      autoFocus
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        borderRadius: '10px',
+                        backgroundColor: 'var(--pill-bg)',
+                        border: '1px solid var(--accent)',
+                        color: 'var(--text-primary)',
+                        fontSize: '12px',
+                        outline: 'none',
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      style={{
+                        padding: '8px 14px',
+                        borderRadius: '10px',
+                        backgroundColor: 'var(--accent)',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        fontWeight: 800,
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Add
+                    </button>
+                  </form>
                 )}
               </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
-
-                <span
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: 600,
-                    padding: '2px 6px',
-                    borderRadius: '6px',
-                    backgroundColor: 'var(--pill-bg)',
-                    color: 'var(--text-secondary)',
-                    border: '1px solid var(--border-glass)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  <Tag size={10} /> {reminder.category}
-                </span>
-              </div>
             </div>
 
-            {/* Date & Time Cards */}
-            <div
-              style={{
-                padding: '10px 12px',
-                borderRadius: '12px',
-                backgroundColor: 'var(--pill-bg)',
-                border: '1px solid var(--border-glass)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Calendar size={15} style={{ color: 'var(--text-secondary)' }} />
-                <div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>Date</div>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>{reminder.dueDate}</div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={15} style={{ color: 'var(--text-secondary)' }} />
-                <div>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>Event Time</div>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                    {reminder.dueTime || 'Task'}{reminder.endTime ? ` - ${reminder.endTime}` : ''}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Alert Alarm Time Box */}
-            <div
-              style={{
-                padding: '10px 12px',
-                borderRadius: '12px',
-                backgroundColor: 'rgba(243, 168, 91, 0.12)',
-                border: '1px solid rgba(243, 168, 91, 0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <Bell size={15} color="#F3A85B" />
-              <div>
-                <div style={{ fontSize: '10px', color: '#F3A85B', fontWeight: 700 }}>Alert Alarm Time</div>
-                <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-primary)' }}>
-                  {reminder.alertDate || reminder.dueDate} @ {reminder.alertTime || reminder.dueTime || '09:00'}
-                </div>
-              </div>
-            </div>
-
-            {/* Notes Section */}
-            {reminder.notes ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>Notes</label>
-                <div
-                  style={{
-                    padding: '10px 12px',
-                    borderRadius: '10px',
-                    backgroundColor: 'var(--pill-bg)',
-                    border: '1px solid var(--border-glass)',
-                    fontSize: '12px',
-                    color: 'var(--text-primary)',
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {reminder.notes}
-                </div>
-              </div>
-            ) : null}
-
-            {/* Action Buttons */}
+            {/* Bottom Primary Action Bar */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-              <button
-                type="button"
-                onClick={handleShareAppleReminders}
-                style={{
-                  width: '100%',
-                  padding: '11px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  backgroundColor: '#FF9500',
-                  color: '#FFFFFF',
-                  fontWeight: 800,
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  boxShadow: '0 4px 14px rgba(255, 149, 0, 0.3)',
-                }}
-              >
-                <Share2 size={15} />
-                <span>Way 1: Share to Apple Reminders</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSyncAppleCalendar}
-                style={{
-                  width: '100%',
-                  padding: '11px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  backgroundColor: '#30D158',
-                  color: '#141416',
-                  fontWeight: 800,
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  boxShadow: '0 4px 14px rgba(48, 209, 88, 0.3)',
-                }}
-              >
-                <Calendar size={15} />
-                <span>Way 2: Add to Apple Calendar</span>
-              </button>
-
-              <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   type="button"
                   onClick={handleToggle}
                   style={{
                     flex: 1,
-                    padding: '10px',
-                    borderRadius: '10px',
-                    border: '1px solid var(--border-glass)',
-                    backgroundColor: reminder.completed ? 'var(--pill-bg)' : 'var(--accent)',
-                    color: reminder.completed ? 'var(--text-primary)' : '#FFF',
-                    fontWeight: 600,
-                    fontSize: '12px',
+                    padding: '12px',
+                    borderRadius: '14px',
+                    border: 'none',
+                    backgroundColor: reminder.completed ? 'var(--pill-bg)' : '#30D158',
+                    color: reminder.completed ? 'var(--text-primary)' : '#141416',
+                    fontWeight: 800,
+                    fontSize: '13px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
+                    boxShadow: reminder.completed ? 'none' : '0 4px 14px rgba(48, 209, 88, 0.35)',
                   }}
                 >
-                  {reminder.completed ? <Square size={15} /> : <CheckSquare size={15} />}
-                  <span>{reminder.completed ? 'Mark Pending' : 'Mark Complete'}</span>
+                  <CheckCircle2 size={16} />
+                  <span>{reminder.completed ? 'Mark Pending' : 'Complete Task'}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleDelete}
                   style={{
-                    padding: '10px 14px',
-                    borderRadius: '10px',
+                    padding: '12px 14px',
+                    borderRadius: '14px',
                     border: '1px solid rgba(239, 68, 68, 0.25)',
-                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
                     color: 'var(--accent-danger)',
-                    fontWeight: 600,
+                    fontWeight: 700,
                     fontSize: '12px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
-                  title="Delete"
+                  title="Delete Task"
                 >
-                  <Trash2 size={15} />
+                  <Trash2 size={16} />
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={handleShareAppleReminders}
+                  style={{
+                    padding: '9px 10px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--border-glass)',
+                    backgroundColor: 'var(--pill-bg)',
+                    color: 'var(--text-secondary)',
+                    fontWeight: 700,
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <Share2 size={13} />
+                  <span>Apple Reminders</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSyncAppleCalendar}
+                  style={{
+                    padding: '9px 10px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--border-glass)',
+                    backgroundColor: 'var(--pill-bg)',
+                    color: 'var(--text-secondary)',
+                    fontWeight: 700,
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <Calendar size={13} />
+                  <span>Apple Calendar</span>
                 </button>
               </div>
             </div>
@@ -643,3 +663,4 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
     </div>
   );
 };
+

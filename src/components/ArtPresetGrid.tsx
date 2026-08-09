@@ -175,46 +175,53 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '12px 14px',
                   borderRadius: '20px',
-                  border: isDragOverThis ? '2px dashed var(--accent)' : '1px solid var(--border-glass)',
-                  backgroundColor: 'var(--bg-card)',
+                  border: isDragOverThis ? '2px dashed var(--accent)' : `1px solid ${hexToRgba(tileHex, 0.22)}`,
+                  backgroundColor: hexToRgba(tileHex, 0.07),
                   color: 'var(--text-primary)',
                   textAlign: 'left',
                   cursor: isReordering ? 'grab' : 'pointer',
-                  transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
-                  minHeight: '66px',
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                  minHeight: '74px',
+                  boxShadow: `0 2px 8px ${hexToRgba(tileHex, 0.06)}`,
                   userSelect: 'none',
                 }}
                 onMouseEnter={e => {
-                  if (!isReordering) e.currentTarget.style.backgroundColor = 'var(--pill-hover)';
+                  if (!isReordering) {
+                    e.currentTarget.style.backgroundColor = hexToRgba(tileHex, 0.12);
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }
                 }}
                 onMouseLeave={e => {
-                  if (!isReordering) e.currentTarget.style.backgroundColor = 'var(--bg-card)';
+                  if (!isReordering) {
+                    e.currentTarget.style.backgroundColor = hexToRgba(tileHex, 0.07);
+                    e.currentTarget.style.transform = 'translateY(0px)';
+                  }
                 }}
               >
                 {/* Top Row: Icon badge left, price count right */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div
                     style={{
-                      width: '28px',
-                      height: '28px',
+                      width: '32px',
+                      height: '32px',
                       borderRadius: '10px',
-                      backgroundColor: hexToRgba(tileHex, 0.15),
-                      border: `1px solid ${hexToRgba(tileHex, 0.25)}`,
+                      backgroundColor: hexToRgba(tileHex, 0.16),
+                      border: `1px solid ${hexToRgba(tileHex, 0.3)}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: tileHex,
                     }}
                   >
-                    <CategoryIconRenderer icon={preset.icon} size={15} color={tileHex} />
+                    <CategoryIconRenderer icon={preset.icon} size={16} color={tileHex} />
                   </div>
 
                   <span
                     className="tabular-nums"
                     style={{
-                      fontSize: '12px',
+                      fontSize: '13px',
                       fontWeight: 800,
                       color: 'var(--text-primary)',
                     }}
@@ -226,10 +233,10 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                 {/* Bottom Row: Single-Word Clean Title */}
                 <span
                   style={{
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    marginTop: '6px',
-                    color: 'var(--text-secondary)',
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    marginTop: '8px',
+                    color: 'var(--text-primary)',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',

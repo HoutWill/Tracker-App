@@ -400,22 +400,22 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
         {/* Savings Goal Progress Bar */}
         <div style={{ marginBottom: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontWeight: 500, marginBottom: '6px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>
-              {savingPeriod === 'DAILY' ? 'Daily' : savingPeriod === 'WEEKLY' ? 'Weekly' : 'Monthly'} Goal ({formatCurrency(currentGoal, currency)})
+            <span style={{ color: 'var(--text-secondary)' }}>
+              Goal ({formatCurrency(currentGoal, currency)})
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ color: pageAccent, fontWeight: 700 }}>
-                {goalProgressPct}% achieved
+                {goalProgressPct}%
               </span>
               {goalProgressPct >= 100 && (
                 <span
                   style={{
                     fontSize: '10px',
                     fontWeight: 800,
-                    padding: '1px 6px',
-                    borderRadius: '5px',
-                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    padding: '2px 6px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+                    border: '1px solid rgba(48, 209, 88, 0.3)',
                     color: 'var(--accent-success)',
                   }}
                 >
@@ -461,7 +461,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
               style={{
                 width: '26px',
                 height: '26px',
-                borderRadius: '6px',
+                borderRadius: '10px',
                 backgroundColor: 'var(--pill-bg)',
                 border: '1px solid var(--border-glass)',
                 color: pageAccent,
@@ -474,7 +474,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
               <PiggyBank size={13} />
             </div>
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 500 }}>Saved</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 500 }}>Saved</div>
               <div className="tabular-nums" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 {hideBalances ? '••••' : formatCurrency(totalSavingUSD, currency)}
               </div>

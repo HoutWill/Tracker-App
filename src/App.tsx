@@ -103,8 +103,6 @@ export const AppContent: React.FC = () => {
           maxWidth: '430px',
           height: '58px',
           backgroundColor: 'var(--bg-card)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
           border: '1px solid var(--border-glass)',
           borderRadius: '20px',
           boxShadow: 'var(--shadow-card)',
@@ -116,7 +114,7 @@ export const AppContent: React.FC = () => {
         }}
       >
         {[
-          { id: 'EXPENSES', label: 'Wallet', icon: Wallet },
+          { id: 'EXPENSES', label: 'Expenses', icon: Wallet },
           { id: 'STATS', label: 'Stats', icon: BarChart3 },
           { id: 'PLANNER', label: 'Planner', icon: Bell },
           { id: 'CALENDAR', label: 'Calendar', icon: Calendar },

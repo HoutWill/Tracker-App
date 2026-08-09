@@ -306,15 +306,15 @@ export const StatsScreen: React.FC = () => {
 
           {/* Metric Overview Grid Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <div className="glass-panel" style={{ padding: '14px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '4px' }}>Today</div>
+            <div className="glass-panel" style={{ padding: '14px', borderRadius: '20px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '4px' }}>Today</div>
               <div className="tabular-nums" style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {hideBalances ? '••' : formatCurrency(todayExpenseUSD, currency)}
               </div>
             </div>
 
-            <div className="glass-panel" style={{ padding: '14px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '4px' }}>This Month</div>
+            <div className="glass-panel" style={{ padding: '14px', borderRadius: '20px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '4px' }}>Month</div>
               <div className="tabular-nums" style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {hideBalances ? '••' : formatCurrency(monthExpenseUSD, currency)}
               </div>
@@ -323,7 +323,7 @@ export const StatsScreen: React.FC = () => {
 
           {/* Top Category Highlight Card */}
           {topExpenseCategory && (
-            <div className="glass-panel" style={{ padding: '14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="glass-panel" style={{ padding: '14px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div
                 style={{
                   width: '38px',
@@ -340,7 +340,7 @@ export const StatsScreen: React.FC = () => {
                 <Award size={18} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>Top Category</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>Category</div>
                 <div style={{ fontSize: '14px', fontWeight: 600 }}>{topExpenseCategory.name}</div>
               </div>
               <div style={{ textAlign: 'right' }}>

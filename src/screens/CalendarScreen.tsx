@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
-import { formatCurrency } from '../services/storageService';
+import { formatCurrency, getTodayDateString } from '../services/storageService';
 import { getDateDetails, CAMBODIA_NATIONAL_HOLIDAYS, WORLD_CELEBRATION_DAYS } from '../services/khmerCalendarService';
 import { ExpenseCard } from '../components/ExpenseCard';
 import { BuddhaIcon, BenOfferingIcon, CambodiaFlagBadge } from '../components/CalendarCustomIcons';
@@ -23,7 +23,7 @@ export const CalendarScreen: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<CalendarViewMode>('MONTH');
   const [viewDate, setViewDate] = useState<Date>(new Date());
-  const [selectedDay, setSelectedDay] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDay, setSelectedDay] = useState<string>(getTodayDateString());
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isHolidaysOpen, setIsHolidaysOpen] = useState(false);
 

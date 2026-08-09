@@ -1,0 +1,52 @@
+{
+  "pkid": "usr_session_hgy815ra",
+  "accountId": "usr_session_hgy815ra",
+  "expenses": [
+    {
+      "title": "Food",
+      "amount": 1,
+      "currency": "USD",
+      "type": "EXPENSE",
+      "categoryId": "cat-food",
+      "categoryName": "Food",
+      "categoryIcon": "utensils",
+      "categoryColor": "orange",
+      "date": "2026-08-09",
+      "paymentMethod": "Cash",
+      "notes": "Quick log via Cash",
+      "id": "exp-1786262835563-500",
+      "createdAt": 1786262835563
+    }
+  ],
+  "reminders": [
+    {
+      "title": "Gym",
+      "notes": "s",
+      "category": "SPORT",
+      "priority": "HIGH",
+      "level": "FLAGGED",
+      "dueDate": "2026-08-09",
+      "dueTime": "15:00",
+      "endTime": "15:30",
+      "alertDate": "2026-08-09",
+      "alertTime": "15:00",
+      "alertEnabled": true,
+      "id": "rem-1786262144302",
+      "completed": false,
+      "createdAt": 1786262144302
+    }
+  ],
+  "trips": [],
+  "targets": {
+    "DAILY": 35,
+    "WEEKLY": 250,
+    "MONTHLY": 1000
+  },
+  "goals": {
+    "DAILY": 15,
+    "WEEKLY": 100,
+    "MONTHLY": 500
+  },
+  "cycleHistory": [],
+  "updatedAt": 1786262835570
+}

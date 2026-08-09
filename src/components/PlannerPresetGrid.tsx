@@ -9,6 +9,7 @@ import {
   X,
   Move,
   Trash2,
+  Edit3,
   Dumbbell,
   Receipt,
   Users,
@@ -122,11 +123,11 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
 
   return (
     <div style={{ marginBottom: '20px' }}>
-      {/* Single-Word Clean Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+      {/* Header Row: Quick Add Title & Edit Action Button */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Zap size={15} style={{ color: 'var(--text-secondary)' }} />
-          <h3 style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '-0.1px', color: 'var(--text-primary)' }}>Presets</h3>
+          <Zap size={16} color="var(--accent)" />
+          <h3 style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '-0.1px', color: 'var(--text-primary)' }}>Quick Add</h3>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -139,33 +140,18 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
             }}
             style={{
               fontSize: '11px',
-              padding: '3px 8px',
+              padding: '4px 10px',
+              borderRadius: '10px',
               color: isReordering ? '#EF4444' : 'var(--text-secondary)',
               borderColor: isReordering ? 'rgba(239, 68, 68, 0.4)' : 'var(--border-glass)',
               backgroundColor: isReordering ? 'rgba(239, 68, 68, 0.15)' : 'var(--pill-bg)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
             }}
           >
-            {isReordering ? <X size={12} /> : <Trash2 size={12} />}
-            <span>{isReordering ? 'Done' : 'Delete'}</span>
-          </button>
-
-          <button
-            type="button"
-            className="glass-pill"
-            onClick={() => {
-              triggerHaptic(12);
-              setIsReordering(!isReordering);
-            }}
-            style={{
-              fontSize: '11px',
-              padding: '3px 8px',
-              color: isReordering ? 'var(--accent)' : 'var(--text-secondary)',
-              borderColor: isReordering ? 'var(--accent)' : 'var(--border-glass)',
-              backgroundColor: isReordering ? 'rgba(99, 102, 241, 0.12)' : 'var(--pill-bg)',
-            }}
-          >
-            <Move size={12} />
-            <span>Move</span>
+            {isReordering ? <X size={13} /> : <Edit3 size={13} />}
+            <span>{isReordering ? 'Done' : 'Edit'}</span>
           </button>
 
           <button
@@ -175,9 +161,9 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
               triggerHaptic(12);
               onAddPreset();
             }}
-            style={{ fontSize: '11px', padding: '3px 8px', color: 'var(--text-secondary)', borderColor: 'var(--border-glass)' }}
+            style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '10px', color: 'var(--text-secondary)', borderColor: 'var(--border-glass)' }}
           >
-            <Plus size={12} /> Add
+            <Plus size={13} /> Add
           </button>
         </div>
       </div>
@@ -188,7 +174,7 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
           style={{
             fontSize: '11px',
             color: 'var(--text-secondary)',
-            marginBottom: '8px',
+            marginBottom: '10px',
             padding: '6px 10px',
             borderRadius: '10px',
             backgroundColor: 'var(--pill-bg)',
@@ -199,9 +185,9 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
         </div>
       )}
 
-      {/* Dynamic Planner Presets Bento Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-        {presetsList.map((preset, idx) => {
+      {/* 5-Column Vertical Preset Bento Tiles Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+        {presetsList.slice(0, 5).map((preset, idx) => {
           const badgeColor = preset.color || LEVEL_COLORS[preset.level] || '#4A99E9';
           const isDraggingThis = draggedIdx === idx;
           const isDragOverThis = dragOverIdx === idx;
@@ -217,7 +203,6 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
               className={isReordering ? 'ios-wiggle' : ''}
               style={{
                 position: 'relative',
-                animationDelay: `${(idx % 4) * 0.07}s`,
                 opacity: isDraggingThis ? 0.4 : 1,
               }}
             >
@@ -232,68 +217,69 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
+                  alignItems: 'center',
                   justifyContent: 'space-between',
                   width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: '20px',
-                  border: isDragOverThis ? '2px dashed var(--accent)' : '1px solid var(--border-glass)',
-                  backgroundColor: 'var(--bg-card)',
+                  height: '115px',
+                  padding: '12px 6px',
+                  borderRadius: '16px',
+                  border: isDragOverThis ? '2px dashed var(--accent)' : `1px solid ${hexToRgba(badgeColor, 0.22)}`,
+                  backgroundColor: hexToRgba(badgeColor, 0.08),
                   color: 'var(--text-primary)',
-                  textAlign: 'left',
+                  textAlign: 'center',
                   cursor: isReordering ? 'grab' : 'pointer',
-                  minHeight: '66px',
-                  transition: 'all 0.15s ease',
+                  boxShadow: `0 3px 12px ${hexToRgba(badgeColor, 0.08)}`,
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                   userSelect: 'none',
                 }}
                 onMouseEnter={e => {
-                  if (!isReordering) e.currentTarget.style.backgroundColor = 'var(--pill-hover)';
+                  if (!isReordering) {
+                    e.currentTarget.style.backgroundColor = hexToRgba(badgeColor, 0.14);
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }
                 }}
                 onMouseLeave={e => {
-                  if (!isReordering) e.currentTarget.style.backgroundColor = 'var(--bg-card)';
+                  if (!isReordering) {
+                    e.currentTarget.style.backgroundColor = hexToRgba(badgeColor, 0.08);
+                    e.currentTarget.style.transform = 'translateY(0px)';
+                  }
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div
-                    style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '10px',
-                      backgroundColor: hexToRgba(badgeColor, 0.15),
-                      border: `1px solid ${hexToRgba(badgeColor, 0.25)}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: badgeColor,
-                    }}
-                  >
-                    {renderIcon(preset.icon, 15, badgeColor)}
-                  </div>
-                  <span
-                    style={{
-                      fontSize: '9px',
-                      fontWeight: 800,
-                      padding: '1px 5px',
-                      borderRadius: '5px',
-                      backgroundColor: hexToRgba(badgeColor, 0.15),
-                      color: badgeColor,
-                    }}
-                  >
-                    {preset.level}
-                  </span>
+                {/* Centered Top Icon */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '32px' }}>
+                  {renderIcon(preset.icon, 24, badgeColor)}
                 </div>
 
+                {/* Centered Single-Word Title */}
                 <span
                   style={{
-                    fontSize: '12px',
+                    fontSize: '13px',
                     fontWeight: 700,
-                    marginTop: '6px',
-                    color: 'var(--text-secondary)',
+                    color: 'var(--text-primary)',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
+                    maxWidth: '100%',
                   }}
                 >
                   {preset.title.split(' ')[0]}
+                </span>
+
+                {/* Bottom Priority Level Badge Pill */}
+                <span
+                  style={{
+                    fontSize: '9px',
+                    fontWeight: 800,
+                    padding: '3px 8px',
+                    borderRadius: '10px',
+                    backgroundColor: hexToRgba(badgeColor, 0.18),
+                    border: `1px solid ${hexToRgba(badgeColor, 0.35)}`,
+                    color: badgeColor,
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {preset.level}
                 </span>
               </button>
 

@@ -326,6 +326,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
         className="glass-panel"
         style={{
           padding: '18px 20px',
+          borderRadius: '20px',
           borderColor: 'var(--border-glass)',
           backgroundColor: 'var(--bg-card)',
           marginBottom: '16px',
@@ -344,17 +345,17 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               value={budgetPeriod}
               onChange={e => setBudgetPeriod(e.target.value as BudgetPeriod)}
               style={{
-                padding: '3px 8px',
+                padding: '4px 10px',
                 fontSize: '11px',
                 fontWeight: 700,
-                borderRadius: '8px',
+                borderRadius: '10px',
                 backgroundColor: 'var(--pill-bg)',
                 color: 'var(--text-secondary)',
                 border: '1px solid var(--border-glass)',
                 cursor: 'pointer',
                 outline: 'none',
               }}
-              title="Select Budget Cycle"
+              title="Budget Cycle"
             >
               <option value="DAILY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Day</option>
               <option value="WEEKLY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Week</option>
@@ -371,7 +372,8 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               }}
               style={{
                 fontSize: '11px',
-                padding: '3px 8px',
+                padding: '4px 10px',
+                borderRadius: '10px',
                 color: 'var(--text-secondary)',
                 borderColor: 'var(--border-glass)',
                 whiteSpace: 'nowrap',
@@ -380,7 +382,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                 alignItems: 'center',
                 gap: '4px',
               }}
-              title="Set Target Budget"
+              title="Set Budget Target"
             >
               <Target size={12} style={{ flexShrink: 0 }} />
               <span>Budget: {formatCurrency(currentBudget, currency)}</span>
@@ -392,7 +394,8 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               onClick={() => setIsHistoryOpen(true)}
               style={{
                 fontSize: '11px',
-                padding: '3px 8px',
+                padding: '4px 10px',
+                borderRadius: '10px',
                 color: 'var(--text-secondary)',
                 borderColor: 'var(--border-glass)',
                 whiteSpace: 'nowrap',
@@ -415,12 +418,12 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
         {/* Spending Budget Target Progress Bar & Remaining Allowance */}
         <div style={{ marginBottom: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontWeight: 500, marginBottom: '6px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>
-              {budgetPeriod === 'DAILY' ? 'Daily' : budgetPeriod === 'WEEKLY' ? 'Weekly' : 'Monthly'} Budget ({formatCurrency(currentBudget, currency)})
+            <span style={{ color: 'var(--text-secondary)' }}>
+              Budget ({formatCurrency(currentBudget, currency)})
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ color: budgetProgress > 90 ? 'var(--accent-danger)' : 'var(--text-secondary)', fontWeight: 600 }}>
-                {hideBalances ? '••••' : formatCurrency(remainingBudgetUSD, currency)} remaining
+                {hideBalances ? '••••' : formatCurrency(remainingBudgetUSD, currency)}
               </span>
               {remainingBudgetUSD > 0 && (
                 <button
@@ -429,10 +432,10 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                   style={{
                     fontSize: '10px',
                     fontWeight: 700,
-                    padding: '1px 6px',
-                    borderRadius: '5px',
-                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+                    border: '1px solid rgba(48, 209, 88, 0.3)',
                     color: 'var(--accent-success)',
                     cursor: 'pointer',
                   }}
@@ -479,7 +482,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               style={{
                 width: '26px',
                 height: '26px',
-                borderRadius: '6px',
+                borderRadius: '10px',
                 backgroundColor: 'var(--pill-bg)',
                 color: 'var(--text-secondary)',
                 display: 'flex',
@@ -490,7 +493,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               <TrendingUp size={13} />
             </div>
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 500 }}>Average</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 500 }}>Average</div>
               <div className="tabular-nums" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 {hideBalances ? '••••' : formatCurrency(averageExpenseUSD, currency)}
               </div>
@@ -504,7 +507,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               style={{
                 width: '26px',
                 height: '26px',
-                borderRadius: '6px',
+                borderRadius: '10px',
                 backgroundColor: 'var(--pill-bg)',
                 color: 'var(--text-secondary)',
                 display: 'flex',
@@ -515,7 +518,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               <Filter size={13} />
             </div>
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 500 }}>Filtered</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 500 }}>Filtered</div>
               <div className="tabular-nums" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 {hideBalances ? '••••' : formatCurrency(totalFilteredUSD, currency)}
               </div>

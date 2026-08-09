@@ -91,7 +91,7 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* Account Cloud Sync & User Profile Card */}
-      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px' }}>
+      <div className="glass-panel" style={{ padding: '16px', borderRadius: '20px', marginBottom: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div

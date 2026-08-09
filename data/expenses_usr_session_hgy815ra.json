@@ -1,0 +1,17 @@
+[
+  {
+    "title": "Food",
+    "amount": 1,
+    "currency": "USD",
+    "type": "EXPENSE",
+    "categoryId": "cat-food",
+    "categoryName": "Food",
+    "categoryIcon": "utensils",
+    "categoryColor": "orange",
+    "date": "2026-08-09",
+    "paymentMethod": "Cash",
+    "notes": "Quick log via Cash",
+    "id": "exp-1786262835563-500",
+    "createdAt": 1786262835563
+  }
+]

@@ -42,12 +42,10 @@ export const Header: React.FC = () => {
         padding: '0 16px',
         borderBottom: '1px solid var(--border-glass)',
         backgroundColor: 'var(--bg-card)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       {/* Left Brand Identifier */}

@@ -11,24 +11,59 @@ export const formatCurrency = (amountUSD: number, currency: CurrencyCode): strin
 };
 
 export const getTodayDateString = (d: Date = new Date()): string => {
-  const year = d.getFullYear();
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
-  const day = d.getDate().toString().padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Phnom_Penh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(d);
 };
 
 export const getStartOfWeekDateString = (d: Date = new Date()): string => {
-  const curr = new Date(d);
-  const day = curr.getDay(); // 0 is Sun, 1 is Mon
-  const diff = curr.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-  const monday = new Date(curr.setDate(diff));
-  return getTodayDateString(monday);
+  const todayStr = getTodayDateString(d);
+  const [year, month, day] = todayStr.split('-').map(Number);
+  const curr = new Date(Date.UTC(year, month - 1, day));
+  const dayOfWeek = curr.getUTCDay(); // 0 is Sun, 1 is Mon
+  const diff = curr.getUTCDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+  const monday = new Date(Date.UTC(year, month - 1, diff));
+  const mondayYear = monday.getUTCFullYear();
+  const mondayMonth = String(monday.getUTCMonth() + 1).padStart(2, '0');
+  const mondayDay = String(monday.getUTCDate()).padStart(2, '0');
+  return `${mondayYear}-${mondayMonth}-${mondayDay}`;
 };
 
 export const getEndOfWeekDateString = (d: Date = new Date()): string => {
-  const start = new Date(getStartOfWeekDateString(d));
-  start.setDate(start.getDate() + 6);
-  return getTodayDateString(start);
+  const mondayStr = getStartOfWeekDateString(d);
+  const [year, month, day] = mondayStr.split('-').map(Number);
+  const monday = new Date(Date.UTC(year, month - 1, day));
+  monday.setUTCDate(monday.getUTCDate() + 6);
+  const sundayYear = monday.getUTCFullYear();
+  const sundayMonth = String(monday.getUTCMonth() + 1).padStart(2, '0');
+  const sundayDay = String(monday.getUTCDate()).padStart(2, '0');
+  return `${sundayYear}-${sundayMonth}-${sundayDay}`;
+};
+
+export const SHORT_MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export const formatCleanDate = (dateStr: string): string => {
+  if (!dateStr) return '';
+  const trimmed = dateStr.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const [year, month, day] = trimmed.split('-');
+    const mIdx = parseInt(month, 10) - 1;
+    const dayNum = parseInt(day, 10);
+    const mName = SHORT_MONTH_NAMES[mIdx] || 'Jan';
+    return `${dayNum} ${mName} ${year}`;
+  }
+  const parsedDate = new Date(trimmed);
+  if (!isNaN(parsedDate.getTime())) {
+    const dayNum = parsedDate.getDate();
+    const mName = SHORT_MONTH_NAMES[parsedDate.getMonth()] || 'Jan';
+    const year = parsedDate.getFullYear();
+    return `${dayNum} ${mName} ${year}`;
+  }
+  return trimmed.replace(/[\/-]/g, ' ');
 };
 
 
