@@ -54,11 +54,12 @@ export const Header: React.FC = () => {
           src="/logo.jpg"
           alt="PiTrack Logo"
           style={{
-            width: '28px',
-            height: '28px',
-            borderRadius: '8px',
+            width: '30px',
+            height: '30px',
+            borderRadius: '9px',
             objectFit: 'cover',
-            border: '1px solid var(--border-glass)',
+            display: 'block',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
           }}
         />
         <h1 style={{ fontSize: '16px', fontWeight: 800, letterSpacing: '-0.3px', margin: 0, color: 'var(--text-primary)' }}>
