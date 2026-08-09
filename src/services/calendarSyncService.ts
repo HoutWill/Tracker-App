@@ -24,105 +24,57 @@ export const getGoogleCalendarUrl = (event: CalendarEventPayload): string => {
   }
 };
 
-export const syncToAppleCalendar = async (event: CalendarEventPayload) => {
+export const getAppleCalendarUrl = (event: CalendarEventPayload): string => {
   try {
     const [year, month, day] = event.dueDate.split('-').map(Number);
     const [hour, minute] = (event.dueTime || '09:00').split(':').map(Number);
-
     const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
-
-    const startDate = new Date(year, month - 1, day, hour, minute, 0);
-    
-    let endDate: Date;
-    if (event.endTime) {
-      const [endHour, endMinute] = event.endTime.split(':').map(Number);
-      endDate = new Date(year, month - 1, day, endHour, endMinute, 0);
-    } else {
-      endDate = new Date(startDate.getTime() + 30 * 60 * 1000);
-    }
-
     const startStr = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
-    let endStr: string;
-    if (event.endTime) {
-      const [endHour, endMinute] = event.endTime.split(':').map(Number);
-      endStr = `${year}${pad(month)}${pad(day)}T${pad(endHour)}${pad(endMinute)}00`;
-    } else {
-      const endDate = new Date(startDate.getTime() + 30 * 60 * 1000);
-      endStr = `${endDate.getFullYear()}${pad(endDate.getMonth() + 1)}${pad(endDate.getDate())}T${pad(endDate.getHours())}${pad(endDate.getMinutes())}00`;
-    }
-
-    const now = new Date();
-    const stampStr = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}00Z`;
-
-    // Dedicated Alert Date and Alert Time calculation
-    const targetAlertDate = event.alertDate || event.dueDate;
-    const targetAlertTime = event.alertTime || event.dueTime || '09:00';
-
-    const [alertYear, alertMonth, alertDay] = targetAlertDate.split('-').map(Number);
-    const [alertHour, alertMinute] = targetAlertTime.split(':').map(Number);
-    const alertDateObj = new Date(alertYear, alertMonth - 1, alertDay, alertHour, alertMinute, 0);
-
-    const alertDiffMs = alertDateObj.getTime() - startDate.getTime();
-    const alertDiffMinutes = Math.round(alertDiffMs / (60 * 1000));
-
-    let alertTriggerStr = '-PT0M';
-    if (alertDiffMinutes === 0) {
-      alertTriggerStr = '-PT0M';
-    } else if (alertDiffMinutes > 0) {
-      alertTriggerStr = `+PT${alertDiffMinutes}M`;
-    } else {
-      alertTriggerStr = `-PT${Math.abs(alertDiffMinutes)}M`;
-    }
+    const endStr = `${year}${pad(month)}${pad(day)}T${pad(hour + 1)}${pad(minute)}00`;
+    const cleanNotes = (event.notes || '').replace(/<[^>]*>/g, '');
 
     const icsLines = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//Apple Inc.//iOS 18.0//EN',
+      'PRODID:-//PiTrack//AppleCalendar//EN',
       'CALSCALE:GREGORIAN',
       'BEGIN:VEVENT',
       'TRANSP:OPAQUE',
-      `UID:tracker-event-${Date.now()}@tracker.app`,
-      `DTSTAMP:${stampStr}`,
+      `UID:tracker-${Date.now()}@pitrack.app`,
       `DTSTART:${startStr}`,
       `DTEND:${endStr}`,
-      `SUMMARY:[PiTrack] ${event.title}`,
-      `DESCRIPTION:${event.notes || 'Scheduled reminder from Tracker App'}`,
-      // Dedicated Alert Time Trigger
+      `SUMMARY:${event.title}`,
+      `DESCRIPTION:${cleanNotes}`,
       'BEGIN:VALARM',
       'ACTION:DISPLAY',
-      `DESCRIPTION:Alert: ${event.title}`,
-      `TRIGGER:${alertTriggerStr}`,
-      'END:VALARM',
-      'BEGIN:VALARM',
-      'ACTION:AUDIO',
-      `TRIGGER:${alertTriggerStr}`,
-      'ATTACH;VALUE=URI:Basso',
+      'TRIGGER:-PT15M',
       'END:VALARM',
       'END:VEVENT',
       'END:VCALENDAR',
     ];
 
     const icsContent = icsLines.join('\r\n');
+    return `data:text/calendar;charset=utf8,${encodeURIComponent(icsContent)}`;
+  } catch (e) {
+    return '';
+  }
+};
+
+export const syncToAppleCalendar = (event: CalendarEventPayload) => {
+  try {
+    const dataUrl = getAppleCalendarUrl(event);
     const fileName = `${event.title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
-    const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
-    const dataUrl = `data:text/calendar;charset=utf8;base64,${base64Content}`;
 
-    const isIOS = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
-
-    if (isIOS) {
-      window.location.href = dataUrl;
-    } else {
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = fileName;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     return true;
   } catch (e) {
-    console.error('Calendar sync error:', e);
+    console.error('Apple Calendar sync error:', e);
     return false;
   }
 };

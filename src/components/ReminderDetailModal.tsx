@@ -129,8 +129,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       alertTime: editAlertTime || reminder.alertTime,
       category: editCategory || reminder.category,
     };
-    const gUrl = getGoogleCalendarUrl(payload);
-    window.open(gUrl, '_blank');
+    syncToAppleCalendar(payload);
   };
 
   const handleDelete = () => {
