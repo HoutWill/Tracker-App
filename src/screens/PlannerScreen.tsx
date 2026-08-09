@@ -1061,35 +1061,65 @@ export const PlannerScreen: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* 1. Header Month Bar Navigation */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
-            <button
-              type="button"
-              onClick={() => setCalViewDate(new Date(year, month - 1, 1))}
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--pill-bg)',
-                border: '1px solid var(--border-glass)',
-                color: 'var(--text-primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <ChevronLeft size={18} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                type="button"
+                onClick={() => setCalViewDate(new Date(year, month - 1, 1))}
+                style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--pill-bg)',
+                  border: '1px solid var(--border-glass)',
+                  color: 'var(--text-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <ChevronLeft size={18} />
+              </button>
 
-            <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
-              {calViewDate.toLocaleString('default', { month: 'long' })} {year}
-            </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic(10);
+                  const now = new Date();
+                  setCalViewDate(now);
+                  setCalSelectedDate(today);
+                }}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: '12px',
+                  backgroundColor: calSelectedDate === today ? 'rgba(64, 196, 170, 0.2)' : 'var(--pill-bg)',
+                  border: calSelectedDate === today ? '1px solid #40C4AA' : '1px solid var(--border-glass)',
+                  color: calSelectedDate === today ? '#40C4AA' : 'var(--text-secondary)',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                Today
+              </button>
+            </div>
+
+            {/* Title: Month & Exact Active Date Selected */}
+            <div style={{ textAlign: 'center' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px', margin: 0 }}>
+                {calViewDate.toLocaleString('default', { month: 'long' })} {year}
+              </h3>
+              <div style={{ fontSize: '12px', fontWeight: 800, color: '#40C4AA', marginTop: '1px' }}>
+                {formatCleanDate(calSelectedDate)}
+              </div>
+            </div>
 
             <button
               type="button"
               onClick={() => setCalViewDate(new Date(year, month + 1, 1))}
               style={{
-                width: '36px',
-                height: '36px',
+                width: '34px',
+                height: '34px',
                 borderRadius: '50%',
                 backgroundColor: 'var(--pill-bg)',
                 border: '1px solid var(--border-glass)',
@@ -1126,9 +1156,10 @@ export const PlannerScreen: React.FC = () => {
                 <button
                   key={item.dateStr}
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
                     triggerHaptic(10);
                     setCalSelectedDate(item.dateStr);
+                    e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                   }}
                   style={{
                     display: 'flex',
@@ -1172,7 +1203,7 @@ export const PlannerScreen: React.FC = () => {
             {/* Current Time Indicator Line Banner */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
               <span style={{ fontSize: '11px', fontWeight: 800, padding: '3px 8px', borderRadius: '12px', backgroundColor: 'var(--text-primary)', color: 'var(--bg-main)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
-                11:24 AM
+                {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
               <div style={{ flex: 1, height: '2px', backgroundColor: 'var(--text-primary)', borderRadius: '1px', opacity: 0.3 }} />
             </div>
