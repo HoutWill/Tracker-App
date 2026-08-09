@@ -74,6 +74,7 @@ export interface ReminderItem {
   alertTime?: string; // HH:mm
   periodScope?: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
   checklist?: Array<{ id: string; text: string; done: boolean }>;
+  notifiedAt?: number;
   createdAt: number;
 }
 
