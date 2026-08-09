@@ -67,34 +67,10 @@ export const ExpenseDetailModal: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(10px)',
-        zIndex: 100,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-      }}
-      onClick={() => setSelectedExpenseForEdit(null)}
-    >
-      <div
-        className="glass-panel"
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: '440px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          padding: '20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
-      >
+    <div className="modal-sheet-overlay" onClick={() => setSelectedExpenseForEdit(null)}>
+      <div className="modal-sheet-content" onClick={e => e.stopPropagation()}>
+        {/* iOS Drag Handle */}
+        <div className="modal-sheet-handle" />
         {/* Modal Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

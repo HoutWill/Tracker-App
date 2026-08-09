@@ -132,18 +132,18 @@ export const StatsScreen: React.FC = () => {
         className="glass-panel"
         style={{
           display: 'flex',
-          padding: '3px',
-          borderRadius: '12px',
+          padding: '4px',
+          borderRadius: '16px',
           marginBottom: '16px',
-          gap: '4px',
-          backgroundColor: 'var(--bg-card)',
+          backgroundColor: 'var(--pill-bg)',
           border: '1px solid var(--border-glass)',
+          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)',
         }}
       >
         {[
-          { id: 'EXPENSE', label: 'Expenses', icon: ArrowDownRight },
-          { id: 'SAVING', label: 'Savings', icon: PiggyBank },
-          { id: 'ALL', label: 'All', icon: Layers },
+          { id: 'EXPENSE', label: 'Expenses', icon: ArrowDownRight, color: '#4A99E9' },
+          { id: 'SAVING', label: 'Savings', icon: PiggyBank, color: '#30D158' },
+          { id: 'ALL', label: 'All', icon: Layers, color: '#48484A' },
         ].map(tab => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
@@ -157,15 +157,17 @@ export const StatsScreen: React.FC = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '6px',
-                padding: '8px 6px',
-                borderRadius: '10px',
-                border: isActive ? '1px solid var(--border-glass)' : '1px solid transparent',
-                backgroundColor: isActive ? 'var(--pill-hover)' : 'transparent',
-                color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
+                padding: '9px 6px',
+                borderRadius: '12px',
+                border: 'none',
+                backgroundColor: isActive ? tab.color : 'transparent',
+                color: isActive ? '#FFFFFF' : 'var(--text-secondary)',
                 fontSize: '12px',
-                fontWeight: isActive ? 600 : 500,
+                fontWeight: isActive ? 800 : 600,
                 cursor: 'pointer',
-                transition: 'all 0.15s ease',
+                boxShadow: isActive ? `0 3px 10px ${tab.color}66` : 'none',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: isActive ? 'scale(1.01)' : 'scale(1)',
               }}
             >
               <Icon size={14} />

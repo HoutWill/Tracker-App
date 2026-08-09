@@ -138,38 +138,10 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(16px)',
-        zIndex: 140,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="glass-panel"
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: '420px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          padding: '22px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          borderRadius: '24px',
-          backgroundColor: 'var(--bg-card)',
-          borderColor: 'var(--border-glass)',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-        }}
-      >
+    <div className="modal-sheet-overlay" onClick={onClose}>
+      <div className="modal-sheet-content" onClick={e => e.stopPropagation()}>
+        {/* iOS Drag Handle */}
+        <div className="modal-sheet-handle" />
         {/* Top Control Bar: Close button right, edit left */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <button

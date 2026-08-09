@@ -9,7 +9,7 @@ import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { EXPENSE_QUICK_PRESETS } from '../constants/presets';
 import { formatCurrency, StorageService, getTodayDateString, getStartOfWeekDateString, getEndOfWeekDateString } from '../services/storageService';
 import { PaymentMethod, QuickPreset, BudgetPeriod } from '../types';
-import { Plus, Zap, TrendingUp, Filter, CheckCircle2, Layers, SearchX, X, Check, ArrowDownRight, Trash2, Target, Edit3, CreditCard, PiggyBank } from 'lucide-react';
+import { Plus, Zap, TrendingUp, Filter, CheckCircle2, Layers, SearchX, X, Check, ArrowDownRight, Trash2, Target, Edit3, CreditCard, PiggyBank, Calendar, ChevronDown, Hash, Award, Eye, EyeOff, Wallet } from 'lucide-react';
 
 const PRESET_ICONS = [
   'receipt', 'laptop', 'coffee', 'utensils', 'car', 'shopping-cart',
@@ -31,6 +31,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
     expenses,
     filteredExpenses,
     currency,
+    setCurrency,
     categories,
     monthlyBudget,
     setMonthlyBudget,
@@ -42,6 +43,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
     archiveCycleSnapshot,
     depositRolloverToSavings,
     hideBalances,
+    toggleHideBalances,
     addExpense,
     setIsAddExpenseOpen,
     setSelectedExpenseForEdit,
@@ -56,6 +58,9 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
   const [presetAmount, setPresetAmount] = useState<string>('');
   const [presetCurrency, setPresetCurrency] = useState<'USD' | 'KHR'>('USD');
   const [presetDate, setPresetDate] = useState<string>(getTodayDateString());
+
+  // Date Check filter state
+  const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
 
   // Edit Budget Target state
   const [isEditingBudget, setIsEditingBudget] = useState<boolean>(false);
@@ -82,13 +87,25 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
     }
   }, []);
 
-  // Expenses only filter
-  const expenseItems = expenses.filter(e => e.type === 'EXPENSE' || (!e.type && !e.categoryId.startsWith('cat-saving') && e.categoryId !== 'cat-income'));
+  // Expenses filter (with optional Check Date filter)
+  const rawExpenseItems = expenses.filter(e => e.type === 'EXPENSE' || (!e.type && !e.categoryId.startsWith('cat-saving') && e.categoryId !== 'cat-income'));
+  const expenseItems = selectedDateFilter
+    ? rawExpenseItems.filter(e => e.date === selectedDateFilter)
+    : rawExpenseItems;
   const filteredExpenseItems = filteredExpenses.filter(e => e.type === 'EXPENSE' || (!e.type && !e.categoryId.startsWith('cat-saving') && e.categoryId !== 'cat-income'));
 
   const totalExpenseUSD = expenseItems.reduce((sum, e) => sum + e.amount, 0);
-  const totalFilteredUSD = filteredExpenseItems.reduce((sum, e) => sum + e.amount, 0);
-  const averageExpenseUSD = expenseItems.length > 0 ? totalExpenseUSD / expenseItems.length : 0;
+
+  // Reworked Financial Insights:
+  // 1. Daily Average across active days
+  const uniqueDays = Array.from(new Set(rawExpenseItems.map(e => e.date)));
+  const dailyAvgUSD = uniqueDays.length > 0 ? rawExpenseItems.reduce((sum, e) => sum + e.amount, 0) / uniqueDays.length : 0;
+
+  // 2. Total Transactions Count
+  const totalTxCount = expenseItems.length;
+
+  // 3. Peak Transaction Amount
+  const maxTxUSD = expenseItems.length > 0 ? Math.max(...expenseItems.map(e => e.amount)) : 0;
 
   // Period Expense Calculation for Multi-Period Budgeting (Daily / Weekly / Monthly)
   const getActivePeriodExpenseUSD = () => {
@@ -260,16 +277,17 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
 
-      {/* Top Segmented Group Bar: Expenses vs Saving */}
+      {/* Top Segmented Mode Switcher with Category Color Identity & Live Metrics */}
       <div
         className="glass-panel"
         style={{
           display: 'flex',
-          padding: '3px',
-          borderRadius: '12px',
-          marginBottom: '14px',
-          backgroundColor: 'var(--bg-card)',
-          borderColor: 'var(--border-glass)',
+          padding: '4px',
+          borderRadius: '16px',
+          marginBottom: '16px',
+          backgroundColor: 'var(--pill-bg)',
+          border: '1px solid var(--border-glass)',
+          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)',
         }}
       >
         <button
@@ -281,19 +299,21 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            padding: '8px 12px',
-            borderRadius: '10px',
-            border: '1px solid var(--border-glass)',
-            backgroundColor: 'var(--pill-hover)',
-            color: 'var(--text-primary)',
-            fontWeight: 600,
+            padding: '10px 12px',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: '#4A99E9',
+            color: '#FFFFFF',
+            fontWeight: 800,
             fontSize: '13px',
             cursor: 'pointer',
-            transition: 'all 0.15s ease',
+            boxShadow: '0 3px 10px rgba(74, 153, 233, 0.4)',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: 'scale(1.01)',
           }}
         >
-          <CreditCard size={15} />
-          <span>Expenses</span>
+          <Wallet size={16} />
+          <span>Wallet</span>
         </button>
 
         <button
@@ -305,225 +325,205 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            padding: '8px 12px',
-            borderRadius: '10px',
-            border: '1px solid transparent',
+            padding: '10px 12px',
+            borderRadius: '12px',
+            border: 'none',
             backgroundColor: 'transparent',
-            color: 'var(--text-muted)',
-            fontWeight: 500,
+            color: 'var(--text-secondary)',
+            fontWeight: 600,
             fontSize: '13px',
             cursor: 'pointer',
-            transition: 'all 0.15s ease',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
-          <PiggyBank size={15} />
+          <PiggyBank size={16} />
           <span>Savings</span>
         </button>
       </div>
 
-      {/* Unified All-in-One Hero Expenses Card with Explicit Budget Target */}
+      {/* 1. Monthly / Period Overview Hero Bento Card (Matching Image 1) */}
       <div
         className="glass-panel"
         style={{
-          padding: '18px 20px',
-          borderRadius: '20px',
-          borderColor: 'var(--border-glass)',
+          padding: '20px 22px',
+          borderRadius: '24px',
           backgroundColor: 'var(--bg-card)',
-          marginBottom: '16px',
+          border: '1px solid var(--border-glass)',
+          boxShadow: 'var(--shadow-card)',
+          marginBottom: '12px',
         }}
       >
-        {/* Top Header Row with Budget Edit Button */}
+        {/* Top Row: Period Title (Left) | Interactive Month & Date Picker (Right) */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-            <ArrowDownRight size={16} />
-            <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '-0.1px' }}>Expenses</span>
-          </div>
+          <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
+            {selectedDateFilter ? `Date: ${selectedDateFilter}` : 'This month'}
+          </span>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-            {/* Multi-Period Cycle Dropdown Select */}
-            <select
-              value={budgetPeriod}
-              onChange={e => setBudgetPeriod(e.target.value as BudgetPeriod)}
-              style={{
-                padding: '4px 10px',
-                fontSize: '11px',
-                fontWeight: 700,
-                borderRadius: '10px',
-                backgroundColor: 'var(--pill-bg)',
-                color: 'var(--text-secondary)',
-                border: '1px solid var(--border-glass)',
-                cursor: 'pointer',
-                outline: 'none',
-              }}
-              title="Budget Cycle"
-            >
-              <option value="DAILY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Day</option>
-              <option value="WEEKLY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Week</option>
-              <option value="MONTHLY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Month</option>
-            </select>
-
-            <button
-              type="button"
-              className="glass-pill"
-              onClick={() => {
-                setCustomBudgetInput(currentBudget.toString());
-                setEditBudgetPeriod(budgetPeriod);
-                setIsEditingBudget(true);
-              }}
-              style={{
-                fontSize: '11px',
-                padding: '4px 10px',
-                borderRadius: '10px',
-                color: 'var(--text-secondary)',
-                borderColor: 'var(--border-glass)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
-              title="Set Budget Target"
-            >
-              <Target size={12} style={{ flexShrink: 0 }} />
-              <span>Budget: {formatCurrency(currentBudget, currency)}</span>
-            </button>
-
-            <button
-              type="button"
-              className="glass-pill"
-              onClick={() => setIsHistoryOpen(true)}
-              style={{
-                fontSize: '11px',
-                padding: '4px 10px',
-                borderRadius: '10px',
-                color: 'var(--text-secondary)',
-                borderColor: 'var(--border-glass)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-              }}
-            >
-              History
-            </button>
-          </div>
-        </div>
-
-        {/* Main Big Balance Amount */}
-        <div
-          className="tabular-nums"
-          style={{ fontSize: '30px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '14px', color: 'var(--text-primary)' }}
-        >
-          {hideBalances ? (currency === 'USD' ? '$ ••••••' : '៛ ••••••') : formatCurrency(totalExpenseUSD, currency)}
-        </div>
-
-        {/* Spending Budget Target Progress Bar & Remaining Allowance */}
-        <div style={{ marginBottom: '14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontWeight: 500, marginBottom: '6px' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>
-              Budget ({formatCurrency(currentBudget, currency)})
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ color: budgetProgress > 90 ? 'var(--accent-danger)' : 'var(--text-secondary)', fontWeight: 600 }}>
-                {hideBalances ? '••••' : formatCurrency(remainingBudgetUSD, currency)}
-              </span>
-              {remainingBudgetUSD > 0 && (
-                <button
-                  type="button"
-                  onClick={handleRolloverSurplus}
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    padding: '2px 8px',
-                    borderRadius: '10px',
-                    backgroundColor: 'rgba(48, 209, 88, 0.15)',
-                    border: '1px solid rgba(48, 209, 88, 0.3)',
-                    color: 'var(--accent-success)',
-                    cursor: 'pointer',
-                  }}
-                  title="Deposit unspent budget surplus to Vault"
-                >
-                  Rollover
-                </button>
-              )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Interactive Date Check Picker */}
+            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  color: selectedDateFilter ? '#4A99E9' : 'var(--text-secondary)',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <Calendar size={13} color={selectedDateFilter ? '#4A99E9' : 'var(--text-secondary)'} />
+                <span>
+                  {selectedDateFilter
+                    ? selectedDateFilter
+                    : new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+              <input
+                type="date"
+                value={selectedDateFilter || ''}
+                onChange={(e) => setSelectedDateFilter(e.target.value || null)}
+                onClick={(e) => {
+                  try { (e.currentTarget as any).showPicker?.(); } catch (err) {}
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  opacity: 0,
+                  cursor: 'pointer',
+                  zIndex: 10,
+                  border: 'none',
+                  margin: 0,
+                  padding: 0,
+                  WebkitAppearance: 'none',
+                }}
+                title="Filter by Date"
+              />
             </div>
-          </div>
 
+            {selectedDateFilter && (
+              <button
+                type="button"
+                onClick={() => setSelectedDateFilter(null)}
+                style={{
+                  padding: '2px 7px',
+                  borderRadius: '6px',
+                  backgroundColor: 'var(--pill-bg)',
+                  border: '1px solid var(--border-glass)',
+                  color: 'var(--text-secondary)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+                title="Show All Dates"
+              >
+                All
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Main Big Spending Amount with Eye Toggle directly next to price */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
           <div
+            className="tabular-nums"
             style={{
-              height: '6px',
-              borderRadius: '3px',
-              backgroundColor: 'var(--pill-bg)',
-              overflow: 'hidden',
+              fontSize: '40px',
+              fontWeight: 900,
+              letterSpacing: '-1px',
+              color: 'var(--text-primary)',
+              lineHeight: 1.1,
+              filter: hideBalances ? 'blur(9px)' : 'none',
+              transition: 'filter 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              userSelect: hideBalances ? 'none' : 'auto',
             }}
           >
-            <div
-              style={{
-                height: '100%',
-                width: `${budgetProgress}%`,
-                backgroundColor: budgetProgress > 90 ? 'var(--accent-danger)' : 'var(--accent)',
-                borderRadius: '3px',
-                transition: 'width 0.2s ease',
-              }}
-            />
+            {formatCurrency(totalExpenseUSD, currency)}
           </div>
+
+          <button
+            type="button"
+            onClick={() => toggleHideBalances()}
+            style={{
+              padding: '4px',
+              background: 'none',
+              border: 'none',
+              color: hideBalances ? '#4A99E9' : 'var(--text-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            title={hideBalances ? 'Show Balance' : 'Hide Balance'}
+          >
+            {hideBalances ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
         </div>
 
-        {/* Integrated Bottom Metrics Bar inside the Same Card */}
+        {/* Middle Info Row: Remaining Label (Left) & Green Amount (Right) */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', marginBottom: '8px' }}>
+          <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Remaining</span>
+          <span className="tabular-nums" style={{ color: '#30D158', fontWeight: 800 }}>
+            {formatCurrency(remainingBudgetUSD, currency)}
+          </span>
+        </div>
+
+        {/* Thin Cyan Progress Bar */}
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingTop: '10px',
-            borderTop: '1px solid var(--border-subtle)',
+            height: '4px',
+            borderRadius: '2px',
+            backgroundColor: 'var(--pill-bg)',
+            overflow: 'hidden',
+            marginBottom: '12px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div
-              style={{
-                width: '26px',
-                height: '26px',
-                borderRadius: '10px',
-                backgroundColor: 'var(--pill-bg)',
-                color: 'var(--text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <TrendingUp size={13} />
-            </div>
-            <div>
-              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 500 }}>Average</div>
-              <div className="tabular-nums" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                {hideBalances ? '••••' : formatCurrency(averageExpenseUSD, currency)}
-              </div>
-            </div>
-          </div>
+          <div
+            style={{
+              height: '100%',
+              width: `${budgetProgress}%`,
+              backgroundColor: '#00E5FF',
+              borderRadius: '2px',
+              transition: 'width 0.3s ease',
+            }}
+          />
+        </div>
 
-          <div style={{ width: '1px', height: '20px', backgroundColor: 'var(--border-subtle)' }} />
+        {/* Bottom Info Row: Clickable Budget Target (Left) & Avg/day (Right) */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: 'var(--text-secondary)' }}>
+          <button
+            type="button"
+            onClick={() => {
+              setCustomBudgetInput(currentBudget.toString());
+              setEditBudgetPeriod(budgetPeriod);
+              setIsEditingBudget(true);
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              color: 'var(--text-secondary)',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+            title="Tap to Set Budget Target"
+          >
+            <span>Budget: {formatCurrency(currentBudget, currency)}</span>
+            <Edit3 size={11} color="var(--text-muted)" />
+          </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div
-              style={{
-                width: '26px',
-                height: '26px',
-                borderRadius: '10px',
-                backgroundColor: 'var(--pill-bg)',
-                color: 'var(--text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Filter size={13} />
-            </div>
-            <div>
-              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 500 }}>Filtered</div>
-              <div className="tabular-nums" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                {hideBalances ? '••••' : formatCurrency(totalFilteredUSD, currency)}
-              </div>
-            </div>
-          </div>
+          <span style={{ fontWeight: 500 }}>
+            Avg/day: {formatCurrency(dailyAvgUSD, currency)}
+          </span>
         </div>
       </div>
 
@@ -804,36 +804,15 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
 
       {/* Add New Preset Modal with Icon & Category Picker */}
       {isCreatingPreset && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(10px)',
-            zIndex: 100,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-          onClick={() => setIsCreatingPreset(false)}
-        >
+        <div className="modal-sheet-overlay" onClick={() => setIsCreatingPreset(false)}>
           <form
-            className="glass-panel"
+            className="modal-sheet-content"
             onSubmit={handleCreateNewPreset}
             onClick={e => e.stopPropagation()}
-            style={{
-              width: '100%',
-              maxWidth: '420px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
-              borderColor: hexToRgba(pageAccent, 0.35),
-            }}
+            style={{ borderColor: hexToRgba(pageAccent, 0.35) }}
           >
+            {/* iOS Drag Handle */}
+            <div className="modal-sheet-handle" />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Zap size={18} color={pageAccent} />
@@ -906,8 +885,8 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                       flex: 1,
                       borderRadius: '8px',
                       border: newPresetCurrency === 'USD' ? `1px solid ${pageAccent}` : '1px solid var(--border-glass)',
-                      backgroundColor: newPresetCurrency === 'USD' ? pageAccent : 'rgba(255, 255, 255, 0.05)',
-                      color: '#FFF',
+                      backgroundColor: newPresetCurrency === 'USD' ? pageAccent : 'var(--pill-bg)',
+                      color: newPresetCurrency === 'USD' ? '#FFFFFF' : 'var(--text-primary)',
                       fontSize: '11px',
                       fontWeight: 800,
                       cursor: 'pointer',
@@ -922,8 +901,8 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                       flex: 1,
                       borderRadius: '8px',
                       border: newPresetCurrency === 'KHR' ? `1px solid ${pageAccent}` : '1px solid var(--border-glass)',
-                      backgroundColor: newPresetCurrency === 'KHR' ? pageAccent : 'rgba(255, 255, 255, 0.05)',
-                      color: '#FFF',
+                      backgroundColor: newPresetCurrency === 'KHR' ? pageAccent : 'var(--pill-bg)',
+                      color: newPresetCurrency === 'KHR' ? '#FFFFFF' : 'var(--text-primary)',
                       fontSize: '11px',
                       fontWeight: 800,
                       cursor: 'pointer',
@@ -1024,33 +1003,14 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
 
       {/* Quick Preset Confirmation / Edit / Delete Modal */}
       {activePreset && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(10px)',
-            zIndex: 100,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-          onClick={() => setActivePreset(null)}
-        >
+        <div className="modal-sheet-overlay" onClick={() => setActivePreset(null)}>
           <div
-            className="glass-panel"
+            className="modal-sheet-content"
             onClick={e => e.stopPropagation()}
-            style={{
-              width: '100%',
-              maxWidth: '400px',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
-              borderColor: hexToRgba(pageAccent, 0.35),
-            }}
+            style={{ borderColor: hexToRgba(pageAccent, 0.35) }}
           >
+            {/* iOS Drag Handle */}
+            <div className="modal-sheet-handle" />
             {/* Header with Delete option */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1131,7 +1091,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                     alignItems: 'center',
                     padding: '3px',
                     borderRadius: '10px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                    backgroundColor: 'var(--pill-bg)',
                     border: '1px solid var(--border-glass)',
                     width: '130px',
                   }}
@@ -1145,7 +1105,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                       borderRadius: '8px',
                       border: 'none',
                       backgroundColor: presetCurrency === 'USD' ? pageAccent : 'transparent',
-                      color: presetCurrency === 'USD' ? '#FFFFFF' : 'var(--text-secondary)',
+                      color: presetCurrency === 'USD' ? '#FFFFFF' : 'var(--text-primary)',
                       fontSize: '11px',
                       fontWeight: presetCurrency === 'USD' ? 800 : 600,
                       cursor: 'pointer',
@@ -1164,7 +1124,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                       borderRadius: '8px',
                       border: 'none',
                       backgroundColor: presetCurrency === 'KHR' ? pageAccent : 'transparent',
-                      color: presetCurrency === 'KHR' ? '#FFFFFF' : 'var(--text-secondary)',
+                      color: presetCurrency === 'KHR' ? '#FFFFFF' : 'var(--text-primary)',
                       fontSize: '11px',
                       fontWeight: presetCurrency === 'KHR' ? 800 : 600,
                       cursor: 'pointer',
@@ -1217,6 +1177,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                 type="date"
                 value={presetDate}
                 onChange={e => setPresetDate(e.target.value)}
+                onClick={(e) => { try { (e.currentTarget as any).showPicker?.(); } catch (err) {} }}
                 style={{
                   width: '100%',
                   height: '42px',
@@ -1231,6 +1192,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                   outline: 'none',
                   boxSizing: 'border-box',
                   WebkitAppearance: 'none',
+                  cursor: 'pointer',
                 }}
               />
             </div>

@@ -121,38 +121,14 @@ export const AiChatModal: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        zIndex: 100,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-      }}
-      onClick={() => setIsAiChatOpen(false)}
-    >
+    <div className="modal-sheet-overlay" onClick={() => setIsAiChatOpen(false)}>
       <div
-        className="glass-panel"
+        className="modal-sheet-content"
         onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: '460px',
-          height: '560px',
-          maxHeight: '90vh',
-          padding: '18px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          gap: '12px',
-          border: '1px solid var(--border-glass)',
-          backgroundColor: 'var(--bg-card)',
-        }}
+        style={{ height: '560px' }}
       >
+        {/* iOS Drag Handle */}
+        <div className="modal-sheet-handle" />
         {/* Header Bar */}
         <div
           style={{

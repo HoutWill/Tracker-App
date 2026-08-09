@@ -120,21 +120,23 @@ export const HomeScreen: React.FC = () => {
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
 
-      {/* Top Segmented Category Mode Switcher: Expenses vs Savings vs All */}
+      {/* Top Segmented Mode Switcher: Expenses vs Savings vs All */}
       <div
         className="glass-panel"
         style={{
           display: 'flex',
           padding: '4px',
-          borderRadius: '14px',
-          marginBottom: '14px',
-          gap: '4px',
+          borderRadius: '16px',
+          marginBottom: '16px',
+          backgroundColor: 'var(--pill-bg)',
+          border: '1px solid var(--border-glass)',
+          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)',
         }}
       >
         {[
-          { id: 'EXPENSE', label: 'Expenses Only', icon: ArrowDownRight, count: expenseItems.length },
-          { id: 'SAVING', label: 'Savings Vault', icon: PiggyBank, count: savingItems.length },
-          { id: 'ALL', label: 'All Records', icon: Layers, count: expenses.length },
+          { id: 'EXPENSE', label: 'Expenses', icon: ArrowDownRight, count: expenseItems.length, color: '#4A99E9' },
+          { id: 'SAVING', label: 'Savings', icon: PiggyBank, count: savingItems.length, color: '#30D158' },
+          { id: 'ALL', label: 'All', icon: Layers, count: expenses.length, color: '#48484A' },
         ].map(tab => {
           const isActive = activeTypeTab === tab.id;
           const Icon = tab.icon;
@@ -148,32 +150,22 @@ export const HomeScreen: React.FC = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '6px',
-                padding: '10px 6px',
-                borderRadius: '10px',
-                border: isActive
-                  ? tab.id === 'SAVING'
-                    ? '1px solid var(--accent-success)'
-                    : '1px solid var(--accent)'
-                  : '1px solid transparent',
-                backgroundColor: isActive
-                  ? tab.id === 'SAVING'
-                    ? 'rgba(126, 231, 135, 0.2)'
-                    : 'var(--accent)'
-                  : 'transparent',
-                color: isActive
-                  ? tab.id === 'SAVING'
-                    ? 'var(--accent-success)'
-                    : '#FFF'
-                  : 'var(--text-secondary)',
+                padding: '9px 6px',
+                borderRadius: '12px',
+                border: 'none',
+                backgroundColor: isActive ? tab.color : 'transparent',
+                color: isActive ? '#FFFFFF' : 'var(--text-secondary)',
                 fontSize: '12px',
                 fontWeight: isActive ? 800 : 600,
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                boxShadow: isActive ? `0 3px 10px ${tab.color}66` : 'none',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: isActive ? 'scale(1.01)' : 'scale(1)',
               }}
             >
               <Icon size={14} />
               <span>{tab.label}</span>
-              <span style={{ fontSize: '10px', opacity: 0.8 }}>({tab.count})</span>
+              <span style={{ fontSize: '10px', opacity: 0.85 }}>({tab.count})</span>
             </button>
           );
         })}
@@ -319,32 +311,10 @@ export const HomeScreen: React.FC = () => {
 
       {/* Quick Preset Confirmation Payment Modal */}
       {activePreset && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(10px)',
-            zIndex: 100,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-          onClick={() => setActivePreset(null)}
-        >
-          <div
-            className="glass-panel"
-            onClick={e => e.stopPropagation()}
-            style={{
-              width: '100%',
-              maxWidth: '400px',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
-            }}
-          >
+        <div className="modal-sheet-overlay" onClick={() => setActivePreset(null)}>
+          <div className="modal-sheet-content" onClick={e => e.stopPropagation()}>
+            {/* iOS Drag Handle */}
+            <div className="modal-sheet-handle" />
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -489,6 +459,7 @@ export const HomeScreen: React.FC = () => {
                 type="date"
                 value={presetDate}
                 onChange={e => setPresetDate(e.target.value)}
+                onClick={(e) => { try { (e.currentTarget as any).showPicker?.(); } catch (err) {} }}
                 style={{
                   width: '100%',
                   height: '40px',
@@ -500,6 +471,7 @@ export const HomeScreen: React.FC = () => {
                   fontSize: '13px',
                   marginTop: '4px',
                   outline: 'none',
+                  cursor: 'pointer',
                 }}
               />
             </div>

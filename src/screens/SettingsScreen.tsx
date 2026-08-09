@@ -177,27 +177,7 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* Privacy Mode (Hide Balances Toggle) */}
-      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Shield size={18} color="var(--accent)" />
-          <div>
-            <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Privacy</h4>
-            <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Mask values ($••••)</p>
-          </div>
-        </div>
 
-        <button
-          className="glass-pill"
-          onClick={() => setHideBalances(!hideBalances)}
-          style={{
-            backgroundColor: hideBalances ? 'var(--accent)' : 'rgba(255, 255, 255, 0.06)',
-            color: hideBalances ? '#FFF' : 'var(--text-primary)',
-          }}
-        >
-          {hideBalances ? <EyeOff size={14} /> : <Eye size={14} />}
-          <span>{hideBalances ? 'Hidden' : 'Visible'}</span>
-        </button>
-      </div>
 
       {/* Ultra-Clean 1-Row Export CSV Card */}
       <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px' }}>

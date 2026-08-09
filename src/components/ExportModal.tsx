@@ -44,33 +44,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 110,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-      }}
-      onClick={onClose}
-    >
+    <div className="modal-sheet-overlay" onClick={onClose}>
       <div
-        className="glass-panel"
+        className="modal-sheet-content"
         onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: '420px',
-          padding: '22px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          borderColor: 'rgba(46, 170, 220, 0.4)',
-        }}
+        style={{ borderColor: 'rgba(46, 170, 220, 0.4)' }}
       >
+        {/* iOS Drag Handle */}
+        <div className="modal-sheet-handle" />
         {/* Modal Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

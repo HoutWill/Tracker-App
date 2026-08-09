@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme, hexToRgba } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
 import { useExpenses } from '../context/ExpenseContext';
 import { AuthModal, UserAccount } from './AuthModal';
-import { ShieldCheck, Sun, Moon, Sparkles, DollarSign, User } from 'lucide-react';
+import { ShieldCheck, Sun, Moon, User } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { isDark, toggleTheme, pageColors } = useTheme();
-  const { currency, setCurrency, setIsAiChatOpen } = useExpenses();
+  const { isDark, toggleTheme } = useTheme();
+  const { currency, setCurrency } = useExpenses();
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [userAccount, setUserAccount] = useState<UserAccount | null>(null);
@@ -26,8 +26,6 @@ export const Header: React.FC = () => {
     window.location.reload();
   };
 
-  const accentColor = pageColors?.EXPENSES || '#6C5CE7';
-
   const toggleCurrency = () => {
     setCurrency(currency === 'USD' ? 'KHR' : 'USD');
   };
@@ -38,30 +36,32 @@ export const Header: React.FC = () => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        height: '60px',
+        height: '56px',
         padding: '0 16px',
         borderBottom: '1px solid var(--border-glass)',
         backgroundColor: 'var(--bg-card)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        boxShadow: 'var(--shadow-card)',
+        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)',
       }}
     >
       {/* Left Brand Identifier */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <img
           src="/logo.jpg"
-          alt="PiTrack App Icon"
+          alt="PiTrack Logo"
           style={{
-            width: '32px',
-            height: '32px',
+            width: '28px',
+            height: '28px',
             borderRadius: '8px',
             objectFit: 'cover',
             border: '1px solid var(--border-glass)',
           }}
         />
-        <h1 style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.3px', lineHeight: 1.1, color: 'var(--text-primary)' }}>
+        <h1 style={{ fontSize: '16px', fontWeight: 800, letterSpacing: '-0.3px', margin: 0, color: 'var(--text-primary)' }}>
           PiTrack
         </h1>
       </div>
@@ -70,53 +70,76 @@ export const Header: React.FC = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         {/* Currency Switcher Pill */}
         <button
-          className="glass-pill"
+          type="button"
           onClick={toggleCurrency}
           style={{
-            height: '34px',
+            height: '32px',
             padding: '0 10px',
-            fontSize: '11px',
+            borderRadius: '10px',
+            backgroundColor: 'var(--pill-bg)',
+            border: '1px solid var(--border-glass)',
+            color: 'var(--text-primary)',
+            fontSize: '12px',
             fontWeight: 800,
+            display: 'inline-flex',
+            alignItems: 'center',
             gap: '4px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
           }}
-          title="Switch Currency"
+          title="Switch Currency (USD / KHR)"
         >
-          <DollarSign size={13} color="var(--accent)" />
+          <span style={{ color: currency === 'USD' ? '#4A99E9' : '#30D158', fontWeight: 900 }}>
+            {currency === 'USD' ? '$' : '៛'}
+          </span>
           <span>{currency === 'USD' ? 'USD' : 'KHR'}</span>
         </button>
 
         {/* Light / Dark Mode Toggle Pill */}
         <button
-          className="glass-pill"
+          type="button"
           onClick={toggleTheme}
           style={{
-            width: '34px',
-            height: '34px',
+            width: '32px',
+            height: '32px',
             padding: 0,
+            borderRadius: '10px',
+            backgroundColor: 'var(--pill-bg)',
+            border: '1px solid var(--border-glass)',
+            color: 'var(--text-primary)',
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
           }}
           title="Toggle Dark/Light Theme"
         >
-          {isDark ? <Sun size={15} color="var(--accent)" /> : <Moon size={15} color="var(--accent)" />}
+          {isDark ? <Sun size={15} color="#F3A85B" /> : <Moon size={15} color="#4A99E9" />}
         </button>
 
-        {/* Account Link / Login Pill (Positioned at Far Right) */}
+        {/* Account Link / Login Pill */}
         <button
-          className="glass-pill"
+          type="button"
           onClick={() => setIsAuthModalOpen(!isAuthModalOpen)}
           style={{
-            height: '34px',
+            height: '32px',
             padding: '0 10px',
-            fontSize: '11px',
+            borderRadius: '10px',
+            border: userAccount ? '1px solid rgba(48, 209, 88, 0.4)' : '1px solid var(--border-glass)',
+            backgroundColor: userAccount ? 'rgba(48, 209, 88, 0.12)' : 'var(--pill-bg)',
+            color: userAccount ? '#30D158' : 'var(--text-primary)',
+            fontSize: '12px',
             fontWeight: 800,
-            gap: '4px',
-            borderColor: userAccount ? 'rgba(0, 230, 118, 0.4)' : 'var(--border-glass)',
-            backgroundColor: userAccount ? 'rgba(0, 230, 118, 0.12)' : 'var(--pill-bg)',
-            color: userAccount ? 'var(--accent-success)' : 'var(--text-primary)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
           }}
           title={userAccount ? `Logged in as ${userAccount.name}` : 'Login / Link Account'}
         >
-          {userAccount ? <ShieldCheck size={14} /> : <User size={14} />}
+          {userAccount ? <ShieldCheck size={14} color="#30D158" /> : <User size={14} />}
           <span>{userAccount ? userAccount.name.split(' ')[0] : 'Account'}</span>
         </button>
       </div>

@@ -147,39 +147,10 @@ export const AddReminderModal: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 150,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-        boxSizing: 'border-box',
-      }}
-      onClick={handleClose}
-    >
-      <div
-        className="glass-panel"
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: 'calc(100vw - 32px)',
-          maxWidth: '420px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          padding: '20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '14px',
-          borderRadius: '24px',
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--border-glass)',
-          boxSizing: 'border-box',
-        }}
-      >
+    <div className="modal-sheet-overlay" onClick={handleClose}>
+      <div className="modal-sheet-content" onClick={e => e.stopPropagation()}>
+        {/* iOS Drag Handle */}
+        <div className="modal-sheet-handle" />
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -352,10 +323,19 @@ export const AddReminderModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Category Selector Grid */}
+        {/* Category Selector Horizontal Slider */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Category</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '6px',
+              overflowX: 'auto',
+              paddingBottom: '4px',
+              whiteSpace: 'nowrap',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
             {REMINDER_CATEGORIES.map(cat => (
               <button
                 key={cat.id}
@@ -371,6 +351,7 @@ export const AddReminderModal: React.FC = () => {
                   fontWeight: category === cat.id ? 800 : 600,
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
+                  flexShrink: 0,
                 }}
               >
                 {cat.label}
@@ -387,6 +368,7 @@ export const AddReminderModal: React.FC = () => {
             required
             value={dueDate}
             onChange={e => setDueDate(e.target.value)}
+            onClick={(e) => { try { (e.currentTarget as any).showPicker?.(); } catch (err) {} }}
             style={{
               width: '100%',
               minWidth: 0,
@@ -400,6 +382,7 @@ export const AddReminderModal: React.FC = () => {
               outline: 'none',
               colorScheme: 'inherit',
               boxSizing: 'border-box',
+              cursor: 'pointer',
             }}
           />
         </div>
@@ -477,6 +460,7 @@ export const AddReminderModal: React.FC = () => {
                 type="date"
                 value={alertDate}
                 onChange={e => setAlertDate(e.target.value)}
+                onClick={(e) => { try { (e.currentTarget as any).showPicker?.(); } catch (err) {} }}
                 style={{
                   width: '100%',
                   minWidth: 0,
@@ -489,6 +473,7 @@ export const AddReminderModal: React.FC = () => {
                   fontWeight: 600,
                   outline: 'none',
                   boxSizing: 'border-box',
+                  cursor: 'pointer',
                 }}
               />
             </div>

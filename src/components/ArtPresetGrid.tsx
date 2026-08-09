@@ -139,14 +139,25 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
         </div>
       )}
 
-      {/* Dynamic Quick Presets Grid (Compact Apple Bento Cards with Drag & Relocate) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+      {/* Dynamic Quick Presets Horizontal Slider (Slide Left to Right) */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '8px',
+          overflowX: 'auto',
+          paddingBottom: '6px',
+          paddingTop: '2px',
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
         {presetsList.map((preset, idx) => {
           const rawHex = presetPalette[(idx + colorOffset) % presetPalette.length];
           const tileHex = (!rawHex || rawHex === '#FFFFFF') ? DEFAULT_PRESET_PALETTE[(idx + colorOffset) % DEFAULT_PRESET_PALETTE.length] : rawHex;
 
           const isDraggingThis = draggedIdx === idx;
           const isDragOverThis = dragOverIdx === idx;
+          const categoryTag = preset.categoryId ? preset.categoryId.replace('cat-', '').replace('saving-', '').split('-')[0].toUpperCase() : (preset.type || 'PRESET');
 
           return (
             <div
@@ -159,6 +170,10 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
               className={isReordering ? 'ios-wiggle' : ''}
               style={{
                 position: 'relative',
+                flex: '0 0 auto',
+                width: 'calc(20% - 6.4px)',
+                minWidth: '100px',
+                scrollSnapAlign: 'start',
                 animationDelay: `${(idx % 4) * 0.07}s`,
                 opacity: isDraggingThis ? 0.4 : 1,
               }}
@@ -173,73 +188,51 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
                   width: '100%',
+                  height: '76px',
                   padding: '12px 14px',
                   borderRadius: '20px',
-                  border: isDragOverThis ? '2px dashed var(--accent)' : `1px solid ${hexToRgba(tileHex, 0.22)}`,
-                  backgroundColor: hexToRgba(tileHex, 0.07),
+                  border: isDragOverThis ? '2px dashed var(--accent)' : '1px solid var(--border-glass)',
+                  backgroundColor: 'var(--bg-card)',
                   color: 'var(--text-primary)',
-                  textAlign: 'left',
+                  textAlign: 'center',
                   cursor: isReordering ? 'grab' : 'pointer',
+                  boxShadow: 'var(--shadow-card)',
                   transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                  minHeight: '74px',
-                  boxShadow: `0 2px 8px ${hexToRgba(tileHex, 0.06)}`,
                   userSelect: 'none',
                 }}
                 onMouseEnter={e => {
                   if (!isReordering) {
-                    e.currentTarget.style.backgroundColor = hexToRgba(tileHex, 0.12);
+                    e.currentTarget.style.backgroundColor = 'var(--pill-bg)';
                     e.currentTarget.style.transform = 'translateY(-2px)';
                   }
                 }}
                 onMouseLeave={e => {
                   if (!isReordering) {
-                    e.currentTarget.style.backgroundColor = hexToRgba(tileHex, 0.07);
+                    e.currentTarget.style.backgroundColor = 'var(--bg-card)';
                     e.currentTarget.style.transform = 'translateY(0px)';
                   }
                 }}
               >
-                {/* Top Row: Icon badge left, price count right */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '10px',
-                      backgroundColor: hexToRgba(tileHex, 0.16),
-                      border: `1px solid ${hexToRgba(tileHex, 0.3)}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: tileHex,
-                    }}
-                  >
-                    <CategoryIconRenderer icon={preset.icon} size={16} color={tileHex} />
-                  </div>
-
-                  <span
-                    className="tabular-nums"
-                    style={{
-                      fontSize: '13px',
-                      fontWeight: 800,
-                      color: 'var(--text-primary)',
-                    }}
-                  >
-                    {formatCurrency(preset.amount, currency)}
-                  </span>
+                {/* Centered Top Vector Icon */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CategoryIconRenderer icon={preset.icon} size={24} color={tileHex} />
                 </div>
 
-                {/* Bottom Row: Single-Word Clean Title */}
+                {/* Centered Single-Word Clean Title */}
                 <span
                   style={{
                     fontSize: '13px',
-                    fontWeight: 800,
-                    marginTop: '8px',
+                    fontWeight: 700,
                     color: 'var(--text-primary)',
+                    letterSpacing: '-0.1px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
+                    maxWidth: '100%',
                   }}
                 >
                   {preset.title.split(' ')[0]}

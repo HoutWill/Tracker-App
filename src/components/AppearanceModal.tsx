@@ -24,7 +24,7 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
     resetDefaultColors,
   } = useTheme();
 
-  const [activeSection, setActiveSection] = useState<'THEME' | 'COLOR' | 'PRESET'>('THEME');
+  const [activeSection, setActiveSection] = useState<'COLOR' | 'PRESET'>('COLOR');
 
   if (!isOpen) return null;
 
@@ -40,37 +40,10 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 110,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="glass-panel"
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: '440px',
-          padding: '20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          maxHeight: '85vh',
-          overflowY: 'auto',
-          borderRadius: '20px',
-          backgroundColor: 'var(--bg-card)',
-          borderColor: 'var(--border-glass)',
-        }}
-      >
+    <div className="modal-sheet-overlay" onClick={onClose}>
+      <div className="modal-sheet-content" onClick={e => e.stopPropagation()}>
+        {/* iOS Drag Handle */}
+        <div className="modal-sheet-handle" />
         {/* Modal Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -93,7 +66,7 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
               <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
                 Appearance & Theme
               </h3>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Themes, Colors & Preset Customizer</span>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Colors & Preset Customizer</span>
             </div>
           </div>
 
@@ -142,7 +115,6 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
           }}
         >
           {[
-            { id: 'THEME', label: 'Themes' },
             { id: 'COLOR', label: 'Accents & Colors' },
             { id: 'PRESET', label: 'Presets' },
           ].map(tab => (
@@ -167,52 +139,6 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
             </button>
           ))}
         </div>
-
-        {/* Section 1: Atmospheric Holiday Themes */}
-        {activeSection === 'THEME' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            {HOLIDAY_THEMES.map(theme => {
-              const isSelected = activeThemeId === theme.id;
-              return (
-                <button
-                  key={theme.id}
-                  type="button"
-                  onClick={() => setHolidayTheme(theme.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '12px',
-                    borderRadius: '12px',
-                    border: isSelected ? '1px solid var(--text-primary)' : '1px solid var(--border-glass)',
-                    backgroundColor: isSelected ? 'var(--pill-hover)' : 'var(--pill-bg)',
-                    color: 'var(--text-primary)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <span style={{ fontSize: '20px' }}>{theme.emoji}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>{theme.name}</div>
-                    <div
-                      style={{
-                        fontSize: '10px',
-                        color: 'var(--text-muted)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {theme.description}
-                    </div>
-                  </div>
-                  {isSelected && <Check size={14} style={{ color: 'var(--text-primary)', flexShrink: 0 }} />}
-                </button>
-              );
-            })}
-          </div>
-        )}
 
         {/* Section 2: Color Packs & Custom Page Color Overrides */}
         {activeSection === 'COLOR' && (

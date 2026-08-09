@@ -57,34 +57,15 @@ export const CreateExpenseFolderModal: React.FC = () => {
   ];
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 110,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-      }}
-      onClick={() => setIsCreateExpenseFolderOpen(false)}
-    >
+    <div className="modal-sheet-overlay" onClick={() => setIsCreateExpenseFolderOpen(false)}>
       <form
-        className="glass-panel"
+        className="modal-sheet-content"
         onSubmit={handleSubmit}
         onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: '420px',
-          padding: '22px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '14px',
-          borderColor: 'rgba(46, 170, 220, 0.4)',
-        }}
+        style={{ borderColor: 'rgba(46, 170, 220, 0.4)' }}
       >
+        {/* iOS Drag Handle */}
+        <div className="modal-sheet-handle" />
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

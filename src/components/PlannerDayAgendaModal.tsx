@@ -180,35 +180,10 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 120,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="glass-panel"
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: '420px',
-          maxHeight: '85vh',
-          borderRadius: '16px',
-          backgroundColor: 'var(--bg-card)',
-          borderColor: 'var(--border-glass)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
-      >
+    <div className="modal-sheet-overlay" onClick={onClose}>
+      <div className="modal-sheet-content" onClick={e => e.stopPropagation()}>
+        {/* iOS Drag Handle */}
+        <div className="modal-sheet-handle" />
         {/* Top Header Navigation Bar */}
         <div
           style={{

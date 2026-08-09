@@ -31,6 +31,7 @@ interface ExpenseContextType {
   savingPeriod: BudgetPeriod;
   cycleHistory: CycleSnapshot[];
   hideBalances: boolean;
+  toggleHideBalances: () => void;
   trips: TripFolder[];
   selectedTripId: string | null;
   selectedTripForEdit: TripFolder | null;
@@ -132,6 +133,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const [hideBalances, setHideBalances] = useState<boolean>(false);
+  const toggleHideBalances = () => setHideBalances(prev => !prev);
 
   const archiveCycleSnapshot = (snapshot: Omit<CycleSnapshot, 'id' | 'archivedAt'>) => {
     const newSnap = StorageService.addCycleSnapshot(snapshot);
@@ -378,6 +380,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         savingPeriod,
         cycleHistory,
         hideBalances,
+        toggleHideBalances,
         trips,
         selectedTripId,
         selectedTripForEdit,

@@ -240,46 +240,19 @@ export const PlannerScreen: React.FC = () => {
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
-      {/* Main Screen Title Bar matching screenshot */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-        <div>
-          <h2 style={{ fontSize: '22px', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.3px' }}>Planner</h2>
-          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>Plan your tasks, stay productive</p>
-        </div>
 
-        <div style={{ position: 'relative' }}>
-          <button
-            type="button"
-            onClick={() => triggerHaptic(10)}
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--pill-bg)',
-              border: '1px solid var(--border-glass)',
-              color: 'var(--text-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-            }}
-          >
-            <Bell size={18} />
-          </button>
-          <div style={{ position: 'absolute', top: '2px', right: '2px', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00E5FF' }} />
-        </div>
-      </div>
 
       {/* Top Segmented Tab Switcher */}
       <div
         className="glass-panel"
         style={{
           display: 'flex',
-          padding: '3px',
-          borderRadius: '14px',
+          padding: '4px',
+          borderRadius: '16px',
           marginBottom: '16px',
-          backgroundColor: 'var(--bg-card)',
+          backgroundColor: 'var(--pill-bg)',
           border: '1px solid var(--border-glass)',
+          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)',
         }}
       >
         <button
@@ -287,19 +260,21 @@ export const PlannerScreen: React.FC = () => {
           onClick={() => setPlannerTab('REMINDERS')}
           style={{
             flex: 1,
-            padding: '8px 0',
-            borderRadius: '11px',
-            border: plannerTab === 'REMINDERS' ? '1px solid var(--border-glass)' : '1px solid transparent',
-            backgroundColor: plannerTab === 'REMINDERS' ? 'var(--pill-hover)' : 'transparent',
-            color: plannerTab === 'REMINDERS' ? 'var(--text-primary)' : 'var(--text-muted)',
+            padding: '9px 0',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: plannerTab === 'REMINDERS' ? '#4A99E9' : 'transparent',
+            color: plannerTab === 'REMINDERS' ? '#FFFFFF' : 'var(--text-secondary)',
             fontSize: '13px',
-            fontWeight: plannerTab === 'REMINDERS' ? 700 : 500,
+            fontWeight: plannerTab === 'REMINDERS' ? 800 : 600,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '6px',
-            transition: 'all 0.15s ease',
+            boxShadow: plannerTab === 'REMINDERS' ? '0 3px 10px rgba(74, 153, 233, 0.4)' : 'none',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: plannerTab === 'REMINDERS' ? 'scale(1.01)' : 'scale(1)',
           }}
         >
           <Bell size={15} />
@@ -311,19 +286,21 @@ export const PlannerScreen: React.FC = () => {
           onClick={() => setPlannerTab('CALENDAR')}
           style={{
             flex: 1,
-            padding: '8px 0',
-            borderRadius: '11px',
-            border: plannerTab === 'CALENDAR' ? '1px solid var(--border-glass)' : '1px solid transparent',
-            backgroundColor: plannerTab === 'CALENDAR' ? 'var(--pill-hover)' : 'transparent',
-            color: plannerTab === 'CALENDAR' ? 'var(--text-primary)' : 'var(--text-muted)',
+            padding: '9px 0',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: plannerTab === 'CALENDAR' ? '#4A99E9' : 'transparent',
+            color: plannerTab === 'CALENDAR' ? '#FFFFFF' : 'var(--text-secondary)',
             fontSize: '13px',
-            fontWeight: plannerTab === 'CALENDAR' ? 700 : 500,
+            fontWeight: plannerTab === 'CALENDAR' ? 800 : 600,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '6px',
-            transition: 'all 0.15s ease',
+            boxShadow: plannerTab === 'CALENDAR' ? '0 3px 10px rgba(74, 153, 233, 0.4)' : 'none',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: plannerTab === 'CALENDAR' ? 'scale(1.01)' : 'scale(1)',
           }}
         >
           <Calendar size={15} />

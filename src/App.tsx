@@ -92,32 +92,32 @@ export const AppContent: React.FC = () => {
       <CreateSavingFolderModal />
       <EditTripModal />
 
-      {/* Modern Floating Dock Bottom Navigation Bar */}
+      {/* Modern Floating Dock Bottom Navigation Bar (Wider for iPhone touch targets) */}
       <nav
         style={{
           position: 'fixed',
           bottom: '16px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: 'calc(100% - 24px)',
-          maxWidth: '430px',
-          height: '58px',
+          width: 'calc(100% - 20px)',
+          maxWidth: '480px',
+          height: '62px',
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-glass)',
-          borderRadius: '20px',
+          borderRadius: '22px',
           boxShadow: 'var(--shadow-card)',
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'center',
-          padding: '0 6px',
+          padding: '0 8px',
           zIndex: 40,
         }}
       >
         {[
-          { id: 'EXPENSES', label: 'Expenses', icon: Wallet },
+          { id: 'EXPENSES', label: 'Wallet', icon: Wallet },
           { id: 'STATS', label: 'Stats', icon: BarChart3 },
-          { id: 'PLANNER', label: 'Planner', icon: Bell },
           { id: 'CALENDAR', label: 'Calendar', icon: Calendar },
+          { id: 'PLANNER', label: 'Planner', icon: Bell },
           { id: 'SETTINGS', label: 'Settings', icon: Settings },
         ].map(tab => {
           const isActive = activeTab === tab.id;
@@ -130,8 +130,8 @@ export const AppContent: React.FC = () => {
               style={{
                 background: isActive ? 'var(--pill-hover)' : 'transparent',
                 border: isActive ? '1px solid var(--border-glass)' : '1px solid transparent',
-                borderRadius: '12px',
-                padding: '6px 10px',
+                borderRadius: '14px',
+                padding: '7px 12px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -139,10 +139,11 @@ export const AppContent: React.FC = () => {
                 color: isActive ? 'var(--accent-light)' : 'var(--text-muted)',
                 cursor: 'pointer',
                 transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+                flex: 1,
               }}
             >
-              <Icon size={18} />
-              <span style={{ fontSize: '10px', fontWeight: isActive ? 600 : 500, whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
+              <Icon size={19} />
+              <span style={{ fontSize: '11px', fontWeight: isActive ? 700 : 500, whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
                 {tab.label}
               </span>
             </button>

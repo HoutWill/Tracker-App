@@ -70,36 +70,15 @@ export const EditExpenseModal: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 100,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-      }}
-      onClick={() => setSelectedExpenseForEdit(null)}
-    >
+    <div className="modal-sheet-overlay" onClick={() => setSelectedExpenseForEdit(null)}>
       <form
-        className="glass-panel"
+        className="modal-sheet-content"
         onSubmit={handleSubmit}
         onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: '430px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          padding: '22px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '14px',
-          borderColor: 'rgba(108, 92, 231, 0.4)',
-        }}
+        style={{ borderColor: 'rgba(108, 92, 231, 0.4)' }}
       >
+        {/* iOS Drag Handle */}
+        <div className="modal-sheet-handle" />
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -268,6 +247,7 @@ export const EditExpenseModal: React.FC = () => {
             type="date"
             value={dateStr}
             onChange={e => setDateStr(e.target.value)}
+            onClick={(e) => { try { (e.currentTarget as any).showPicker?.(); } catch (err) {} }}
             style={{
               width: '100%',
               height: '40px',
@@ -279,6 +259,7 @@ export const EditExpenseModal: React.FC = () => {
               fontSize: '13px',
               marginTop: '4px',
               outline: 'none',
+              cursor: 'pointer',
             }}
           />
         </div>

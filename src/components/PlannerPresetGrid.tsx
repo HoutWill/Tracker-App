@@ -185,9 +185,19 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
         </div>
       )}
 
-      {/* 5-Column Vertical Preset Bento Tiles Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
-        {presetsList.slice(0, 5).map((preset, idx) => {
+      {/* Horizontal Preset Bento Tiles Slider (Slide Left to Right) */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '8px',
+          overflowX: 'auto',
+          paddingBottom: '6px',
+          paddingTop: '2px',
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        {presetsList.map((preset, idx) => {
           const badgeColor = preset.color || LEVEL_COLORS[preset.level] || '#4A99E9';
           const isDraggingThis = draggedIdx === idx;
           const isDragOverThis = dragOverIdx === idx;
@@ -203,6 +213,10 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
               className={isReordering ? 'ios-wiggle' : ''}
               style={{
                 position: 'relative',
+                flex: '0 0 auto',
+                width: 'calc(20% - 6.4px)',
+                minWidth: '100px',
+                scrollSnapAlign: 'start',
                 opacity: isDraggingThis ? 0.4 : 1,
               }}
             >
@@ -218,35 +232,36 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
+                  justifyContent: 'center',
+                  gap: '8px',
                   width: '100%',
-                  height: '115px',
-                  padding: '12px 6px',
-                  borderRadius: '16px',
-                  border: isDragOverThis ? '2px dashed var(--accent)' : `1px solid ${hexToRgba(badgeColor, 0.22)}`,
-                  backgroundColor: hexToRgba(badgeColor, 0.08),
+                  height: '76px',
+                  padding: '12px 14px',
+                  borderRadius: '20px',
+                  border: isDragOverThis ? '2px dashed var(--accent)' : '1px solid var(--border-glass)',
+                  backgroundColor: 'var(--bg-card)',
                   color: 'var(--text-primary)',
                   textAlign: 'center',
                   cursor: isReordering ? 'grab' : 'pointer',
-                  boxShadow: `0 3px 12px ${hexToRgba(badgeColor, 0.08)}`,
+                  boxShadow: 'var(--shadow-card)',
                   transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                   userSelect: 'none',
                 }}
                 onMouseEnter={e => {
                   if (!isReordering) {
-                    e.currentTarget.style.backgroundColor = hexToRgba(badgeColor, 0.14);
+                    e.currentTarget.style.backgroundColor = 'var(--pill-bg)';
                     e.currentTarget.style.transform = 'translateY(-2px)';
                   }
                 }}
                 onMouseLeave={e => {
                   if (!isReordering) {
-                    e.currentTarget.style.backgroundColor = hexToRgba(badgeColor, 0.08);
+                    e.currentTarget.style.backgroundColor = 'var(--bg-card)';
                     e.currentTarget.style.transform = 'translateY(0px)';
                   }
                 }}
               >
                 {/* Centered Top Icon */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {renderIcon(preset.icon, 24, badgeColor)}
                 </div>
 
@@ -256,6 +271,7 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
                     fontSize: '13px',
                     fontWeight: 700,
                     color: 'var(--text-primary)',
+                    letterSpacing: '-0.1px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -263,23 +279,6 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
                   }}
                 >
                   {preset.title.split(' ')[0]}
-                </span>
-
-                {/* Bottom Priority Level Badge Pill */}
-                <span
-                  style={{
-                    fontSize: '9px',
-                    fontWeight: 800,
-                    padding: '3px 8px',
-                    borderRadius: '10px',
-                    backgroundColor: hexToRgba(badgeColor, 0.18),
-                    border: `1px solid ${hexToRgba(badgeColor, 0.35)}`,
-                    color: badgeColor,
-                    letterSpacing: '0.04em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {preset.level}
                 </span>
               </button>
 

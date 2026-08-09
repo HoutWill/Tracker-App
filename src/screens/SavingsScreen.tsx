@@ -9,7 +9,7 @@ import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { SAVING_QUICK_PRESETS } from '../constants/presets';
 import { formatCurrency, StorageService, getTodayDateString, getStartOfWeekDateString, getEndOfWeekDateString } from '../services/storageService';
 import { PaymentMethod, QuickPreset, BudgetPeriod } from '../types';
-import { Plus, Zap, CheckCircle2, Layers, SearchX, X, Check, PiggyBank, Target, TrendingUp, Trash2, CreditCard } from 'lucide-react';
+import { Plus, Zap, CheckCircle2, Layers, SearchX, X, Check, PiggyBank, Target, TrendingUp, Trash2, CreditCard, Eye, EyeOff, Edit3, Wallet } from 'lucide-react';
 
 const SAVING_PRESET_ICONS = [
   'piggy-bank', 'vault', 'wallet', 'shield-check', 'target', 'trending-up',
@@ -39,6 +39,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
     cycleHistory,
     archiveCycleSnapshot,
     hideBalances,
+    toggleHideBalances,
     addExpense,
     setIsAddSavingOpen,
     setSelectedExpenseForEdit,
@@ -236,16 +237,17 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
 
-      {/* Top Segmented Group Bar: Expenses vs Saving */}
+      {/* Top Segmented Mode Switcher with Category Color Identity & Live Metrics */}
       <div
         className="glass-panel"
         style={{
           display: 'flex',
-          padding: '3px',
-          borderRadius: '12px',
-          marginBottom: '14px',
-          backgroundColor: 'var(--bg-card)',
+          padding: '4px',
+          borderRadius: '16px',
+          marginBottom: '16px',
+          backgroundColor: 'var(--pill-bg)',
           border: '1px solid var(--border-glass)',
+          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)',
         }}
       >
         <button
@@ -256,20 +258,20 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '6px',
-            padding: '8px 12px',
-            borderRadius: '9px',
+            gap: '8px',
+            padding: '10px 12px',
+            borderRadius: '12px',
             border: 'none',
             backgroundColor: 'transparent',
-            color: 'var(--text-muted)',
-            fontWeight: 500,
-            fontSize: '12px',
+            color: 'var(--text-secondary)',
+            fontWeight: 600,
+            fontSize: '13px',
             cursor: 'pointer',
-            transition: 'all 0.15s ease',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
-          <CreditCard size={15} />
-          <span>Expenses</span>
+          <Wallet size={16} />
+          <span>Wallet</span>
         </button>
 
         <button
@@ -280,256 +282,147 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '6px',
-            padding: '8px 12px',
-            borderRadius: '9px',
-            border: '1px solid var(--border-glass)',
-            backgroundColor: 'var(--pill-hover)',
-            color: 'var(--text-primary)',
-            fontWeight: 600,
-            fontSize: '12px',
+            gap: '8px',
+            padding: '10px 12px',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: '#30D158',
+            color: '#FFFFFF',
+            fontWeight: 800,
+            fontSize: '13px',
             cursor: 'pointer',
-            transition: 'all 0.15s ease',
+            boxShadow: '0 3px 10px rgba(48, 209, 88, 0.4)',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: 'scale(1.01)',
           }}
         >
-          <PiggyBank size={15} style={{ color: pageAccent }} />
-          <span>Saving</span>
+          <PiggyBank size={16} />
+          <span>Savings</span>
         </button>
       </div>
 
-      {/* Unified All-in-One Hero Vault Card displaying Saved, Goal, Progress Bar, and Metrics */}
+      {/* Ultra-Clean Hero Savings Vault Card */}
       <div
         className="glass-panel"
         style={{
-          padding: '18px 20px',
-          border: '1px solid var(--border-glass)',
+          padding: '20px 22px',
+          borderRadius: '24px',
           backgroundColor: 'var(--bg-card)',
-          borderRadius: '16px',
+          border: '1px solid var(--border-glass)',
+          boxShadow: 'var(--shadow-card)',
           marginBottom: '16px',
         }}
       >
-        {/* Top Header Row with Goal Editor Button */}
+        {/* Top Row: Period Title (Left) | Interactive Date Picker (Right) */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
-            <PiggyBank size={18} style={{ color: pageAccent }} />
-            <span style={{ fontSize: '14px', fontWeight: 600, letterSpacing: '-0.1px' }}>Vault</span>
-          </div>
+          <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
+            {savingPeriod === 'DAILY' ? 'Today' : savingPeriod === 'WEEKLY' ? 'This week' : 'This month'}
+          </span>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-            {/* Multi-Period Cycle Dropdown Select */}
-            <select
-              value={savingPeriod}
-              onChange={e => setSavingPeriod(e.target.value as BudgetPeriod)}
-              style={{
-                padding: '3px 8px',
-                fontSize: '11px',
-                fontWeight: 700,
-                borderRadius: '8px',
-                backgroundColor: 'var(--pill-bg)',
-                color: 'var(--text-secondary)',
-                border: '1px solid var(--border-glass)',
-                cursor: 'pointer',
-                outline: 'none',
-              }}
-              title="Select Saving Cycle"
-            >
-              <option value="DAILY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Day</option>
-              <option value="WEEKLY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Week</option>
-              <option value="MONTHLY" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>Month</option>
-            </select>
-
-            <button
-              type="button"
-              onClick={() => {
-                setCustomGoalInput(currentGoal.toString());
-                setEditSavingPeriod(savingPeriod);
-                setIsEditingGoal(true);
-              }}
-              style={{
-                fontSize: '11px',
-                padding: '3px 8px',
-                borderRadius: '8px',
-                backgroundColor: 'var(--pill-bg)',
-                border: '1px solid var(--border-glass)',
-                color: 'var(--text-secondary)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer',
-              }}
-              title="Set Saving Goal Target"
-            >
-              <Target size={12} style={{ flexShrink: 0, color: pageAccent }} />
-              <span>Goal: {formatCurrency(currentGoal, currency)}</span>
-            </button>
-
-            <button
-              type="button"
-              className="glass-pill"
-              onClick={() => setIsHistoryOpen(true)}
-              style={{
-                fontSize: '11px',
-                padding: '3px 8px',
-                color: 'var(--text-secondary)',
-                borderColor: 'var(--border-glass)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-              }}
-            >
-              History
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+              {new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}
+            </span>
           </div>
         </div>
 
-        {/* Main Big Balance Amount */}
+        {/* Main Big Saved Amount with Eye Toggle directly next to price */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+          <div
+            className="tabular-nums"
+            style={{
+              fontSize: '40px',
+              fontWeight: 900,
+              letterSpacing: '-1px',
+              color: 'var(--text-primary)',
+              lineHeight: 1.1,
+              filter: hideBalances ? 'blur(9px)' : 'none',
+              transition: 'filter 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              userSelect: hideBalances ? 'none' : 'auto',
+            }}
+          >
+            {formatCurrency(totalSavingUSD, currency)}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => toggleHideBalances()}
+            style={{
+              padding: '4px',
+              background: 'none',
+              border: 'none',
+              color: hideBalances ? '#4A99E9' : 'var(--text-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            title={hideBalances ? 'Show Balance' : 'Hide Balance'}
+          >
+            {hideBalances ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+
+        {/* Middle Info Row: Remaining Goal Label (Left) & Green Amount (Right) */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', marginBottom: '8px' }}>
+          <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Remaining goal</span>
+          <span className="tabular-nums" style={{ color: '#30D158', fontWeight: 800 }}>
+            {formatCurrency(Math.max(0, currentGoal - totalSavingUSD), currency)}
+          </span>
+        </div>
+
+        {/* Thin Emerald Accent Progress Bar */}
         <div
-          className="tabular-nums"
           style={{
-            fontSize: '28px',
-            fontWeight: 700,
-            letterSpacing: '-0.5px',
-            color: 'var(--text-primary)',
+            height: '4px',
+            borderRadius: '2px',
+            backgroundColor: 'var(--pill-bg)',
+            overflow: 'hidden',
             marginBottom: '12px',
           }}
         >
-          {hideBalances ? '••••••••' : formatCurrency(totalSavingUSD, currency)}
-        </div>
-
-        {/* Savings Goal Progress Bar */}
-        <div style={{ marginBottom: '14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontWeight: 500, marginBottom: '6px' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>
-              Goal ({formatCurrency(currentGoal, currency)})
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ color: pageAccent, fontWeight: 700 }}>
-                {goalProgressPct}%
-              </span>
-              {goalProgressPct >= 100 && (
-                <span
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: 800,
-                    padding: '2px 6px',
-                    borderRadius: '8px',
-                    backgroundColor: 'rgba(48, 209, 88, 0.15)',
-                    border: '1px solid rgba(48, 209, 88, 0.3)',
-                    color: 'var(--accent-success)',
-                  }}
-                >
-                  Milestone
-                </span>
-              )}
-            </div>
-          </div>
-
           <div
             style={{
-              height: '6px',
-              borderRadius: '3px',
-              backgroundColor: 'var(--pill-bg)',
-              border: '1px solid var(--border-subtle)',
-              overflow: 'hidden',
+              height: '100%',
+              width: `${goalProgressPct}%`,
+              backgroundColor: '#30D158',
+              borderRadius: '2px',
+              transition: 'width 0.3s ease',
             }}
-          >
-            <div
-              style={{
-                height: '100%',
-                width: `${goalProgressPct}%`,
-                backgroundColor: pageAccent,
-                borderRadius: '3px',
-                transition: 'width 0.3s ease',
-              }}
-            />
-          </div>
+          />
         </div>
 
-        {/* Integrated Bottom 3-Metrics Bar inside the Vault Card */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr 1fr',
-            gap: '6px',
-            paddingTop: '12px',
-            borderTop: '1px solid var(--border-glass)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div
-              style={{
-                width: '26px',
-                height: '26px',
-                borderRadius: '10px',
-                backgroundColor: 'var(--pill-bg)',
-                border: '1px solid var(--border-glass)',
-                color: pageAccent,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <PiggyBank size={13} />
-            </div>
-            <div>
-              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 500 }}>Saved</div>
-              <div className="tabular-nums" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                {hideBalances ? '••••' : formatCurrency(totalSavingUSD, currency)}
-              </div>
-            </div>
-          </div>
+        {/* Bottom Info Row: Clickable Goal Target (Left) & Avg/day (Right) */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: 'var(--text-secondary)' }}>
+          <button
+            type="button"
+            onClick={() => {
+              setCustomGoalInput(currentGoal.toString());
+              setEditSavingPeriod(savingPeriod);
+              setIsEditingGoal(true);
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              color: 'var(--text-secondary)',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+            title="Tap to Set Saving Goal"
+          >
+            <span>Goal: {formatCurrency(currentGoal, currency)}</span>
+            <Edit3 size={11} color="var(--text-muted)" />
+          </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div
-              style={{
-                width: '26px',
-                height: '26px',
-                borderRadius: '6px',
-                backgroundColor: 'var(--pill-bg)',
-                border: '1px solid var(--border-glass)',
-                color: pageAccent,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <TrendingUp size={13} />
-            </div>
-            <div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 500 }}>Average</div>
-              <div className="tabular-nums" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                {hideBalances ? '••••' : formatCurrency(averageSavingUSD, currency)}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div
-              style={{
-                width: '26px',
-                height: '26px',
-                borderRadius: '6px',
-                backgroundColor: 'var(--pill-bg)',
-                border: '1px solid var(--border-glass)',
-                color: pageAccent,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Target size={13} />
-            </div>
-            <div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 500 }}>Goal</div>
-              <div className="tabular-nums" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                {hideBalances ? '••••' : formatCurrency(currentGoal, currency)}
-              </div>
-            </div>
-          </div>
+          <span style={{ fontWeight: 500 }}>
+            Avg/day: {formatCurrency(averageSavingUSD, currency)}
+          </span>
         </div>
       </div>
 
@@ -810,36 +703,15 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
 
       {/* Add New Savings Preset Modal */}
       {isCreatingPreset && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(10px)',
-            zIndex: 100,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-          onClick={() => setIsCreatingPreset(false)}
-        >
+        <div className="modal-sheet-overlay" onClick={() => setIsCreatingPreset(false)}>
           <form
-            className="glass-panel"
+            className="modal-sheet-content"
             onSubmit={handleCreateNewPreset}
             onClick={e => e.stopPropagation()}
-            style={{
-              width: '100%',
-              maxWidth: '420px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
-              borderColor: hexToRgba(pageAccent, 0.35),
-            }}
+            style={{ borderColor: hexToRgba(pageAccent, 0.35) }}
           >
+            {/* iOS Drag Handle */}
+            <div className="modal-sheet-handle" />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Zap size={18} color={pageAccent} />
@@ -912,8 +784,8 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                       flex: 1,
                       borderRadius: '8px',
                       border: newPresetCurrency === 'USD' ? `1px solid ${pageAccent}` : '1px solid var(--border-glass)',
-                      backgroundColor: newPresetCurrency === 'USD' ? pageAccent : 'rgba(255, 255, 255, 0.05)',
-                      color: '#FFF',
+                      backgroundColor: newPresetCurrency === 'USD' ? pageAccent : 'var(--pill-bg)',
+                      color: newPresetCurrency === 'USD' ? '#FFFFFF' : 'var(--text-primary)',
                       fontSize: '11px',
                       fontWeight: 800,
                       cursor: 'pointer',
@@ -928,8 +800,8 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                       flex: 1,
                       borderRadius: '8px',
                       border: newPresetCurrency === 'KHR' ? `1px solid ${pageAccent}` : '1px solid var(--border-glass)',
-                      backgroundColor: newPresetCurrency === 'KHR' ? pageAccent : 'rgba(255, 255, 255, 0.05)',
-                      color: '#FFF',
+                      backgroundColor: newPresetCurrency === 'KHR' ? pageAccent : 'var(--pill-bg)',
+                      color: newPresetCurrency === 'KHR' ? '#FFFFFF' : 'var(--text-primary)',
                       fontSize: '11px',
                       fontWeight: 800,
                       cursor: 'pointer',
@@ -1030,33 +902,14 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
 
       {/* Quick Preset Confirmation / Delete Modal */}
       {activePreset && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(10px)',
-            zIndex: 100,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-          onClick={() => setActivePreset(null)}
-        >
+        <div className="modal-sheet-overlay" onClick={() => setActivePreset(null)}>
           <div
-            className="glass-panel"
+            className="modal-sheet-content"
             onClick={e => e.stopPropagation()}
-            style={{
-              width: '100%',
-              maxWidth: '400px',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
-              borderColor: hexToRgba(pageAccent, 0.35),
-            }}
+            style={{ borderColor: hexToRgba(pageAccent, 0.35) }}
           >
+            {/* iOS Drag Handle */}
+            <div className="modal-sheet-handle" />
             {/* Header with Delete Option */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1137,7 +990,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                     alignItems: 'center',
                     padding: '3px',
                     borderRadius: '10px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                    backgroundColor: 'var(--pill-bg)',
                     border: '1px solid var(--border-glass)',
                     width: '130px',
                   }}
@@ -1151,7 +1004,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                       borderRadius: '8px',
                       border: 'none',
                       backgroundColor: presetCurrency === 'USD' ? pageAccent : 'transparent',
-                      color: presetCurrency === 'USD' ? '#FFFFFF' : 'var(--text-secondary)',
+                      color: presetCurrency === 'USD' ? '#FFFFFF' : 'var(--text-primary)',
                       fontSize: '11px',
                       fontWeight: presetCurrency === 'USD' ? 800 : 600,
                       cursor: 'pointer',
@@ -1170,7 +1023,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                       borderRadius: '8px',
                       border: 'none',
                       backgroundColor: presetCurrency === 'KHR' ? pageAccent : 'transparent',
-                      color: presetCurrency === 'KHR' ? '#FFFFFF' : 'var(--text-secondary)',
+                      color: presetCurrency === 'KHR' ? '#FFFFFF' : 'var(--text-primary)',
                       fontSize: '11px',
                       fontWeight: presetCurrency === 'KHR' ? 800 : 600,
                       cursor: 'pointer',
@@ -1223,6 +1076,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                 type="date"
                 value={presetDate}
                 onChange={e => setPresetDate(e.target.value)}
+                onClick={(e) => { try { (e.currentTarget as any).showPicker?.(); } catch (err) {} }}
                 style={{
                   width: '100%',
                   height: '40px',
@@ -1234,6 +1088,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                   fontSize: '13px',
                   marginTop: '4px',
                   outline: 'none',
+                  cursor: 'pointer',
                 }}
               />
             </div>
@@ -1266,22 +1121,46 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
 
       {/* Database Header & Filter Control Bar */}
       <div style={{ marginBottom: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-          <Layers size={16} style={{ color: pageAccent }} />
-          <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>Records</h3>
-          <span
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Layers size={16} style={{ color: pageAccent }} />
+            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>Records</h3>
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                padding: '2px 8px',
+                borderRadius: '6px',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-glass)',
+              }}
+            >
+              {filteredSavingItems.length}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsAddSavingOpen(true)}
             style={{
-              fontSize: '10px',
-              fontWeight: 600,
-              padding: '2px 8px',
-              borderRadius: '6px',
-              backgroundColor: 'var(--pill-bg)',
-              color: 'var(--text-secondary)',
-              border: '1px solid var(--border-glass)',
+              padding: '6px 14px',
+              borderRadius: '10px',
+              border: 'none',
+              backgroundColor: 'var(--accent-success)',
+              color: '#FFFFFF',
+              fontSize: '12px',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
             }}
           >
-            {filteredSavingItems.length}
-          </span>
+            <Plus size={14} color="#FFFFFF" />
+            <span>Add</span>
+          </button>
         </div>
 
         <FilterControlBar screenType="SAVING" />

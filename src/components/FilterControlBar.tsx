@@ -142,8 +142,8 @@ export const FilterControlBar: React.FC<FilterControlBarProps> = ({ screenType =
             height: '30px',
             borderRadius: '8px',
             border: hasActiveFilters ? `1px solid ${screenAccent}` : '1px solid var(--border-glass)',
-            backgroundColor: hasActiveFilters ? screenAccent : 'rgba(255, 255, 255, 0.06)',
-            color: '#FFF',
+            backgroundColor: hasActiveFilters ? screenAccent : 'var(--pill-bg)',
+            color: hasActiveFilters ? '#FFF' : 'var(--text-primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -151,7 +151,7 @@ export const FilterControlBar: React.FC<FilterControlBarProps> = ({ screenType =
           }}
           title="Filter"
         >
-          <SlidersHorizontal size={14} />
+          <SlidersHorizontal size={14} color={hasActiveFilters ? '#FFF' : 'var(--text-primary)'} />
         </button>
       </div>
 
