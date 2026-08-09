@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PlannerPreset, ReminderCategory } from '../types';
 import { hexToRgba } from '../context/ThemeContext';
 import { triggerHaptic } from '../services/soundService';
+import { useTheme } from '../context/ThemeContext';
 import {
   Zap,
   Plus,
@@ -69,6 +70,7 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
   onDeletePreset,
   onReorderPresets,
 }) => {
+  const { activePackId } = useTheme();
   const [isReordering, setIsReordering] = useState<boolean>(false);
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
@@ -198,7 +200,7 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
         }}
       >
         {presetsList.map((preset, idx) => {
-          const badgeColor = preset.color || LEVEL_COLORS[preset.level] || '#4A99E9';
+          const badgeColor = activePackId === 'MINIMAL_WHITE' ? 'var(--text-primary)' : (preset.color || LEVEL_COLORS[preset.level] || '#4A99E9');
           const isDraggingThis = draggedIdx === idx;
           const isDragOverThis = dragOverIdx === idx;
 

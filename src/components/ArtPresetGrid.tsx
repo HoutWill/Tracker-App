@@ -26,7 +26,7 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
   onReorderPresets,
   colorOffset = 0,
 }) => {
-  const { presetPalette } = useTheme();
+  const { presetPalette, activePackId } = useTheme();
   const [isReordering, setIsReordering] = useState<boolean>(false);
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
@@ -153,7 +153,8 @@ export const ArtPresetGrid: React.FC<ArtPresetGridProps> = ({
       >
         {presetsList.map((preset, idx) => {
           const rawHex = presetPalette[(idx + colorOffset) % presetPalette.length];
-          const tileHex = (!rawHex || rawHex === '#FFFFFF') ? DEFAULT_PRESET_PALETTE[(idx + colorOffset) % DEFAULT_PRESET_PALETTE.length] : rawHex;
+          const isMonochrome = activePackId === 'MINIMAL_WHITE' || (presetPalette && presetPalette.every(c => !c || c === '#FFFFFF'));
+          const tileHex = isMonochrome ? 'var(--text-primary)' : (rawHex && rawHex !== '#FFFFFF' ? rawHex : DEFAULT_PRESET_PALETTE[(idx + colorOffset) % DEFAULT_PRESET_PALETTE.length]);
 
           const isDraggingThis = draggedIdx === idx;
           const isDragOverThis = dragOverIdx === idx;
