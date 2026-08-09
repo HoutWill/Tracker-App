@@ -132,8 +132,20 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setSavingGoalTarget(savingPeriod, amount);
   };
 
-  const [hideBalances, setHideBalances] = useState<boolean>(false);
-  const toggleHideBalances = () => setHideBalances(prev => !prev);
+  const [hideBalances, setHideBalancesState] = useState<boolean>(() => StorageService.getHideBalances());
+
+  const setHideBalances = (hide: boolean) => {
+    setHideBalancesState(hide);
+    StorageService.saveHideBalances(hide);
+  };
+
+  const toggleHideBalances = () => {
+    setHideBalancesState(prev => {
+      const next = !prev;
+      StorageService.saveHideBalances(next);
+      return next;
+    });
+  };
 
   const archiveCycleSnapshot = (snapshot: Omit<CycleSnapshot, 'id' | 'archivedAt'>) => {
     const newSnap = StorageService.addCycleSnapshot(snapshot);

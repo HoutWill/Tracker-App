@@ -612,4 +612,19 @@ export const StorageService = {
     } catch (e) {}
     this.syncAccountToCloud();
   },
+
+  getHideBalances(): boolean {
+    try {
+      const val = localStorage.getItem('pitrack_hide_balances');
+      return val === 'true';
+    } catch (e) {
+      return false;
+    }
+  },
+
+  saveHideBalances(hide: boolean): void {
+    try {
+      localStorage.setItem('pitrack_hide_balances', String(hide));
+    } catch (e) {}
+  },
 };
