@@ -15,7 +15,7 @@ import { CalendarScreen } from './screens/CalendarScreen';
 import { PlannerScreen } from './screens/PlannerScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { AtmosphericBackground } from './components/AtmosphericBackground';
-import { CreditCard, PiggyBank, BarChart3, Calendar, Settings, Bell, Wallet } from 'lucide-react';
+import { CreditCard, PiggyBank, BarChart3, Calendar, Settings, CheckSquare, Wallet } from 'lucide-react';
 
 import { requestPersistentStorage } from './services/storageService';
 import { CreateTripModal } from './components/CreateTripModal';
@@ -117,7 +117,7 @@ export const AppContent: React.FC = () => {
           { id: 'EXPENSES', label: 'Wallet', icon: Wallet },
           { id: 'STATS', label: 'Stats', icon: BarChart3 },
           { id: 'CALENDAR', label: 'Calendar', icon: Calendar },
-          { id: 'PLANNER', label: 'Todo', icon: Bell },
+          { id: 'PLANNER', label: 'Todo', icon: CheckSquare },
           { id: 'SETTINGS', label: 'Settings', icon: Settings },
         ].map(tab => {
           const isActive = activeTab === tab.id;
