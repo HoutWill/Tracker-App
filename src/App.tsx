@@ -117,7 +117,7 @@ export const AppContent: React.FC = () => {
           { id: 'EXPENSES', label: 'Wallet', icon: Wallet },
           { id: 'STATS', label: 'Stats', icon: BarChart3 },
           { id: 'CALENDAR', label: 'Calendar', icon: Calendar },
-          { id: 'PLANNER', label: 'Planner', icon: Bell },
+          { id: 'PLANNER', label: 'Todo', icon: Bell },
           { id: 'SETTINGS', label: 'Settings', icon: Settings },
         ].map(tab => {
           const isActive = activeTab === tab.id;
