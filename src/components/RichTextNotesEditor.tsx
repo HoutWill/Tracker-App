@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Bold, Italic, Underline, Strikethrough, Type, Palette, List, CheckSquare } from 'lucide-react';
 
 interface RichTextNotesEditorProps {
@@ -10,6 +10,7 @@ interface RichTextNotesEditorProps {
 }
 
 const COLOR_PALETTE = [
+  { label: 'Default', hex: 'inherit' },
   { label: 'Red', hex: '#ED6C6C' },
   { label: 'Green', hex: '#30D158' },
   { label: 'Blue', hex: '#4A99E9' },
@@ -24,50 +25,39 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
   rows = 3,
   activeVoiceField = false,
 }) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const [showColorPicker, setShowColorPicker] = useState<boolean>(false);
+  const isInternalChange = useRef<boolean>(false);
 
-  // Helper to insert prefix & suffix around selected text or current cursor position
-  const applyFormat = (prefix: string, suffix: string = '') => {
-    const el = textareaRef.current;
-    if (!el) return;
-
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-    const selectedText = value.substring(start, end);
-
-    let replacement = '';
-    if (selectedText) {
-      replacement = `${prefix}${selectedText}${suffix}`;
-    } else {
-      replacement = `${prefix}${suffix}`;
-    }
-
-    const newValue = value.substring(0, start) + replacement + value.substring(end);
-    onChange(newValue);
-
-    setTimeout(() => {
-      el.focus();
-      if (selectedText) {
-        el.setSelectionRange(start, start + replacement.length);
-      } else {
-        const cursorPosition = start + prefix.length;
-        el.setSelectionRange(cursorPosition, cursorPosition);
+  // Sync value from props into contentEditable innerHTML when props change externally
+  useEffect(() => {
+    if (editorRef.current && !isInternalChange.current) {
+      if (editorRef.current.innerHTML !== value) {
+        editorRef.current.innerHTML = value || '';
       }
-    }, 10);
+    }
+    isInternalChange.current = false;
+  }, [value]);
+
+  const handleInput = () => {
+    if (editorRef.current) {
+      isInternalChange.current = true;
+      const html = editorRef.current.innerHTML;
+      onChange(html === '<br>' ? '' : html);
+    }
+  };
+
+  const execCmd = (command: string, valueArg: string | undefined = undefined) => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+      document.execCommand(command, false, valueArg);
+      handleInput();
+    }
   };
 
   const applyColor = (hex: string) => {
-    applyFormat(`<span style="color:${hex}">`, `</span>`);
+    execCmd('foreColor', hex);
     setShowColorPicker(false);
-  };
-
-  const insertBullet = () => {
-    applyFormat(`\n• `);
-  };
-
-  const insertCheckbox = () => {
-    applyFormat(`\n[ ] `);
   };
 
   return (
@@ -82,7 +72,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
       }}
     >
-      {/* Word-Style Toolbar */}
+      {/* Visual Word-Style Toolbar */}
       <div
         style={{
           display: 'flex',
@@ -98,7 +88,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
         {/* Bold */}
         <button
           type="button"
-          onClick={() => applyFormat('<b>', '</b>')}
+          onMouseDown={e => { e.preventDefault(); execCmd('bold'); }}
           style={{
             padding: '4px 6px',
             borderRadius: '6px',
@@ -117,7 +107,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
         {/* Italic */}
         <button
           type="button"
-          onClick={() => applyFormat('<i>', '</i>')}
+          onMouseDown={e => { e.preventDefault(); execCmd('italic'); }}
           style={{
             padding: '4px 6px',
             borderRadius: '6px',
@@ -136,7 +126,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
         {/* Underline */}
         <button
           type="button"
-          onClick={() => applyFormat('<u>', '</u>')}
+          onMouseDown={e => { e.preventDefault(); execCmd('underline'); }}
           style={{
             padding: '4px 6px',
             borderRadius: '6px',
@@ -155,7 +145,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
         {/* Strikethrough */}
         <button
           type="button"
-          onClick={() => applyFormat('<s>', '</s>')}
+          onMouseDown={e => { e.preventDefault(); execCmd('strikeThrough'); }}
           style={{
             padding: '4px 6px',
             borderRadius: '6px',
@@ -176,7 +166,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
         {/* Larger Text / Heading */}
         <button
           type="button"
-          onClick={() => applyFormat('<h3 style="margin:4px 0;font-size:16px;font-weight:800;">', '</h3>')}
+          onMouseDown={e => { e.preventDefault(); execCmd('formatBlock', '<h3>'); }}
           style={{
             padding: '4px 6px',
             borderRadius: '6px',
@@ -236,12 +226,12 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
                 <button
                   key={c.hex}
                   type="button"
-                  onClick={() => applyColor(c.hex)}
+                  onMouseDown={e => { e.preventDefault(); applyColor(c.hex); }}
                   style={{
                     width: '18px',
                     height: '18px',
                     borderRadius: '50%',
-                    backgroundColor: c.hex,
+                    backgroundColor: c.hex === 'inherit' ? 'var(--text-primary)' : c.hex,
                     border: '1px solid rgba(255,255,255,0.2)',
                     cursor: 'pointer',
                   }}
@@ -257,7 +247,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
         {/* Bullet List */}
         <button
           type="button"
-          onClick={insertBullet}
+          onMouseDown={e => { e.preventDefault(); execCmd('insertUnorderedList'); }}
           style={{
             padding: '4px 6px',
             borderRadius: '6px',
@@ -274,7 +264,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
         {/* Checkbox List */}
         <button
           type="button"
-          onClick={insertCheckbox}
+          onMouseDown={e => { e.preventDefault(); execCmd('insertHTML', '☑ '); }}
           style={{
             padding: '4px 6px',
             borderRadius: '6px',
@@ -283,33 +273,51 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
             color: 'var(--text-primary)',
             cursor: 'pointer',
           }}
-          title="Checklist Item"
+          title="Checklist Box"
         >
           <CheckSquare size={14} />
         </button>
       </div>
 
-      {/* Main Textarea */}
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={activeVoiceField ? 'Listening...' : placeholder}
-        rows={rows}
-        style={{
-          width: '100%',
-          padding: '10px 14px',
-          border: 'none',
-          backgroundColor: 'transparent',
-          color: 'var(--text-primary)',
-          fontSize: '13px',
-          lineHeight: 1.5,
-          outline: 'none',
-          resize: 'vertical',
-          boxSizing: 'border-box',
-          fontFamily: 'inherit',
-        }}
-      />
+      {/* Visual WYSIWYG ContentEditable Area */}
+      <div style={{ position: 'relative', width: '100%', minHeight: `${rows * 24}px` }}>
+        {(!value || value === '<br>' || value.trim() === '') && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '10px',
+              left: '14px',
+              color: 'var(--text-muted)',
+              fontSize: '13px',
+              pointerEvents: 'none',
+              userSelect: 'none',
+            }}
+          >
+            {activeVoiceField ? 'Listening...' : placeholder}
+          </div>
+        )}
+
+        <div
+          ref={editorRef}
+          contentEditable={true}
+          onInput={handleInput}
+          onBlur={handleInput}
+          style={{
+            width: '100%',
+            minHeight: `${rows * 24}px`,
+            padding: '10px 14px',
+            backgroundColor: 'transparent',
+            color: 'var(--text-primary)',
+            fontSize: '13px',
+            lineHeight: 1.5,
+            outline: 'none',
+            boxSizing: 'border-box',
+            fontFamily: 'inherit',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+          }}
+        />
+      </div>
     </div>
   );
 };
@@ -318,15 +326,10 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
 export const renderRichFormattedText = (text: string) => {
   if (!text) return null;
 
-  const formattedHtml = text
-    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-    .replace(/\*(.*?)\*/g, '<i>$1</i>')
-    .replace(/~~(.*?)~~/g, '<s>$1</s>');
-
   return (
     <div
       className="rich-notes-view"
-      dangerouslySetInnerHTML={{ __html: formattedHtml }}
+      dangerouslySetInnerHTML={{ __html: text }}
       style={{
         fontSize: '13px',
         lineHeight: 1.5,
