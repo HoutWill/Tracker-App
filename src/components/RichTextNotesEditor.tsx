@@ -40,7 +40,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
     if (selectedText) {
       replacement = `${prefix}${selectedText}${suffix}`;
     } else {
-      replacement = `${prefix}text${suffix}`;
+      replacement = `${prefix}${suffix}`;
     }
 
     const newValue = value.substring(0, start) + replacement + value.substring(end);
@@ -51,7 +51,8 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
       if (selectedText) {
         el.setSelectionRange(start, start + replacement.length);
       } else {
-        el.setSelectionRange(start + prefix.length, start + prefix.length + 4);
+        const cursorPosition = start + prefix.length;
+        el.setSelectionRange(cursorPosition, cursorPosition);
       }
     }, 10);
   };

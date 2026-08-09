@@ -38,7 +38,7 @@ export const AddReminderModal: React.FC = () => {
   const [alertDate, setAlertDate] = useState(getTodayDateString());
   const [alertTime, setAlertTime] = useState(getFutureTimeString(5));
   const [alertEnabled, setAlertEnabled] = useState(true);
-  const [syncCalendar, setSyncCalendar] = useState(true);
+  const [syncCalendar, setSyncCalendar] = useState(false);
   const [activeField, setActiveField] = useState<'title' | 'notes' | null>(null);
 
   const recognitionRef = useRef<any>(null);
