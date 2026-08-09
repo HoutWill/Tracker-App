@@ -50,18 +50,30 @@ export const Header: React.FC = () => {
     >
       {/* Left Brand Identifier */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <img
-          src="/logo.jpg"
-          alt="PiTrack Logo"
+        <div
           style={{
-            width: '30px',
-            height: '30px',
-            borderRadius: '9px',
-            objectFit: 'cover',
-            display: 'block',
+            width: '32px',
+            height: '32px',
+            borderRadius: '10px',
+            backgroundColor: 'var(--pill-bg)',
+            border: '1px solid var(--border-glass)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
           }}
-        />
+        >
+          <img
+            src="/logo.jpg"
+            alt="PiTrack Logo"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        </div>
         <h1 style={{ fontSize: '16px', fontWeight: 800, letterSpacing: '-0.3px', margin: 0, color: 'var(--text-primary)' }}>
           PiTrack
         </h1>
