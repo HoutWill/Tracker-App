@@ -32,7 +32,7 @@
       "alertTime": "23:34",
       "alertEnabled": true,
       "id": "rem-1786293008805",
-      "completed": false,
+      "completed": true,
       "createdAt": 1786293008805
     },
     {
@@ -48,7 +48,7 @@
       "alertTime": "15:00",
       "alertEnabled": true,
       "id": "rem-1786262144302",
-      "completed": false,
+      "completed": true,
       "createdAt": 1786262144302
     }
   ],
@@ -64,5 +64,5 @@
     "MONTHLY": 500
   },
   "cycleHistory": [],
-  "updatedAt": 1786293008808
+  "updatedAt": 1786296926801
 }

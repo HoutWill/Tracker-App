@@ -78,7 +78,9 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
   };
 
   const handleToggle = () => {
+    triggerHaptic(15);
     toggleReminder(reminder.id);
+    onClose();
   };
 
   const handleSaveUpdate = (e: React.FormEvent) => {
