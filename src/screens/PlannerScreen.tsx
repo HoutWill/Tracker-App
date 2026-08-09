@@ -163,8 +163,21 @@ export const PlannerScreen: React.FC = () => {
   const [selectedDayFilter, setSelectedDayFilter] = useState<string | null>(null);
   const [showSearchInput, setShowSearchInput] = useState<boolean>(false);
   const [isPlannerDayModalOpen, setIsPlannerDayModalOpen] = useState<boolean>(false);
+  const selectedDayRef = useRef<HTMLButtonElement | null>(null);
 
   const today = getTodayDateString();
+
+  // Auto-scroll calendar horizontal day strip to active selected date immediately on tab mount or date change
+  useEffect(() => {
+    if (plannerTab === 'CALENDAR') {
+      const timer = setTimeout(() => {
+        if (selectedDayRef.current) {
+          selectedDayRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      }, 60);
+      return () => clearTimeout(timer);
+    }
+  }, [calSelectedDate, plannerTab]);
 
   const todayReminders = reminders.filter(r => r.dueDate === today && !r.completed);
   const scheduledReminders = reminders.filter(r => r.dueDate > today && !r.completed);
@@ -1155,6 +1168,7 @@ export const PlannerScreen: React.FC = () => {
               return (
                 <button
                   key={item.dateStr}
+                  ref={isSelected ? selectedDayRef : null}
                   type="button"
                   onClick={(e) => {
                     triggerHaptic(10);
