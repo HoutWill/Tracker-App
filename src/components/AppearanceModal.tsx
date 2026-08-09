@@ -39,6 +39,13 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
     }
   };
 
+  const handleApplyMonochrome = () => {
+    setColorPack('MINIMAL_WHITE');
+    setPageColor('EXPENSES', '#FFFFFF');
+    setPageColor('SAVING', '#FFFFFF');
+    handleSetAllPresetsToWhite();
+  };
+
   return (
     <div className="modal-sheet-overlay" onClick={onClose}>
       <div className="modal-sheet-content" onClick={e => e.stopPropagation()}>
@@ -143,6 +150,42 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
         {/* Section 2: Color Packs & Custom Page Color Overrides */}
         {activeSection === 'COLOR' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Quick 1-Tap Black & White Preset Button */}
+            <button
+              type="button"
+              onClick={handleApplyMonochrome}
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                borderRadius: '14px',
+                border: activePackId === 'MINIMAL_WHITE' ? '1.5px solid var(--text-primary)' : '1px solid var(--border-glass)',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '22px',
+                    height: '22px',
+                    borderRadius: '50%',
+                    backgroundColor: '#FFFFFF',
+                    border: '1.5px solid #64748B',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                  }}
+                />
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 800 }}>Black & White (Monochrome)</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Pure minimal dark/light theme for all accents & presets</div>
+                </div>
+              </div>
+              {activePackId === 'MINIMAL_WHITE' && <Check size={16} style={{ color: 'var(--text-primary)' }} />}
+            </button>
             {/* Presets / Color Packs */}
             <div>
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
@@ -340,23 +383,23 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
                 </div>
 
                 <div style={{ display: 'flex', gap: '4px' }}>
-                  {/* Clean White Button */}
+                  {/* Clean Monochrome B&W Button */}
                   <button
                     type="button"
-                    onClick={handleSetAllPresetsToWhite}
+                    onClick={handleApplyMonochrome}
                     style={{
                       fontSize: '10px',
-                      fontWeight: 500,
+                      fontWeight: 700,
                       padding: '3px 8px',
                       borderRadius: '6px',
-                      backgroundColor: 'var(--bg-card)',
+                      backgroundColor: 'var(--pill-bg)',
                       border: '1px solid var(--border-glass)',
                       color: 'var(--text-primary)',
                       cursor: 'pointer',
                     }}
-                    title="Set All Preset Tiles to Clean White"
+                    title="Set All Accents & Presets to Black & White"
                   >
-                    All White
+                    Black & White
                   </button>
 
                   {/* Reset Palette Button */}
