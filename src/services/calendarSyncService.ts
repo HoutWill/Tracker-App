@@ -10,6 +10,20 @@ export interface CalendarEventPayload {
   alarmOffsetMinutes?: number;
 }
 
+export const getGoogleCalendarUrl = (event: CalendarEventPayload): string => {
+  try {
+    const [year, month, day] = event.dueDate.split('-').map(Number);
+    const [hour, minute] = (event.dueTime || '09:00').split(':').map(Number);
+    const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+    const startStr = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
+    const endStr = `${year}${pad(month)}${pad(day)}T${pad(hour + 1)}${pad(minute)}00`;
+    const cleanNotes = (event.notes || '').replace(/<[^>]*>/g, '');
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${startStr}/${endStr}&details=${encodeURIComponent(cleanNotes)}`;
+  } catch (e) {
+    return 'https://calendar.google.com';
+  }
+};
+
 export const syncToAppleCalendar = async (event: CalendarEventPayload) => {
   try {
     const [year, month, day] = event.dueDate.split('-').map(Number);

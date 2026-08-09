@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useReminders } from '../context/ReminderContext';
 import { getTodayDateString } from '../services/storageService';
+import { renderRichFormattedText } from './RichTextNotesEditor';
 import { ReminderItem } from '../types';
 import {
   X,
@@ -160,7 +161,7 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
                 }}
               >
                 <MapPin size={10} style={{ color: 'var(--text-muted)' }} />
-                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.notes}</span>
+                <div>{renderRichFormattedText(r.notes)}</div>
               </div>
             )}
           </div>

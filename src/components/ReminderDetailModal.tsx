@@ -5,7 +5,7 @@ import { formatCleanDate } from '../services/storageService';
 import { triggerHaptic } from '../services/soundService';
 import { X, Bell, Calendar, Clock, CheckSquare, Square, Trash2, Tag, Share2, Edit3, Save, CheckCircle2, Circle, Plus, MoreHorizontal } from 'lucide-react';
 import { RichTextNotesEditor, renderRichFormattedText } from './RichTextNotesEditor';
-import { syncToAppleCalendar, shareToAppleReminders } from '../services/calendarSyncService';
+import { syncToAppleCalendar, shareToAppleReminders, getGoogleCalendarUrl } from '../services/calendarSyncService';
 
 interface ReminderDetailModalProps {
   reminder: ReminderItem | null;
@@ -119,7 +119,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
   };
 
   const handleSyncAppleCalendar = () => {
-    syncToAppleCalendar({
+    const payload = {
       title: editTitle || reminder.title,
       notes: editNotes || reminder.notes,
       dueDate: editDueDate || reminder.dueDate,
@@ -128,7 +128,9 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       alertDate: editAlertDate || reminder.alertDate,
       alertTime: editAlertTime || reminder.alertTime,
       category: editCategory || reminder.category,
-    });
+    };
+    const gUrl = getGoogleCalendarUrl(payload);
+    window.open(gUrl, '_blank');
   };
 
   const handleDelete = () => {

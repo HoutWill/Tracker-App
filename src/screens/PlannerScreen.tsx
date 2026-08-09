@@ -1220,9 +1220,9 @@ export const PlannerScreen: React.FC = () => {
                       </div>
 
                       {r.notes && (
-                        <p style={{ fontSize: '12px', opacity: 0.8, margin: '0 0 8px 0', lineHeight: 1.3 }}>
-                          {r.notes}
-                        </p>
+                        <div style={{ fontSize: '12px', opacity: 0.85, margin: '0 0 8px 0', lineHeight: 1.3 }}>
+                          {renderRichFormattedText(r.notes)}
+                        </div>
                       )}
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', opacity: 0.85 }}>
