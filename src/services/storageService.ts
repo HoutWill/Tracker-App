@@ -52,16 +52,17 @@ export const formatCleanDate = (dateStr: string): string => {
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
     const [year, month, day] = trimmed.split('-');
     const mIdx = parseInt(month, 10) - 1;
-    const dayNum = parseInt(day, 10);
+    const dayPad = day.padStart(2, '0');
+    const shortYear = year.slice(2);
     const mName = SHORT_MONTH_NAMES[mIdx] || 'Jan';
-    return `${dayNum} ${mName} ${year}`;
+    return `${dayPad} ${mName} ${shortYear}`;
   }
   const parsedDate = new Date(trimmed);
   if (!isNaN(parsedDate.getTime())) {
-    const dayNum = parsedDate.getDate();
+    const dayPad = String(parsedDate.getDate()).padStart(2, '0');
     const mName = SHORT_MONTH_NAMES[parsedDate.getMonth()] || 'Jan';
-    const year = parsedDate.getFullYear();
-    return `${dayNum} ${mName} ${year}`;
+    const shortYear = String(parsedDate.getFullYear()).slice(2);
+    return `${dayPad} ${mName} ${shortYear}`;
   }
   return trimmed.replace(/[\/-]/g, ' ');
 };

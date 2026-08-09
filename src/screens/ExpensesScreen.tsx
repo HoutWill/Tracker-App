@@ -7,7 +7,7 @@ import { TripFolderBar } from '../components/TripFolderBar';
 import { ArtPresetGrid } from '../components/ArtPresetGrid';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { EXPENSE_QUICK_PRESETS } from '../constants/presets';
-import { formatCurrency, StorageService, getTodayDateString, getStartOfWeekDateString, getEndOfWeekDateString } from '../services/storageService';
+import { formatCurrency, StorageService, getTodayDateString, getStartOfWeekDateString, getEndOfWeekDateString, formatCleanDate } from '../services/storageService';
 import { PaymentMethod, QuickPreset, BudgetPeriod } from '../types';
 import { Plus, Zap, TrendingUp, Filter, CheckCircle2, Layers, SearchX, X, Check, ArrowDownRight, Trash2, Target, Edit3, CreditCard, PiggyBank, Calendar, ChevronDown, Hash, Award, Eye, EyeOff, Wallet } from 'lucide-react';
 
@@ -356,7 +356,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
         {/* Top Row: Period Title (Left) | Interactive Month & Date Picker (Right) */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
-            {selectedDateFilter ? `Date: ${selectedDateFilter}` : 'This month'}
+            {selectedDateFilter ? `Date: ${formatCleanDate(selectedDateFilter)}` : 'This month'}
           </span>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -376,8 +376,8 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                 <Calendar size={13} color={selectedDateFilter ? '#4A99E9' : 'var(--text-secondary)'} />
                 <span>
                   {selectedDateFilter
-                    ? selectedDateFilter
-                    : new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}
+                    ? formatCleanDate(selectedDateFilter)
+                    : new Date().toLocaleString('en-US', { month: 'short', year: '2-digit' })}
                 </span>
               </div>
               <input
