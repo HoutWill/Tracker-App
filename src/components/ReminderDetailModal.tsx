@@ -4,6 +4,7 @@ import { useReminders } from '../context/ReminderContext';
 import { formatCleanDate } from '../services/storageService';
 import { triggerHaptic } from '../services/soundService';
 import { X, Bell, Calendar, Clock, CheckSquare, Square, Trash2, Tag, Share2, Edit3, Save, CheckCircle2, Circle, Plus, MoreHorizontal } from 'lucide-react';
+import { RichTextNotesEditor, renderRichFormattedText } from './RichTextNotesEditor';
 import { syncToAppleCalendar, shareToAppleReminders } from '../services/calendarSyncService';
 
 interface ReminderDetailModalProps {
@@ -324,23 +325,11 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
 
             <div>
               <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Notes</label>
-              <textarea
+              <RichTextNotesEditor
                 value={editNotes}
-                onChange={e => setEditNotes(e.target.value)}
-                rows={3}
+                onChange={setEditNotes}
                 placeholder="Description or notes..."
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: '10px',
-                  backgroundColor: 'var(--pill-bg)',
-                  border: '1px solid var(--border-glass)',
-                  color: 'var(--text-primary)',
-                  fontSize: '12px',
-                  outline: 'none',
-                  resize: 'none',
-                  boxSizing: 'border-box',
-                }}
+                rows={3}
               />
             </div>
 
@@ -428,10 +417,10 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
               </div>
             </div>
 
-            {/* Description / Notes Section */}
+            {/* Description / Notes Section with Rich Formatting */}
             {reminder.notes && (
-              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5', padding: '12px 14px', borderRadius: '14px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)' }}>
-                {reminder.notes}
+              <div style={{ padding: '12px 14px', borderRadius: '14px', backgroundColor: 'var(--pill-bg)', border: '1px solid var(--border-glass)' }}>
+                {renderRichFormattedText(reminder.notes)}
               </div>
             )}
 

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useReminders } from '../context/ReminderContext';
+import { renderRichFormattedText } from '../components/RichTextNotesEditor';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { getTodayDateString, formatCleanDate, StorageService } from '../services/storageService';
 import { ReminderDetailModal } from '../components/ReminderDetailModal';
@@ -965,9 +966,9 @@ export const PlannerScreen: React.FC = () => {
                 )}
               </div>
 
-              {/* Middle Row: Description/Notes */}
+              {/* Middle Row: Description/Notes with Rich Text Formatting */}
               {r.notes && (
-                <p
+                <div
                   style={{
                     fontSize: '12px',
                     color: 'var(--text-secondary)',
@@ -976,8 +977,8 @@ export const PlannerScreen: React.FC = () => {
                     paddingLeft: '30px',
                   }}
                 >
-                  {r.notes}
-                </p>
+                  {renderRichFormattedText(r.notes)}
+                </div>
               )}
 
               {/* Bottom Row: Date & Category Pill (Left), Info & Delete Icons (Right) */}

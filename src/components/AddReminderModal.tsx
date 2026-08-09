@@ -3,6 +3,7 @@ import { useReminders } from '../context/ReminderContext';
 import { getTodayDateString } from '../services/storageService';
 import { ReminderCategory } from '../types';
 import { X, Bell, Check, Calendar, Clock, AlertCircle, Mic, Square } from 'lucide-react';
+import { RichTextNotesEditor } from './RichTextNotesEditor';
 import { syncToAppleCalendar } from '../services/calendarSyncService';
 import { startVoiceRecognition } from '../services/speechService';
 
@@ -243,23 +244,12 @@ export const AddReminderModal: React.FC = () => {
               <span>{activeField === 'notes' ? 'Listening' : 'Voice'}</span>
             </button>
           </div>
-          <textarea
+          <RichTextNotesEditor
             value={notes}
-            onChange={e => setNotes(e.target.value)}
+            onChange={setNotes}
             placeholder={activeField === 'notes' ? 'Listening...' : 'Details'}
-            rows={2}
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: '14px',
-              border: activeField === 'notes' ? '1.5px solid #EC668C' : '1px solid var(--border-glass)',
-              backgroundColor: 'var(--pill-bg)',
-              color: 'var(--text-primary)',
-              fontSize: '13px',
-              outline: 'none',
-              resize: 'none',
-              boxSizing: 'border-box',
-            }}
+            rows={3}
+            activeVoiceField={activeField === 'notes'}
           />
         </div>
 
