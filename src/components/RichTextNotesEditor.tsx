@@ -29,12 +29,35 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
   const savedSelectionRef = useRef<Range | null>(null);
   const isInternalChange = useRef<boolean>(false);
 
+  const [activeFormats, setActiveFormats] = useState({
+    bold: false,
+    italic: false,
+    underline: false,
+    strikeThrough: false,
+    unorderedList: false,
+  });
+
+  const checkActiveFormats = () => {
+    try {
+      if (typeof document !== 'undefined') {
+        setActiveFormats({
+          bold: document.queryCommandState('bold'),
+          italic: document.queryCommandState('italic'),
+          underline: document.queryCommandState('underline'),
+          strikeThrough: document.queryCommandState('strikeThrough'),
+          unorderedList: document.queryCommandState('insertUnorderedList'),
+        });
+      }
+    } catch (e) {}
+  };
+
   // Save selection before clicking toolbar items
   const saveSelection = () => {
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0 && editorRef.current && editorRef.current.contains(sel.anchorNode)) {
       savedSelectionRef.current = sel.getRangeAt(0).cloneRange();
     }
+    checkActiveFormats();
   };
 
   const restoreSelection = () => {
@@ -61,6 +84,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
       isInternalChange.current = true;
       const html = editorRef.current.innerHTML;
       onChange(html === '<br>' ? '' : html);
+      checkActiveFormats();
     }
   };
 
@@ -71,6 +95,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
       document.execCommand(command, false, valueArg);
       saveSelection();
       handleInput();
+      checkActiveFormats();
     }
   };
 
@@ -85,6 +110,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
       }
       saveSelection();
       handleInput();
+      checkActiveFormats();
     }
   };
 
@@ -100,7 +126,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
       }}
     >
-      {/* 100% Solid & Reliable Formatting Toolbar */}
+      {/* 100% Solid & Reliable Formatting Toolbar with Active Indicators */}
       <div
         style={{
           display: 'flex',
@@ -120,12 +146,13 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
           style={{
             padding: '5px 7px',
             borderRadius: '6px',
-            border: 'none',
-            backgroundColor: 'transparent',
-            color: 'var(--text-primary)',
+            border: activeFormats.bold ? '1px solid rgba(74, 153, 233, 0.4)' : '1px solid transparent',
+            backgroundColor: activeFormats.bold ? 'rgba(74, 153, 233, 0.22)' : 'transparent',
+            color: activeFormats.bold ? '#4A99E9' : 'var(--text-primary)',
             fontSize: '12px',
             fontWeight: 800,
             cursor: 'pointer',
+            transition: 'all 0.15s ease',
           }}
           title="Bold"
         >
@@ -139,12 +166,13 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
           style={{
             padding: '5px 7px',
             borderRadius: '6px',
-            border: 'none',
-            backgroundColor: 'transparent',
-            color: 'var(--text-primary)',
+            border: activeFormats.italic ? '1px solid rgba(74, 153, 233, 0.4)' : '1px solid transparent',
+            backgroundColor: activeFormats.italic ? 'rgba(74, 153, 233, 0.22)' : 'transparent',
+            color: activeFormats.italic ? '#4A99E9' : 'var(--text-primary)',
             fontSize: '12px',
             fontWeight: 800,
             cursor: 'pointer',
+            transition: 'all 0.15s ease',
           }}
           title="Italic"
         >
@@ -158,12 +186,13 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
           style={{
             padding: '5px 7px',
             borderRadius: '6px',
-            border: 'none',
-            backgroundColor: 'transparent',
-            color: 'var(--text-primary)',
+            border: activeFormats.underline ? '1px solid rgba(74, 153, 233, 0.4)' : '1px solid transparent',
+            backgroundColor: activeFormats.underline ? 'rgba(74, 153, 233, 0.22)' : 'transparent',
+            color: activeFormats.underline ? '#4A99E9' : 'var(--text-primary)',
             fontSize: '12px',
             fontWeight: 800,
             cursor: 'pointer',
+            transition: 'all 0.15s ease',
           }}
           title="Underline"
         >
@@ -177,12 +206,13 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
           style={{
             padding: '5px 7px',
             borderRadius: '6px',
-            border: 'none',
-            backgroundColor: 'transparent',
-            color: 'var(--text-primary)',
+            border: activeFormats.strikeThrough ? '1px solid rgba(74, 153, 233, 0.4)' : '1px solid transparent',
+            backgroundColor: activeFormats.strikeThrough ? 'rgba(74, 153, 233, 0.22)' : 'transparent',
+            color: activeFormats.strikeThrough ? '#4A99E9' : 'var(--text-primary)',
             fontSize: '12px',
             fontWeight: 800,
             cursor: 'pointer',
+            transition: 'all 0.15s ease',
           }}
           title="Strikethrough"
         >
@@ -198,7 +228,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
           style={{
             padding: '5px 7px',
             borderRadius: '6px',
-            border: 'none',
+            border: '1px solid transparent',
             backgroundColor: 'transparent',
             color: 'var(--text-primary)',
             fontSize: '11px',
@@ -212,7 +242,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
 
         <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--border-glass)', margin: '0 2px' }} />
 
-        {/* Direct 1-Tap Inline Color Chips (No glitchy popover) */}
+        {/* Direct 1-Tap Inline Color Chips */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
           {COLOR_PALETTE.map(c => (
             <button
@@ -247,10 +277,11 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
           style={{
             padding: '5px 7px',
             borderRadius: '6px',
-            border: 'none',
-            backgroundColor: 'transparent',
-            color: 'var(--text-primary)',
+            border: activeFormats.unorderedList ? '1px solid rgba(74, 153, 233, 0.4)' : '1px solid transparent',
+            backgroundColor: activeFormats.unorderedList ? 'rgba(74, 153, 233, 0.22)' : 'transparent',
+            color: activeFormats.unorderedList ? '#4A99E9' : 'var(--text-primary)',
             cursor: 'pointer',
+            transition: 'all 0.15s ease',
           }}
           title="Bullet List"
         >
@@ -264,7 +295,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
           style={{
             padding: '5px 7px',
             borderRadius: '6px',
-            border: 'none',
+            border: '1px solid transparent',
             backgroundColor: 'transparent',
             color: 'var(--text-primary)',
             cursor: 'pointer',
@@ -281,7 +312,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
           style={{
             padding: '5px 7px',
             borderRadius: '6px',
-            border: 'none',
+            border: '1px solid transparent',
             backgroundColor: 'transparent',
             color: 'var(--text-muted)',
             cursor: 'pointer',
