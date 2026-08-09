@@ -293,7 +293,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
       </div>
 
       {/* Visual ContentEditable Area */}
-      <div style={{ position: 'relative', width: '100%', minHeight: `${rows * 24}px` }}>
+      <div style={{ position: 'relative', width: '100%', minHeight: `${Math.max(rows * 24, 130)}px` }}>
         {(!value || value === '<br>' || value.trim() === '') && (
           <div
             style={{
@@ -319,7 +319,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
           onMouseUp={saveSelection}
           style={{
             width: '100%',
-            minHeight: `${rows * 24}px`,
+            minHeight: `${Math.max(rows * 24, 130)}px`,
             padding: '10px 14px',
             backgroundColor: 'transparent',
             color: 'var(--text-primary)',

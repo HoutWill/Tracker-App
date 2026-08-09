@@ -248,7 +248,7 @@ export const AddReminderModal: React.FC = () => {
             value={notes}
             onChange={setNotes}
             placeholder={activeField === 'notes' ? 'Listening...' : 'Details'}
-            rows={3}
+            rows={5}
             activeVoiceField={activeField === 'notes'}
           />
         </div>
