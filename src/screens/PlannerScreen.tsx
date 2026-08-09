@@ -219,7 +219,24 @@ export const PlannerScreen: React.FC = () => {
     })
     .sort((a, b) => (a.completed === b.completed ? b.createdAt - a.createdAt : a.completed ? 1 : -1));
 
-  const completionPct = reminders.length > 0 ? Math.round((completedReminders.length / reminders.length) * 100) : 0;
+  // Dynamic scope reminders calculation for Hero Progress Card & date filtering
+  const activeScopeReminders = reminders.filter(r => {
+    if (selectedDayFilter) return r.dueDate === selectedDayFilter;
+    if (periodTab === 'DAILY') return r.dueDate === today;
+    if (periodTab === 'WEEKLY') return isThisWeek(r.dueDate);
+    if (periodTab === 'MONTHLY') return r.dueDate.startsWith(today.slice(0, 7));
+    if (periodTab === 'YEARLY') return r.dueDate.startsWith(today.slice(0, 4));
+    return true;
+  });
+
+  const activeDoneCount = activeScopeReminders.filter(r => r.completed).length;
+  const activeUrgentCount = activeScopeReminders.filter(r => r.level === 'URGENT' && !r.completed).length;
+  const activeFlaggedCount = activeScopeReminders.filter(r => (r.priority === 'HIGH' || r.level === 'FLAGGED') && !r.completed).length;
+  const activeRemainingCount = activeScopeReminders.length - activeDoneCount;
+
+  const completionPct = activeScopeReminders.length > 0
+    ? Math.round((activeDoneCount / activeScopeReminders.length) * 100)
+    : 0;
 
   // Calendar Math inside Planner
   const year = calViewDate.getFullYear();
@@ -361,75 +378,55 @@ export const PlannerScreen: React.FC = () => {
 
             {/* Right Header & 4 Count Bento Tiles */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                <div>
-                  <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.2px' }}>
-                    {completionPct >= 100 ? 'Completed!' : completionPct >= 50 ? 'Good progress!' : 'Keep going'}
-                  </h4>
-                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '1px 0 0 0' }}>
-                    Planner status for this cycle
-                  </p>
-                </div>
-                {/* Interactive Date Dropdown Capsule Pill matching user screenshot (Image 2) */}
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                  <label style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }} title="Select Date">
-                    <input
-                      type="date"
-                      value={selectedDayFilter || today}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          triggerHaptic(10);
-                          setSelectedDayFilter(e.target.value);
-                        }
-                      }}
-                      style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
-                      id="hero-planner-date-dropdown-input"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '10px' }}>
+                {/* Interactive Date Dropdown Capsule Pill */}
+                <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                  <button
+                    type="button"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '5px 12px',
+                      borderRadius: '9999px',
+                      backgroundColor: selectedDayFilter ? 'rgba(74, 153, 233, 0.18)' : 'var(--pill-bg)',
+                      border: selectedDayFilter ? '1px solid rgba(74, 153, 233, 0.4)' : '1px solid var(--border-glass)',
+                      color: selectedDayFilter ? '#4A99E9' : 'var(--text-primary)',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <Calendar size={13} color={selectedDayFilter ? '#4A99E9' : 'var(--text-secondary)'} />
+                    <span>{formatCleanDate(selectedDayFilter || today)}</span>
+                    <ChevronDown size={13} color={selectedDayFilter ? '#4A99E9' : 'var(--text-secondary)'} />
+                  </button>
+                  <input
+                    type="date"
+                    value={selectedDayFilter || today}
+                    onChange={(e) => {
+                      if (e.target.value) {
                         triggerHaptic(10);
-                        const el = document.getElementById('hero-planner-date-dropdown-input') as HTMLInputElement | null;
-                        if (el) {
-                          if (typeof (el as any).showPicker === 'function') {
-                            try {
-                              (el as any).showPicker();
-                            } catch (err) {
-                              el.click();
-                            }
-                          } else {
-                            el.click();
-                          }
-                        }
-                      }}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '5px 12px',
-                        borderRadius: '9999px',
-                        backgroundColor: selectedDayFilter ? 'rgba(74, 153, 233, 0.18)' : 'var(--pill-bg)',
-                        border: selectedDayFilter ? '1px solid rgba(74, 153, 233, 0.4)' : '1px solid var(--border-glass)',
-                        color: selectedDayFilter ? '#4A99E9' : 'var(--text-primary)',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                        transition: 'all 0.15s ease',
-                      }}
-                    >
-                      <Calendar size={13} color={selectedDayFilter ? '#4A99E9' : 'var(--text-secondary)'} />
-                      <span>
-                        {(() => {
-                          const target = selectedDayFilter || today;
-                          const [y, m, d] = target.split('-').map(Number);
-                          const dateObj = new Date(y, m - 1, d);
-                          return dateObj.toLocaleString('en-US', { month: 'short' }) + ' ' + String(d).padStart(2, '0');
-                        })()}
-                      </span>
-                      <ChevronDown size={13} color={selectedDayFilter ? '#4A99E9' : 'var(--text-secondary)'} />
-                    </button>
-                  </label>
+                        setSelectedDayFilter(e.target.value);
+                      }
+                    }}
+                    onClick={(e) => {
+                      try { (e.currentTarget as any).showPicker?.(); } catch (err) {}
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: 'pointer',
+                      zIndex: 10,
+                    }}
+                    title="Filter by Date"
+                  />
 
                   {selectedDayFilter && (
                     <button
@@ -447,6 +444,7 @@ export const PlannerScreen: React.FC = () => {
                         fontSize: '11px',
                         fontWeight: 700,
                         cursor: 'pointer',
+                        zIndex: 20,
                       }}
                       title="Show All Dates"
                     >
@@ -459,19 +457,19 @@ export const PlannerScreen: React.FC = () => {
               {/* 4 Summary Count Bento Cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                 <div style={{ padding: '6px 2px', borderRadius: '10px', backgroundColor: 'rgba(74, 153, 233, 0.08)', border: '1px solid rgba(74, 153, 233, 0.2)', textAlign: 'center' }}>
-                  <div className="tabular-nums" style={{ fontSize: '15px', fontWeight: 900, color: '#4A99E9' }}>{reminders.length}</div>
+                  <div className="tabular-nums" style={{ fontSize: '15px', fontWeight: 900, color: '#4A99E9' }}>{activeScopeReminders.length}</div>
                   <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-secondary)', marginTop: '1px' }}>Total</div>
                 </div>
                 <div style={{ padding: '6px 2px', borderRadius: '10px', backgroundColor: 'rgba(48, 209, 88, 0.08)', border: '1px solid rgba(48, 209, 88, 0.2)', textAlign: 'center' }}>
-                  <div className="tabular-nums" style={{ fontSize: '15px', fontWeight: 900, color: '#30D158' }}>{completedReminders.length}</div>
+                  <div className="tabular-nums" style={{ fontSize: '15px', fontWeight: 900, color: '#30D158' }}>{activeDoneCount}</div>
                   <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-secondary)', marginTop: '1px' }}>Done</div>
                 </div>
                 <div style={{ padding: '6px 2px', borderRadius: '10px', backgroundColor: 'rgba(236, 102, 140, 0.08)', border: '1px solid rgba(236, 102, 140, 0.2)', textAlign: 'center' }}>
-                  <div className="tabular-nums" style={{ fontSize: '15px', fontWeight: 900, color: '#EC668C' }}>{urgentReminders.length}</div>
+                  <div className="tabular-nums" style={{ fontSize: '15px', fontWeight: 900, color: '#EC668C' }}>{activeUrgentCount}</div>
                   <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-secondary)', marginTop: '1px' }}>Urgent</div>
                 </div>
                 <div style={{ padding: '6px 2px', borderRadius: '10px', backgroundColor: 'rgba(243, 168, 91, 0.08)', border: '1px solid rgba(243, 168, 91, 0.2)', textAlign: 'center' }}>
-                  <div className="tabular-nums" style={{ fontSize: '15px', fontWeight: 900, color: '#F3A85B' }}>{flaggedReminders.length}</div>
+                  <div className="tabular-nums" style={{ fontSize: '15px', fontWeight: 900, color: '#F3A85B' }}>{activeFlaggedCount}</div>
                   <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-secondary)', marginTop: '1px' }}>Flagged</div>
                 </div>
               </div>
@@ -486,7 +484,7 @@ export const PlannerScreen: React.FC = () => {
           {/* Sub Footer Row: Remaining count & Keep it up! */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-secondary)' }}>
             <span style={{ fontWeight: 600 }}>
-              {reminders.length - completedReminders.length} remaining
+              {activeRemainingCount} remaining
             </span>
             <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>
               Keep it up!
