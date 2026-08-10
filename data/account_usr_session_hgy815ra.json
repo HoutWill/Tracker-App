@@ -32,8 +32,9 @@
       "alertTime": "23:34",
       "alertEnabled": true,
       "id": "rem-1786293008805",
-      "completed": true,
-      "createdAt": 1786293008805
+      "completed": false,
+      "createdAt": 1786293008805,
+      "notifiedAt": 1786342799336
     },
     {
       "title": "Gym",
@@ -49,7 +50,8 @@
       "alertEnabled": true,
       "id": "rem-1786262144302",
       "completed": true,
-      "createdAt": 1786262144302
+      "createdAt": 1786262144302,
+      "notifiedAt": 1786342799336
     }
   ],
   "trips": [],
@@ -64,5 +66,5 @@
     "MONTHLY": 500
   },
   "cycleHistory": [],
-  "updatedAt": 1786296926801
+  "updatedAt": 1786342802055
 }

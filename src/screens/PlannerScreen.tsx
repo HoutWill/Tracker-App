@@ -46,6 +46,9 @@ import {
   Briefcase,
   Droplets,
   ShoppingCart,
+  Sun,
+  SunMedium,
+  Moon,
 } from 'lucide-react';
 
 type FilterTab = 'TODAY' | 'SCHEDULED' | 'ALL' | 'FLAGGED' | 'URGENT' | 'COMPLETED';
@@ -160,6 +163,8 @@ export const PlannerScreen: React.FC = () => {
   // Planner Calendar View State
   const [calViewDate, setCalViewDate] = useState<Date>(new Date());
   const [calSelectedDate, setCalSelectedDate] = useState<string>(getTodayDateString());
+  const [calTimePeriod, setCalTimePeriod] = useState<'ALL' | 'MORNING' | 'AFTERNOON' | 'EVENING'>('ALL');
+  const [timelineViewMode, setTimelineViewMode] = useState<'ACTIVE' | 'FULL'>('ACTIVE');
   const [selectedDayFilter, setSelectedDayFilter] = useState<string | null>(null);
   const [showSearchInput, setShowSearchInput] = useState<boolean>(false);
   const [isPlannerDayModalOpen, setIsPlannerDayModalOpen] = useState<boolean>(false);
@@ -268,6 +273,15 @@ export const PlannerScreen: React.FC = () => {
   }
 
   const selectedCalReminders = reminders.filter(r => r.dueDate === calSelectedDate);
+
+  const getReminderPeriod = (r: ReminderItem): 'MORNING' | 'AFTERNOON' | 'EVENING' => {
+    if (!r.dueTime) return 'MORNING';
+    const hour = parseInt(r.dueTime.split(':')[0], 10);
+    if (isNaN(hour)) return 'MORNING';
+    if (hour < 12) return 'MORNING';
+    if (hour < 17) return 'AFTERNOON';
+    return 'EVENING';
+  };
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
@@ -1211,80 +1225,407 @@ export const PlannerScreen: React.FC = () => {
             })}
           </div>
 
-          {/* 3. Vertical Timeline Agenda View (Bento Event Cards Column) */}
-          <div className="glass-panel" style={{ padding: '16px', borderRadius: '20px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-glass)' }}>
-            
-            {/* Current Time Indicator Line Banner */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 800, padding: '3px 8px', borderRadius: '12px', backgroundColor: 'var(--text-primary)', color: 'var(--bg-main)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
-                {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-              <div style={{ flex: 1, height: '2px', backgroundColor: 'var(--text-primary)', borderRadius: '1px', opacity: 0.3 }} />
+          {/* 3. Smart 24-Hour Timeline View Separated into Morning, Afternoon & Evening */}
+          <div
+            className="glass-panel"
+            style={{
+              padding: '16px 12px',
+              borderRadius: '24px',
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-glass)',
+              boxShadow: 'var(--shadow-card)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+            }}
+          >
+            {/* Top Control Bar: Schedule Title (Left) + View Mode Toggle Pills (Right) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px', marginBottom: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Clock size={16} color="var(--accent)" />
+                <h4 style={{ fontSize: '15px', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.2px' }}>
+                  Schedule
+                </h4>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  ({selectedCalReminders.length})
+                </span>
+              </div>
+
+              {/* Toggle Pills: Active vs Full 24h */}
+              <div style={{ display: 'flex', gap: '4px', backgroundColor: 'var(--pill-bg)', padding: '3px', borderRadius: '12px', border: '1px solid var(--border-glass)' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic(10);
+                    setTimelineViewMode('ACTIVE');
+                  }}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '9px',
+                    border: 'none',
+                    backgroundColor: timelineViewMode === 'ACTIVE' ? '#40C4AA' : 'transparent',
+                    color: timelineViewMode === 'ACTIVE' ? '#FFFFFF' : 'var(--text-secondary)',
+                    fontSize: '11px',
+                    fontWeight: timelineViewMode === 'ACTIVE' ? 800 : 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                  title="Show only active task hours"
+                >
+                  Active
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic(10);
+                    setTimelineViewMode('FULL');
+                  }}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '9px',
+                    border: 'none',
+                    backgroundColor: timelineViewMode === 'FULL' ? '#40C4AA' : 'transparent',
+                    color: timelineViewMode === 'FULL' ? '#FFFFFF' : 'var(--text-secondary)',
+                    fontSize: '11px',
+                    fontWeight: timelineViewMode === 'FULL' ? 800 : 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                  title="Show full 24-hour timeline"
+                >
+                  Full
+                </button>
+              </div>
             </div>
 
-            {/* Agenda Event Cards */}
-            {selectedCalReminders.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {selectedCalReminders.map((r, idx) => {
-                  const cardColors = [
-                    { bg: 'var(--pill-bg)', text: 'var(--text-primary)', border: '1px solid var(--border-glass)' },
-                    { bg: 'rgba(243, 168, 91, 0.18)', text: '#F3A85B', border: '1px solid rgba(243, 168, 91, 0.35)' },
-                    { bg: 'rgba(74, 153, 233, 0.18)', text: '#4A99E9', border: '1px solid rgba(74, 153, 233, 0.35)' },
-                    { bg: 'rgba(236, 102, 140, 0.18)', text: '#EC668C', border: '1px solid rgba(236, 102, 140, 0.35)' },
-                  ];
-                  const cTheme = r.level === 'URGENT' ? cardColors[3] : r.priority === 'HIGH' ? cardColors[1] : cardColors[idx % 3];
+            {(() => {
+              const now = new Date();
+              const currentHour = now.getHours();
+              const currentMin = now.getMinutes();
+              const currentMinStr = currentMin < 10 ? '0' + currentMin : '' + currentMin;
+              const isTodaySelected = calSelectedDate === today;
 
-                  return (
+              const currentAmpm = currentHour >= 12 ? 'PM' : 'AM';
+              const currentDisplayHour = currentHour % 12 === 0 ? 12 : currentHour % 12;
+              const currentTimePillText = `${currentDisplayHour}:${currentMinStr} ${currentAmpm}`;
+
+              const formatShortHourLabel = (h: number): string => {
+                if (h === 0) return '12 AM';
+                if (h < 12) return `${h} AM`;
+                if (h === 12) return '12 PM';
+                return `${h - 12} PM`;
+              };
+
+              const formatShortTimeRange = (dueTime?: string, endTime?: string): string => {
+                if (!dueTime) return '9:00 AM';
+                const formatTime = (tStr: string) => {
+                  const [hRaw, mRaw] = tStr.split(':').map(Number);
+                  const ampm = hRaw >= 12 ? 'PM' : 'AM';
+                  const h = hRaw % 12 === 0 ? 12 : hRaw % 12;
+                  const m = mRaw < 10 ? '0' + mRaw : '' + mRaw;
+                  return `${h}:${m} ${ampm}`;
+                };
+                const startFormatted = formatTime(dueTime);
+                if (endTime && endTime.trim() !== '') {
+                  return `${startFormatted} - ${formatTime(endTime)}`;
+                }
+                return startFormatted;
+              };
+
+              // Full range sections (0..23)
+              const allSections = [
+                {
+                  key: 'MORNING',
+                  title: 'Morning',
+                  subtitle: '12 AM – 11 AM',
+                  icon: Sun,
+                  color: '#F59E0B',
+                  bgColor: 'rgba(245, 158, 11, 0.1)',
+                  hours: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                },
+                {
+                  key: 'AFTERNOON',
+                  title: 'Afternoon',
+                  subtitle: '12 PM – 4 PM',
+                  icon: SunMedium,
+                  color: '#3B82F6',
+                  bgColor: 'rgba(59, 130, 246, 0.1)',
+                  hours: [12, 13, 14, 15, 16],
+                },
+                {
+                  key: 'EVENING',
+                  title: 'Evening',
+                  subtitle: '5 PM – 11 PM',
+                  icon: Moon,
+                  color: '#8B5CF6',
+                  bgColor: 'rgba(139, 92, 246, 0.1)',
+                  hours: [17, 18, 19, 20, 21, 22, 23],
+                },
+              ];
+
+              // In ACTIVE mode, filter each section's hours to show only hours with tasks or current time
+              const renderedSections = allSections.map(sec => {
+                const targetHours = timelineViewMode === 'FULL'
+                  ? sec.hours
+                  : sec.hours.filter(h => {
+                      const hasTasks = selectedCalReminders.some(r => {
+                        if (!r.dueTime) return h === 9;
+                        const rHour = parseInt(r.dueTime.split(':')[0], 10);
+                        return rHour === h;
+                      });
+                      const isCurrent = isTodaySelected && currentHour === h;
+                      return hasTasks || isCurrent;
+                    });
+
+                return {
+                  ...sec,
+                  visibleHours: targetHours,
+                };
+              }).filter(sec => timelineViewMode === 'FULL' || sec.visibleHours.length > 0);
+
+              const totalVisibleHoursCount = renderedSections.reduce((sum, sec) => sum + sec.visibleHours.length, 0);
+
+              if (totalVisibleHoursCount === 0) {
+                return (
+                  <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                    No tasks scheduled for {formatCleanDate(calSelectedDate)}. Tap + to add a reminder!
+                  </div>
+                );
+              }
+
+              return renderedSections.map(sec => {
+                const SecIcon = sec.icon;
+
+                const sectionEventsCount = selectedCalReminders.filter(r => {
+                  if (!r.dueTime) return sec.key === 'MORNING';
+                  const rHour = parseInt(r.dueTime.split(':')[0], 10);
+                  return sec.hours.includes(rHour);
+                }).length;
+
+                return (
+                  <div key={sec.key} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* Section Divider Header */}
                     <div
-                      key={r.id}
-                      onClick={() => {
-                        triggerHaptic(12);
-                        setSelectedReminderForDetail(r);
-                      }}
                       style={{
-                        padding: '14px 16px',
-                        borderRadius: '18px',
-                        backgroundColor: cTheme.bg,
-                        border: cTheme.border,
-                        color: cTheme.text,
-                        cursor: 'pointer',
-                        boxShadow: 'var(--shadow-card)',
-                        transition: 'transform 0.15s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '6px 10px',
+                        borderRadius: '14px',
+                        backgroundColor: sec.bgColor,
+                        border: `1px solid ${hexToRgba(sec.color, 0.25)}`,
+                        marginBottom: '4px',
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: 800, margin: 0, color: cTheme.text }}>{r.title}</h4>
-                        <button type="button" style={{ background: 'none', border: 'none', color: cTheme.text, opacity: 0.7, cursor: 'pointer' }}>
-                          <MoreHorizontal size={16} />
-                        </button>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', opacity: 0.85, marginBottom: '8px' }}>
-                        <Clock size={13} />
-                        <span>{r.dueTime ? r.dueTime : '09:00 - 10:30'}</span>
-                      </div>
-
-                      {r.notes && (
-                        <div style={{ fontSize: '12px', opacity: 0.85, margin: '0 0 8px 0', lineHeight: 1.3 }}>
-                          {renderRichFormattedText(r.notes)}
-                        </div>
-                      )}
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', opacity: 0.85 }}>
-                        <span>Category:</span>
-                        <span style={{ fontWeight: 700, textTransform: 'capitalize' }}>
-                          {r.category ? r.category.toLowerCase() : 'Task'}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <SecIcon size={15} color={sec.color} />
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: sec.color, letterSpacing: '-0.2px' }}>
+                          {sec.title}
+                        </span>
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                          ({sec.subtitle})
                         </span>
                       </div>
+
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          padding: '2px 8px',
+                          borderRadius: '9999px',
+                          backgroundColor: 'var(--pill-bg)',
+                          color: sec.color,
+                          border: `1px solid ${hexToRgba(sec.color, 0.3)}`,
+                        }}
+                      >
+                        {sectionEventsCount} Tasks
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
-                No tasks scheduled for {formatCleanDate(calSelectedDate)}. Tap + to add a reminder!
-              </div>
-            )}
+
+                    {/* Hourly Grid Rows */}
+                    {sec.visibleHours.map(h => {
+                      const hourLabel = formatShortHourLabel(h);
+
+                      const hourEvents = selectedCalReminders.filter(r => {
+                        if (!r.dueTime) return h === 9;
+                        const rHour = parseInt(r.dueTime.split(':')[0], 10);
+                        return rHour === h;
+                      }).sort((a, b) => (a.dueTime || '').localeCompare(b.dueTime || ''));
+
+                      const isCurrentHourSlot = isTodaySelected && currentHour === h;
+
+                      return (
+                        <div
+                          key={h}
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '52px 1fr',
+                            columnGap: '10px',
+                            alignItems: 'flex-start',
+                            minHeight: hourEvents.length > 0 ? 'auto' : '44px',
+                            position: 'relative',
+                            padding: '3px 0',
+                          }}
+                        >
+                          {/* Left Column: Short 12h Label (e.g. "9 AM", "12 PM", "2 PM") */}
+                          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                            <span
+                              style={{
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                color: 'var(--text-secondary)',
+                                whiteSpace: 'nowrap',
+                                letterSpacing: '-0.2px',
+                                marginTop: '2px',
+                              }}
+                            >
+                              {hourLabel}
+                            </span>
+                          </div>
+
+                          {/* Right Column: Guideline Line & Bento Cards */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', paddingTop: '2px' }}>
+                            {/* Horizontal Guideline Line */}
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: '10px',
+                                left: 0,
+                                right: 0,
+                                height: '1px',
+                                backgroundColor: 'var(--border-glass)',
+                                zIndex: 1,
+                              }}
+                            />
+
+                            {/* Current Time Capsule Pill Indicator Line */}
+                            {isCurrentHourSlot && (
+                              <div
+                                style={{
+                                  position: 'relative',
+                                  zIndex: 10,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  marginTop: '-4px',
+                                  marginBottom: '6px',
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontSize: '10px',
+                                    fontWeight: 900,
+                                    padding: '3px 8px',
+                                    borderRadius: '9999px',
+                                    backgroundColor: '#FFFFFF',
+                                    color: '#141416',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                                    letterSpacing: '-0.2px',
+                                    flexShrink: 0,
+                                    marginLeft: '-60px',
+                                    zIndex: 12,
+                                  }}
+                                >
+                                  {currentTimePillText}
+                                </span>
+                                <div
+                                  style={{
+                                    flex: 1,
+                                    height: '2px',
+                                    backgroundColor: '#FFFFFF',
+                                    borderRadius: '1px',
+                                    boxShadow: '0 0 6px rgba(255, 255, 255, 0.6)',
+                                  }}
+                                />
+                              </div>
+                            )}
+
+                            {/* Hourly Bento Event Cards */}
+                            {hourEvents.length > 0 ? (
+                              hourEvents.map((r, idx) => {
+                                const cardPalettes = [
+                                  { bg: '#2C2C2E', text: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.12)' },
+                                  { bg: '#F3A85B', text: '#1C1917', border: 'none' },
+                                  { bg: '#4A99E9', text: '#FFFFFF', border: 'none' },
+                                  { bg: '#EC668C', text: '#FFFFFF', border: 'none' },
+                                  { bg: '#ED6C6C', text: '#FFFFFF', border: 'none' },
+                                ];
+                                const theme = r.level === 'URGENT'
+                                  ? cardPalettes[3]
+                                  : r.level === 'FLAGGED'
+                                  ? cardPalettes[1]
+                                  : cardPalettes[idx % cardPalettes.length];
+
+                                const timeDisplay = formatShortTimeRange(r.dueTime, r.endTime);
+
+                                return (
+                                  <div
+                                    key={r.id}
+                                    onClick={() => {
+                                      triggerHaptic(12);
+                                      setSelectedReminderForDetail(r);
+                                    }}
+                                    style={{
+                                      position: 'relative',
+                                      zIndex: 5,
+                                      padding: '14px 16px',
+                                      borderRadius: '20px',
+                                      backgroundColor: theme.bg,
+                                      color: theme.text,
+                                      border: theme.border,
+                                      cursor: 'pointer',
+                                      boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)',
+                                      transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                      <h4 style={{ fontSize: '15px', fontWeight: 800, margin: 0, color: theme.text, letterSpacing: '-0.2px' }}>
+                                        {r.title}
+                                      </h4>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedReminderForDetail(r);
+                                        }}
+                                        style={{ background: 'none', border: 'none', color: theme.text, opacity: 0.8, cursor: 'pointer', padding: 0 }}
+                                      >
+                                        <MoreHorizontal size={16} />
+                                      </button>
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', opacity: 0.9, fontWeight: 700, marginBottom: '6px' }}>
+                                      <Clock size={13} />
+                                      <span>{timeDisplay}</span>
+                                    </div>
+
+                                    {r.notes && (
+                                      <div style={{ fontSize: '12px', opacity: 0.85, margin: '0 0 6px 0', lineHeight: 1.3 }}>
+                                        {renderRichFormattedText(r.notes)}
+                                      </div>
+                                    )}
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', opacity: 0.85 }}>
+                                      <span style={{ fontWeight: 600 }}>Category:</span>
+                                      <span style={{ fontWeight: 800, textTransform: 'capitalize' }}>
+                                        {r.category ? r.category.toLowerCase() : 'Task'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div style={{ height: '18px' }} />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              });
+            })()}
           </div>
         </div>
       )}

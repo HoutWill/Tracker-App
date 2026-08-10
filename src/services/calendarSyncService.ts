@@ -10,13 +10,55 @@ export interface CalendarEventPayload {
   alarmOffsetMinutes?: number;
 }
 
+export const formatDateForICal = (d: Date): string => {
+  const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+  const y = d.getFullYear();
+  const m = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mm = pad(d.getMinutes());
+  const ss = pad(d.getSeconds());
+  return `${y}${m}${day}T${hh}${mm}${ss}`;
+};
+
+export const getEventStartAndEndDates = (event: CalendarEventPayload): { startStr: string; endStr: string } => {
+  const [year, month, day] = (event.dueDate || new Date().toISOString().slice(0, 10)).split('-').map(Number);
+  const [startHour, startMinute] = (event.dueTime || '09:00').split(':').map(Number);
+
+  const startDate = new Date(year, month - 1, day, startHour, startMinute || 0, 0);
+
+  let endDate: Date;
+
+  if (event.endTime && event.endTime.trim() !== '') {
+    const [endHourRaw, endMinute] = event.endTime.split(':').map(Number);
+    let endHour = endHourRaw;
+
+    // Handle 12-hour AM/PM edge case:
+    // If endHour < startHour and endHour < 12, user likely entered a 12-hour format PM time (e.g. 5 for 5:00 PM when start is 12:00)
+    if (endHour < startHour && endHour < 12) {
+      endHour += 12;
+    }
+
+    endDate = new Date(year, month - 1, day, endHour, endMinute || 0, 0);
+
+    // If endDate is still on or before startDate (e.g. crossing midnight to next day), move endDate to next day
+    if (endDate <= startDate) {
+      endDate = new Date(year, month - 1, day + 1, endHourRaw, endMinute || 0, 0);
+    }
+  } else {
+    // Default duration to 1 hour after start time if no end time is specified
+    endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+  }
+
+  return {
+    startStr: formatDateForICal(startDate),
+    endStr: formatDateForICal(endDate),
+  };
+};
+
 export const getGoogleCalendarUrl = (event: CalendarEventPayload): string => {
   try {
-    const [year, month, day] = event.dueDate.split('-').map(Number);
-    const [hour, minute] = (event.dueTime || '09:00').split(':').map(Number);
-    const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
-    const startStr = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
-    const endStr = `${year}${pad(month)}${pad(day)}T${pad(hour + 1)}${pad(minute)}00`;
+    const { startStr, endStr } = getEventStartAndEndDates(event);
     const cleanNotes = (event.notes || '').replace(/<[^>]*>/g, '');
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${startStr}/${endStr}&details=${encodeURIComponent(cleanNotes)}`;
   } catch (e) {
@@ -26,11 +68,7 @@ export const getGoogleCalendarUrl = (event: CalendarEventPayload): string => {
 
 export const getAppleCalendarUrl = (event: CalendarEventPayload): string => {
   try {
-    const [year, month, day] = event.dueDate.split('-').map(Number);
-    const [hour, minute] = (event.dueTime || '09:00').split(':').map(Number);
-    const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
-    const startStr = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
-    const endStr = `${year}${pad(month)}${pad(day)}T${pad(hour + 1)}${pad(minute)}00`;
+    const { startStr, endStr } = getEventStartAndEndDates(event);
     const cleanNotes = (event.notes || '').replace(/<[^>]*>/g, '');
 
     const icsLines = [

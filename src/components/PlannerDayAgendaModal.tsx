@@ -31,6 +31,7 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
   const { reminders, toggleReminder, setIsAddReminderOpen } = useReminders();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [timeFilter, setTimeFilter] = useState<'ALL' | 'MORNING' | 'AFTERNOON' | 'EVENING'>('ALL');
 
   if (!selectedDay) return null;
 
@@ -75,11 +76,15 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
   const anytimeTasks = filteredReminders.filter(r => !r.dueTime);
 
   const sections = [
-    { title: 'Morning', icon: <Sun size={13} style={{ color: '#F59E0B' }} />, items: morningTasks },
-    { title: 'Afternoon', icon: <SunMedium size={13} style={{ color: '#3B82F6' }} />, items: afternoonTasks },
-    { title: 'Evening', icon: <Moon size={13} style={{ color: '#8B5CF6' }} />, items: eveningTasks },
-    { title: 'Anytime', icon: <Clock size={13} style={{ color: 'var(--text-muted)' }} />, items: anytimeTasks },
-  ].filter(s => s.items.length > 0);
+    { key: 'MORNING', title: 'Morning', icon: <Sun size={13} style={{ color: '#F59E0B' }} />, items: morningTasks },
+    { key: 'AFTERNOON', title: 'Afternoon', icon: <SunMedium size={13} style={{ color: '#3B82F6' }} />, items: afternoonTasks },
+    { key: 'EVENING', title: 'Evening', icon: <Moon size={13} style={{ color: '#8B5CF6' }} />, items: eveningTasks },
+    { key: 'ANYTIME', title: 'Anytime', icon: <Clock size={13} style={{ color: 'var(--text-muted)' }} />, items: anytimeTasks },
+  ].filter(s => {
+    if (s.items.length === 0) return false;
+    if (timeFilter !== 'ALL' && s.key !== timeFilter) return false;
+    return true;
+  });
 
   const renderTaskCard = (r: ReminderItem) => {
     return (
@@ -308,7 +313,7 @@ export const PlannerDayAgendaModal: React.FC<PlannerDayAgendaModalProps> = ({
               fontSize: '14px',
               fontWeight: 600,
               color: isToday ? 'var(--accent)' : 'var(--text-primary)',
-              marginBottom: '12px',
+              marginBottom: '14px',
               paddingBottom: '6px',
               borderBottom: '1px solid var(--border-subtle)',
               display: 'flex',
