@@ -34,12 +34,14 @@ export const AddSavingModal: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const num = parseFloat(amount);
-    if (!title.trim() || isNaN(num) || num <= 0) {
-      alert('Please enter a valid deposit title and amount.');
+    const cleanTitle = title.trim().slice(0, 150);
+    if (!cleanTitle || isNaN(num) || num <= 0 || num > 1000000000) {
+      alert('Invalid');
       return;
     }
 
     const cat = categories.find(c => c.id === categoryId) || savingCategories[0];
+    const safeDate = dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? dateStr : getTodayDateString();
 
     // Close modal and reset inputs INSTANTLY for 0ms UI lag
     setTitle('');
@@ -48,7 +50,7 @@ export const AddSavingModal: React.FC = () => {
     setIsAddSavingOpen(false);
 
     addExpense({
-      title: title.trim(),
+      title: cleanTitle,
       amount: num,
       currency: currency,
       type: 'SAVING',
@@ -56,9 +58,9 @@ export const AddSavingModal: React.FC = () => {
       categoryName: cat.name,
       categoryIcon: cat.icon,
       categoryColor: cat.color,
-      date: dateStr,
+      date: safeDate,
       paymentMethod,
-      notes: notes.trim(),
+      notes: notes.trim().slice(0, 500),
       tripId: tripId,
     });
   };

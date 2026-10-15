@@ -99,9 +99,16 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const addReminder = (item: Omit<ReminderItem, 'id' | 'createdAt' | 'completed'>) => {
+    const cleanTitle = (item.title || '').trim();
+    if (!cleanTitle) {
+      console.warn('Empty reminder title rejected');
+      return;
+    }
+
     const newReminder: ReminderItem = {
       ...item,
-      id: 'rem-' + Date.now(),
+      title: cleanTitle.slice(0, 150),
+      id: 'rem-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
       completed: false,
       createdAt: Date.now(),
     };
@@ -118,19 +125,32 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const toggleReminder = (id: string) => {
-    const updated = reminders.map(r => (r.id === id ? { ...r, completed: !r.completed } : r));
+    if (!id || typeof id !== 'string') return;
+    const cleanId = id.trim();
+    const updated = reminders.map(r => (r.id === cleanId ? { ...r, completed: !r.completed, completedAt: !r.completed ? Date.now() : undefined } : r));
     setReminders(updated);
     StorageService.saveReminders(updated);
   };
 
   const updateReminder = (id: string, fields: Partial<ReminderItem>) => {
-    const updated = reminders.map(r => (r.id === id ? { ...r, ...fields } : r));
+    if (!id || typeof id !== 'string') return;
+    const cleanId = id.trim();
+
+    if (fields.title !== undefined) {
+      const cleanTitle = fields.title.trim();
+      if (!cleanTitle) return;
+      fields.title = cleanTitle.slice(0, 150);
+    }
+
+    const updated = reminders.map(r => (r.id === cleanId ? { ...r, ...fields } : r));
     setReminders(updated);
     StorageService.saveReminders(updated);
   };
 
   const deleteReminder = (id: string) => {
-    const updated = reminders.filter(r => r.id !== id);
+    if (!id || typeof id !== 'string') return;
+    const cleanId = id.trim();
+    const updated = reminders.filter(r => r.id !== cleanId);
     setReminders(updated);
     StorageService.saveReminders(updated);
   };

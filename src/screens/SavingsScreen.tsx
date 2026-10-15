@@ -157,8 +157,8 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
     if (!activePreset) return;
 
     const num = parseFloat(presetAmount);
-    if (isNaN(num) || num <= 0) {
-      alert('Please enter a valid amount.');
+    if (isNaN(num) || num <= 0 || num > 1000000000) {
+      alert('Invalid');
       return;
     }
 
@@ -214,8 +214,8 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
   const handleSaveGoal = (e: React.FormEvent) => {
     e.preventDefault();
     const val = parseFloat(customGoalInput);
-    if (isNaN(val) || val <= 0) {
-      alert('Please enter a valid goal amount.');
+    if (isNaN(val) || val <= 0 || val > 1000000000) {
+      alert('Invalid');
       return;
     }
     setSavingGoalTarget(editSavingPeriod, val);
@@ -236,8 +236,9 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
   const handleCreateNewPreset = (e: React.FormEvent) => {
     e.preventDefault();
     const num = parseFloat(newPresetAmount);
-    if (!newPresetTitle.trim() || isNaN(num) || num <= 0) {
-      alert('Please enter a valid title and amount.');
+    const cleanTitle = newPresetTitle.trim().slice(0, 100);
+    if (!cleanTitle || isNaN(num) || num <= 0 || num > 1000000000) {
+      alert('Invalid');
       return;
     }
 
@@ -247,7 +248,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
 
     const newPreset: QuickPreset = {
       id: 'preset-custom-saving-' + Date.now(),
-      title: newPresetTitle.trim(),
+      title: cleanTitle,
       amount: amountUSD,
       currency: newPresetCurrency,
       categoryId: cat.id,

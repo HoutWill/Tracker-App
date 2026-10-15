@@ -36,28 +36,30 @@ export const EditSavingModal: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const num = parseFloat(amount);
-    if (!title.trim() || isNaN(num) || num <= 0) {
-      alert('Please enter a valid title and amount.');
+    const cleanTitle = title.trim().slice(0, 150);
+    if (!cleanTitle || isNaN(num) || num <= 0 || num > 1000000000) {
+      alert('Invalid');
       return;
     }
 
     const cat = categories.find(c => c.id === categoryId) || savingCategories[0];
+    const safeDate = dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? dateStr : getTodayDateString();
 
     const editId = selectedExpenseForEdit.id;
     // Close modal INSTANTLY for 0ms UI lag
     setSelectedExpenseForEdit(null);
 
     updateExpense(editId, {
-      title: title.trim(),
+      title: cleanTitle,
       amount: num,
       type: 'SAVING',
       categoryId: cat.id,
       categoryName: cat.name,
       categoryIcon: cat.icon,
       categoryColor: cat.color,
-      date: dateStr,
+      date: safeDate,
       paymentMethod,
-      notes: notes.trim(),
+      notes: notes.trim().slice(0, 500),
     });
   };
 

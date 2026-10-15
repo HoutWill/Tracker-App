@@ -82,9 +82,9 @@ export const AiChatModal: React.FC = () => {
         savingGoal
       );
 
-      if (result.type === 'LOG_TRANSACTION' && result.title && result.amount && result.amount > 0) {
+      if (result.type === 'LOG_TRANSACTION' && result.title && typeof result.amount === 'number' && result.amount > 0 && result.amount <= 1000000000) {
         await addExpense({
-          title: result.title,
+          title: result.title.trim().slice(0, 150),
           amount: result.amount,
           currency: 'USD',
           type: result.itemType || 'EXPENSE',

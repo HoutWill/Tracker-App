@@ -291,7 +291,7 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
         {/* Checkbox Box */}
         <button
           type="button"
-          onMouseDown={e => { e.preventDefault(); saveSelection(); execCmd('insertHTML', '☑ '); }}
+          onMouseDown={e => { e.preventDefault(); saveSelection(); execCmd('insertHTML', '[ ] '); }}
           style={{
             padding: '5px 7px',
             borderRadius: '6px',

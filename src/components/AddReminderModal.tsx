@@ -106,30 +106,34 @@ export const AddReminderModal: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    const cleanTitle = title.trim().slice(0, 150);
+    if (!cleanTitle) return;
+
+    const safeDueDate = dueDate && /^\d{4}-\d{2}-\d{2}$/.test(dueDate) ? dueDate : getTodayDateString();
+    const cleanNotes = notes.trim().slice(0, 2000);
 
     addReminder({
-      title: title.trim(),
-      notes: notes.trim(),
+      title: cleanTitle,
+      notes: cleanNotes,
       category,
       priority: level === 'SIMPLE' ? 'LOW' : 'HIGH',
       level,
-      dueDate,
+      dueDate: safeDueDate,
       dueTime,
       endTime,
-      alertDate,
+      alertDate: alertDate || safeDueDate,
       alertTime,
       alertEnabled,
     });
 
     if (syncCalendar) {
       syncToAppleCalendar({
-        title: title.trim(),
-        notes: notes.trim(),
-        dueDate,
+        title: cleanTitle,
+        notes: cleanNotes,
+        dueDate: safeDueDate,
         dueTime,
         endTime,
-        alertDate,
+        alertDate: alertDate || safeDueDate,
         alertTime,
         category,
       });

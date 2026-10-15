@@ -67,9 +67,10 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
 
   const handleAddChecklistItem = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newChecklistItemText.trim()) return;
+    const cleanText = newChecklistItemText.trim().slice(0, 150);
+    if (!cleanText) return;
     triggerHaptic(10);
-    const newItem = { id: 'cl-' + Date.now(), text: newChecklistItemText.trim(), done: false };
+    const newItem = { id: 'cl-' + Date.now(), text: cleanText, done: false };
     const updated = [...checklist, newItem];
     setChecklist(updated);
     setNewChecklistItemText('');
@@ -85,18 +86,22 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
 
   const handleSaveUpdate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editTitle.trim()) {
-      alert('Title is required');
+    const cleanTitle = editTitle.trim().slice(0, 150);
+    if (!cleanTitle) {
+      alert('Invalid');
       return;
     }
 
+    const safeDueDate = editDueDate && /^\d{4}-\d{2}-\d{2}$/.test(editDueDate) ? editDueDate : reminder.dueDate;
+    const cleanNotes = editNotes.trim().slice(0, 2000);
+
     updateReminder(reminder.id, {
-      title: editTitle.trim(),
-      notes: editNotes.trim(),
-      dueDate: editDueDate,
+      title: cleanTitle,
+      notes: cleanNotes,
+      dueDate: safeDueDate,
       dueTime: editDueTime,
       endTime: editEndTime,
-      alertDate: editAlertDate,
+      alertDate: editAlertDate || safeDueDate,
       alertTime: editAlertTime,
       category: editCategory,
       level: editLevel,

@@ -146,28 +146,116 @@ export const isUserAccount = (): boolean => {
   }
 };
 
+export const sanitizeExpenseItem = (item: any): ExpenseItem | null => {
+  if (!item || typeof item !== 'object') return null;
+
+  const rawAmount = typeof item.amount === 'number' ? item.amount : parseFloat(String(item.amount));
+  if (isNaN(rawAmount) || !isFinite(rawAmount) || rawAmount < 0) return null;
+
+  const rawTitle = typeof item.title === 'string' ? item.title.trim() : '';
+  const title = rawTitle.slice(0, 150) || 'Expense';
+
+  const type = item.type === 'SAVING' || (typeof item.categoryId === 'string' && item.categoryId.startsWith('cat-saving')) ? 'SAVING' : 'EXPENSE';
+  const currency = item.currency === 'KHR' ? 'KHR' : 'USD';
+  const id = typeof item.id === 'string' && item.id.trim() ? item.id.trim().slice(0, 100) : ('exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000));
+  const createdAt = typeof item.createdAt === 'number' && isFinite(item.createdAt) ? item.createdAt : Date.now();
+  const date = typeof item.date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(item.date) ? item.date.slice(0, 10) : getTodayDateString();
+
+  return {
+    id,
+    title,
+    amount: rawAmount,
+    currency,
+    type,
+    categoryId: typeof item.categoryId === 'string' && item.categoryId.trim() ? item.categoryId.trim().slice(0, 50) : (type === 'SAVING' ? 'cat-saving-vault' : 'cat-food'),
+    categoryName: typeof item.categoryName === 'string' && item.categoryName.trim() ? item.categoryName.trim().slice(0, 50) : 'General',
+    categoryIcon: typeof item.categoryIcon === 'string' && item.categoryIcon.trim() ? item.categoryIcon.trim().slice(0, 50) : 'receipt',
+    categoryColor: typeof item.categoryColor === 'string' && item.categoryColor.trim() ? item.categoryColor.trim().slice(0, 30) : '#6C5CE7',
+    date,
+    paymentMethod: typeof item.paymentMethod === 'string' && item.paymentMethod.trim() ? item.paymentMethod.trim().slice(0, 30) : 'Cash',
+    notes: typeof item.notes === 'string' ? item.notes.slice(0, 1000) : '',
+    tripId: typeof item.tripId === 'string' && item.tripId.trim() ? item.tripId.trim().slice(0, 80) : undefined,
+    createdAt,
+  };
+};
+
+export const sanitizeTripFolder = (trip: any): TripFolder | null => {
+  if (!trip || typeof trip !== 'object') return null;
+  const rawBudget = typeof trip.budget === 'number' ? trip.budget : parseFloat(String(trip.budget));
+  const budget = !isNaN(rawBudget) && isFinite(rawBudget) && rawBudget > 0 ? rawBudget : 100;
+  const name = typeof trip.name === 'string' && trip.name.trim() ? trip.name.trim().slice(0, 50) : 'Trip';
+  const id = typeof trip.id === 'string' && trip.id.trim() ? trip.id.trim().slice(0, 80) : ('trip-' + Date.now());
+  const category = typeof trip.category === 'string' && trip.category.trim() ? trip.category.trim().slice(0, 50) : name;
+  const currency = trip.currency === 'KHR' ? 'KHR' : 'USD';
+  const startDate = typeof trip.startDate === 'string' && /^\d{4}-\d{2}-\d{2}/.test(trip.startDate) ? trip.startDate.slice(0, 10) : getTodayDateString();
+  const endDate = typeof trip.endDate === 'string' && /^\d{4}-\d{2}-\d{2}/.test(trip.endDate) ? trip.endDate.slice(0, 10) : startDate;
+  const type = trip.type === 'SAVING' ? 'SAVING' : 'EXPENSE';
+
+  return {
+    id,
+    name,
+    category,
+    budget,
+    currency,
+    startDate,
+    endDate: endDate >= startDate ? endDate : startDate,
+    status: trip.status === 'Closed' ? 'Closed' : 'Active',
+    type,
+    createdAt: typeof trip.createdAt === 'number' && isFinite(trip.createdAt) ? trip.createdAt : Date.now(),
+  };
+};
+
+export const sanitizeReminderItem = (r: any): ReminderItem | null => {
+  if (!r || typeof r !== 'object') return null;
+  const rawTitle = typeof r.title === 'string' ? r.title.trim() : '';
+  if (!rawTitle) return null;
+
+  return {
+    id: typeof r.id === 'string' && r.id.trim() ? r.id.trim().slice(0, 80) : ('rem-' + Date.now()),
+    title: rawTitle.slice(0, 150),
+    notes: typeof r.notes === 'string' ? r.notes.slice(0, 2000) : '',
+    category: typeof r.category === 'string' ? r.category : 'TASK',
+    priority: r.priority === 'HIGH' ? 'HIGH' : r.priority === 'LOW' ? 'LOW' : 'MEDIUM',
+    level: r.level === 'URGENT' ? 'URGENT' : r.level === 'FLAGGED' ? 'FLAGGED' : 'SIMPLE',
+    dueDate: typeof r.dueDate === 'string' && /^\d{4}-\d{2}-\d{2}/.test(r.dueDate) ? r.dueDate.slice(0, 10) : getTodayDateString(),
+    dueTime: typeof r.dueTime === 'string' ? r.dueTime.slice(0, 10) : '09:00',
+    endTime: typeof r.endTime === 'string' ? r.endTime.slice(0, 10) : undefined,
+    alertDate: typeof r.alertDate === 'string' ? r.alertDate.slice(0, 10) : undefined,
+    alertTime: typeof r.alertTime === 'string' ? r.alertTime.slice(0, 10) : undefined,
+    alertEnabled: r.alertEnabled !== false,
+    completed: Boolean(r.completed),
+    notifiedAt: typeof r.notifiedAt === 'number' ? r.notifiedAt : undefined,
+    createdAt: typeof r.createdAt === 'number' && isFinite(r.createdAt) ? r.createdAt : Date.now(),
+    checklist: Array.isArray(r.checklist) ? r.checklist.map((c: any) => ({
+      id: typeof c.id === 'string' ? c.id : ('cl-' + Math.random()),
+      text: typeof c.text === 'string' ? c.text.slice(0, 100) : '',
+      done: Boolean(c.done),
+    })) : undefined,
+  };
+};
+
 export const StorageService = {
   getCachedExpenses(): ExpenseItem[] {
     const guestId = String(getGuestId());
-    const isUser = isUserAccount();
 
     try {
       const masterKey = `pitrack_expenses_${guestId}`;
       const userSpecific = localStorage.getItem(masterKey);
       if (userSpecific) {
-        const parsed: ExpenseItem[] = JSON.parse(userSpecific);
+        const parsed = JSON.parse(userSpecific);
         if (Array.isArray(parsed)) {
-          return parsed.sort((a, b) => b.createdAt - a.createdAt);
+          const sanitized = parsed.map(sanitizeExpenseItem).filter((e): e is ExpenseItem => e !== null);
+          return sanitized.sort((a, b) => b.createdAt - a.createdAt);
         }
       }
 
       const legacyRaw = localStorage.getItem('pitrack_expenses_data') || localStorage.getItem('pitrack_expenses');
       if (legacyRaw) {
-        const parsed: ExpenseItem[] = JSON.parse(legacyRaw);
+        const parsed = JSON.parse(legacyRaw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Auto-migrate guest expenses to user account key so data is never lost on login
-          localStorage.setItem(masterKey, JSON.stringify(parsed));
-          return parsed.sort((a, b) => b.createdAt - a.createdAt);
+          const sanitized = parsed.map(sanitizeExpenseItem).filter((e): e is ExpenseItem => e !== null);
+          localStorage.setItem(masterKey, JSON.stringify(sanitized));
+          return sanitized.sort((a, b) => b.createdAt - a.createdAt);
         }
       }
 
@@ -243,11 +331,11 @@ export const StorageService = {
 
   async addExpense(item: ExpenseItem | Omit<ExpenseItem, 'id' | 'createdAt'>): Promise<ExpenseItem> {
     const guestId = String(getGuestId());
-    const newItem: ExpenseItem = {
-      ...item,
-      id: ('id' in item && item.id) ? item.id : 'exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-      createdAt: ('createdAt' in item && item.createdAt) ? item.createdAt : Date.now(),
-    };
+    const sanitized = sanitizeExpenseItem(item);
+    if (!sanitized) {
+      throw new Error('Invalid expense data. Please check title and amount.');
+    }
+    const newItem: ExpenseItem = sanitized;
 
     // 1. Immediately update local master cache synchronously
     try {
@@ -275,18 +363,40 @@ export const StorageService = {
   },
 
   async updateExpense(id: string, updatedFields: Partial<ExpenseItem>): Promise<void> {
+    if (!id || typeof id !== 'string') return;
+    const cleanId = id.trim();
     const guestId = getGuestId();
+
+    // Validate updated amount if present
+    if (updatedFields.amount !== undefined) {
+      const raw = typeof updatedFields.amount === 'number' ? updatedFields.amount : parseFloat(String(updatedFields.amount));
+      if (isNaN(raw) || !isFinite(raw) || raw <= 0) {
+        console.warn('Invalid update amount:', updatedFields.amount);
+        return;
+      }
+      updatedFields.amount = raw;
+    }
+
+    // Validate title if present
+    if (updatedFields.title !== undefined) {
+      const cleanTitle = updatedFields.title.trim();
+      if (!cleanTitle) {
+        console.warn('Empty title rejected');
+        return;
+      }
+      updatedFields.title = cleanTitle.slice(0, 150);
+    }
 
     // 1. Update local cache synchronously
     try {
       const current = this.getCachedExpenses();
-      const updated = current.map(e => (e.id === id ? { ...e, ...updatedFields } : e));
+      const updated = current.map(e => (e.id === cleanId ? { ...e, ...updatedFields } : e));
       localStorage.setItem('pitrack_expenses_data', JSON.stringify(updated));
       localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
     // 2. Fast non-blocking sync PUT
-    fetchWithTimeout(`/api/expenses/${id}`, {
+    fetchWithTimeout(`/api/expenses/${cleanId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -297,18 +407,20 @@ export const StorageService = {
   },
 
   async deleteExpense(id: string): Promise<void> {
+    if (!id || typeof id !== 'string') return;
+    const cleanId = id.trim();
     const guestId = getGuestId();
 
     // 1. Update local cache synchronously
     try {
       const current = this.getCachedExpenses();
-      const updated = current.filter(e => e.id !== id);
+      const updated = current.filter(e => e.id !== cleanId);
       localStorage.setItem('pitrack_expenses_data', JSON.stringify(updated));
       localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}
 
     // 2. Fast non-blocking sync DELETE
-    fetchWithTimeout(`/api/expenses/${id}`, {
+    fetchWithTimeout(`/api/expenses/${cleanId}`, {
       method: 'DELETE',
       headers: { 'x-guest-id': guestId },
     });
@@ -563,14 +675,20 @@ export const StorageService = {
       const userKey = `trip_folders_${guestId}`;
       const local = localStorage.getItem(userKey);
       if (local) {
-        return JSON.parse(local);
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) {
+          return parsed.map(sanitizeTripFolder).filter((t): t is TripFolder => t !== null);
+        }
       }
       if (isUserAccount()) {
         return [];
       }
       const fallback = localStorage.getItem('pitrack_trips_data');
       if (fallback) {
-        return JSON.parse(fallback);
+        const parsed = JSON.parse(fallback);
+        if (Array.isArray(parsed)) {
+          return parsed.map(sanitizeTripFolder).filter((t): t is TripFolder => t !== null);
+        }
       }
       localStorage.setItem('pitrack_trips_data', JSON.stringify(defaultDemoTrips));
       localStorage.setItem(userKey, JSON.stringify(defaultDemoTrips));
@@ -582,10 +700,11 @@ export const StorageService = {
 
   saveTrips(trips: TripFolder[]): void {
     const guestId = String(getGuestId());
+    const sanitized = Array.isArray(trips) ? trips.map(sanitizeTripFolder).filter((t): t is TripFolder => t !== null) : [];
     try {
-      localStorage.setItem(`trip_folders_${guestId}`, JSON.stringify(trips));
+      localStorage.setItem(`trip_folders_${guestId}`, JSON.stringify(sanitized));
       if (!isUserAccount()) {
-        localStorage.setItem('pitrack_trips_data', JSON.stringify(trips));
+        localStorage.setItem('pitrack_trips_data', JSON.stringify(sanitized));
       }
     } catch (e) {}
     this.syncAccountToCloud();
@@ -597,15 +716,19 @@ export const StorageService = {
       const userKey = `reminders_v2_${guestId}`;
       const local = localStorage.getItem(userKey);
       if (local) {
-        return JSON.parse(local);
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) {
+          return parsed.map(sanitizeReminderItem).filter((r): r is ReminderItem => r !== null);
+        }
       }
       // Auto-migrate guest reminders into user account key so data is never lost on login
       const fallback = localStorage.getItem('pitrack_reminders_backup') || localStorage.getItem('reminders_v2_usr_default');
       if (fallback) {
         const parsed = JSON.parse(fallback);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          localStorage.setItem(userKey, JSON.stringify(parsed));
-          return parsed;
+          const sanitized = parsed.map(sanitizeReminderItem).filter((r): r is ReminderItem => r !== null);
+          localStorage.setItem(userKey, JSON.stringify(sanitized));
+          return sanitized;
         }
       }
       return [];
@@ -616,9 +739,10 @@ export const StorageService = {
 
   saveReminders(reminders: ReminderItem[]): void {
     const guestId = getGuestId();
+    const sanitized = Array.isArray(reminders) ? reminders.map(sanitizeReminderItem).filter((r): r is ReminderItem => r !== null) : [];
     try {
-      localStorage.setItem(`reminders_v2_${guestId}`, JSON.stringify(reminders));
-      localStorage.setItem('pitrack_reminders_backup', JSON.stringify(reminders));
+      localStorage.setItem(`reminders_v2_${guestId}`, JSON.stringify(sanitized));
+      localStorage.setItem('pitrack_reminders_backup', JSON.stringify(sanitized));
     } catch (e) {}
     this.syncAccountToCloud();
   },

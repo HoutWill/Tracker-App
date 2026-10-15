@@ -129,43 +129,161 @@ const writeExpenses = (req, data) => {
 };
 
 // REST API Endpoints with Anonymous Guest Isolation
+// REST API Endpoints with Anonymous Guest Isolation & Strict CRUD Validation
 app.get('/api/expenses', (req, res) => {
   const expenses = readExpenses(req);
   res.json(expenses);
 });
 
 app.post('/api/expenses', (req, res) => {
-  const { amount, title } = req.body || {};
-  if (amount !== undefined && (typeof amount !== 'number' || isNaN(amount) || amount < 0 || amount > 1000000000)) {
-    return res.status(400).json({ error: 'Invalid expense amount' });
+  if (!req.body || typeof req.body !== 'object') {
+    return res.status(400).json({ error: 'Invalid request body' });
   }
-  const cleanTitle = typeof title === 'string' ? title.slice(0, 150) : 'Expense';
+
+  const { amount, title, date, currency, type, paymentMethod, categoryId, categoryName, categoryIcon, categoryColor, notes, tripId } = req.body;
+
+  // Strict Amount Validation: Must be finite, positive number, max 1 billion
+  const parsedAmount = typeof amount === 'number' ? amount : parseFloat(amount);
+  if (isNaN(parsedAmount) || !isFinite(parsedAmount) || parsedAmount <= 0 || parsedAmount > 1000000000) {
+    return res.status(400).json({ error: 'Valid positive amount required (max 1,000,000,000)' });
+  }
+
+  // Strict Title Validation: Non-empty string, max 150 chars
+  const rawTitle = typeof title === 'string' ? title.trim() : '';
+  if (!rawTitle) {
+    return res.status(400).json({ error: 'Title is required' });
+  }
+  const cleanTitle = rawTitle.slice(0, 150);
+
+  // Strict Date Validation: YYYY-MM-DD or Cambodia UTC+7 fallback
+  const cleanDate = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(date)
+    ? date.slice(0, 10)
+    : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Phnom_Penh' }).format(new Date());
+
+  // Strict Enum & Field Validation
+  const cleanType = type === 'SAVING' ? 'SAVING' : 'EXPENSE';
+  const cleanCurrency = currency === 'KHR' ? 'KHR' : 'USD';
+  const cleanPayment = typeof paymentMethod === 'string' ? paymentMethod.slice(0, 30) : 'Cash';
+  const cleanCatId = typeof categoryId === 'string' && categoryId.trim() ? categoryId.slice(0, 50) : (cleanType === 'SAVING' ? 'cat-saving-vault' : 'cat-food');
+  const cleanCatName = typeof categoryName === 'string' && categoryName.trim() ? categoryName.slice(0, 50) : 'General';
+  const cleanCatIcon = typeof categoryIcon === 'string' && categoryIcon.trim() ? categoryIcon.slice(0, 50) : 'receipt';
+  const cleanCatColor = typeof categoryColor === 'string' && categoryColor.trim() ? categoryColor.slice(0, 30) : '#6C5CE7';
+  const cleanNotes = typeof notes === 'string' ? notes.slice(0, 1000) : '';
+  const cleanTripId = typeof tripId === 'string' && tripId.trim() ? tripId.slice(0, 80) : undefined;
+
   const expenses = readExpenses(req);
+  const cleanId = req.body.id ? String(req.body.id).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100) : ('exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000));
+  const cleanCreatedAt = typeof req.body.createdAt === 'number' && isFinite(req.body.createdAt) ? req.body.createdAt : Date.now();
+
   const newItem = {
-    ...req.body,
+    id: cleanId,
     title: cleanTitle,
-    id: req.body.id ? String(req.body.id).slice(0, 100) : ('exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000)),
-    createdAt: req.body.createdAt || Date.now(),
+    amount: parsedAmount,
+    currency: cleanCurrency,
+    type: cleanType,
+    categoryId: cleanCatId,
+    categoryName: cleanCatName,
+    categoryIcon: cleanCatIcon,
+    categoryColor: cleanCatColor,
+    date: cleanDate,
+    paymentMethod: cleanPayment,
+    notes: cleanNotes,
+    tripId: cleanTripId,
+    createdAt: cleanCreatedAt,
   };
+
   const updated = [newItem, ...expenses.filter(e => e.id !== newItem.id)].slice(0, 5000);
   writeExpenses(req, updated);
   res.status(201).json(newItem);
 });
 
 app.put('/api/expenses/:id', (req, res) => {
-  const { id } = req.params;
+  const rawId = req.params.id;
+  if (!rawId || typeof rawId !== 'string') {
+    return res.status(400).json({ error: 'Valid expense id required' });
+  }
+  const cleanId = rawId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100);
   const expenses = readExpenses(req);
-  const updated = expenses.map(e => (e.id === id ? { ...e, ...req.body } : e));
-  writeExpenses(req, updated);
-  res.json({ success: true });
+  const index = expenses.findIndex(e => e.id === cleanId);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Expense not found' });
+  }
+
+  const existing = expenses[index];
+  const updates = {};
+
+  if (req.body.amount !== undefined) {
+    const parsedAmount = typeof req.body.amount === 'number' ? req.body.amount : parseFloat(req.body.amount);
+    if (isNaN(parsedAmount) || !isFinite(parsedAmount) || parsedAmount <= 0 || parsedAmount > 1000000000) {
+      return res.status(400).json({ error: 'Valid positive amount required (max 1,000,000,000)' });
+    }
+    updates.amount = parsedAmount;
+  }
+
+  if (req.body.title !== undefined) {
+    const rawTitle = typeof req.body.title === 'string' ? req.body.title.trim() : '';
+    if (!rawTitle) {
+      return res.status(400).json({ error: 'Title cannot be empty' });
+    }
+    updates.title = rawTitle.slice(0, 150);
+  }
+
+  if (req.body.date !== undefined && typeof req.body.date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(req.body.date)) {
+    updates.date = req.body.date.slice(0, 10);
+  }
+
+  if (req.body.type !== undefined) {
+    updates.type = req.body.type === 'SAVING' ? 'SAVING' : 'EXPENSE';
+  }
+
+  if (req.body.currency !== undefined) {
+    updates.currency = req.body.currency === 'KHR' ? 'KHR' : 'USD';
+  }
+
+  if (req.body.paymentMethod !== undefined && typeof req.body.paymentMethod === 'string') {
+    updates.paymentMethod = req.body.paymentMethod.slice(0, 30);
+  }
+
+  if (req.body.categoryId !== undefined && typeof req.body.categoryId === 'string') {
+    updates.categoryId = req.body.categoryId.slice(0, 50);
+  }
+
+  if (req.body.categoryName !== undefined && typeof req.body.categoryName === 'string') {
+    updates.categoryName = req.body.categoryName.slice(0, 50);
+  }
+
+  if (req.body.categoryIcon !== undefined && typeof req.body.categoryIcon === 'string') {
+    updates.categoryIcon = req.body.categoryIcon.slice(0, 50);
+  }
+
+  if (req.body.categoryColor !== undefined && typeof req.body.categoryColor === 'string') {
+    updates.categoryColor = req.body.categoryColor.slice(0, 30);
+  }
+
+  if (req.body.notes !== undefined && typeof req.body.notes === 'string') {
+    updates.notes = req.body.notes.slice(0, 1000);
+  }
+
+  if (req.body.tripId !== undefined) {
+    updates.tripId = typeof req.body.tripId === 'string' && req.body.tripId.trim() ? req.body.tripId.slice(0, 80) : undefined;
+  }
+
+  expenses[index] = { ...existing, ...updates, updatedAt: Date.now() };
+  writeExpenses(req, expenses);
+  res.json({ success: true, item: expenses[index] });
 });
 
 app.delete('/api/expenses/:id', (req, res) => {
-  const { id } = req.params;
+  const rawId = req.params.id;
+  if (!rawId || typeof rawId !== 'string') {
+    return res.status(400).json({ error: 'Valid expense id required' });
+  }
+  const cleanId = rawId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100);
   const expenses = readExpenses(req);
-  const updated = expenses.filter(e => e.id !== id);
+  const exists = expenses.some(e => e.id === cleanId);
+  const updated = expenses.filter(e => e.id !== cleanId);
   writeExpenses(req, updated);
-  res.json({ success: true });
+  res.json({ success: true, deleted: exists });
 });
 
 app.post('/api/expenses/reset', (req, res) => {
@@ -301,18 +419,40 @@ app.post('/api/sync', (req, res) => {
       try { existing = JSON.parse(fs.readFileSync(accountFile, 'utf8')); } catch (e) {}
     }
 
+    const payload = {};
+    if (req.body.expenses && Array.isArray(req.body.expenses)) {
+      payload.expenses = req.body.expenses.slice(0, 5000);
+    }
+    if (req.body.reminders && Array.isArray(req.body.reminders)) {
+      payload.reminders = req.body.reminders.slice(0, 2000);
+    }
+    if (req.body.trips && Array.isArray(req.body.trips)) {
+      payload.trips = req.body.trips.slice(0, 500);
+    }
+    if (req.body.targets && typeof req.body.targets === 'object') {
+      payload.targets = req.body.targets;
+    }
+    if (req.body.goals && typeof req.body.goals === 'object') {
+      payload.goals = req.body.goals;
+    }
+    if (req.body.cycleHistory && Array.isArray(req.body.cycleHistory)) {
+      payload.cycleHistory = req.body.cycleHistory.slice(0, 500);
+    }
+
     const updated = {
       ...existing,
-      ...req.body,
+      ...payload,
+      pkid: cleanId,
+      accountId: cleanId,
       updatedAt: Date.now(),
     };
 
     fs.writeFileSync(accountFile, JSON.stringify(updated, null, 2));
 
     // Also write expenses to expenses_ clean file for backwards compatibility
-    if (req.body.expenses && Array.isArray(req.body.expenses)) {
+    if (payload.expenses) {
       const expFile = path.join(DATA_DIR, `expenses_${cleanId}.json`);
-      fs.writeFileSync(expFile, JSON.stringify(req.body.expenses, null, 2));
+      fs.writeFileSync(expFile, JSON.stringify(payload.expenses, null, 2));
     }
 
     res.json({ success: true, updatedAt: updated.updatedAt });

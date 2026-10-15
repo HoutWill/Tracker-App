@@ -34,19 +34,21 @@ export const CreateTripModal: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const numBudget = parseFloat(budget);
-    if (!name.trim() || isNaN(numBudget) || numBudget <= 0) {
-      alert('Please enter a valid folder title and budget.');
+    const cleanName = name.trim().slice(0, 100);
+    if (!cleanName || isNaN(numBudget) || numBudget <= 0 || numBudget > 1000000000) {
+      alert('Invalid');
       return;
     }
 
-    const computedEnd = calculateEndDate(startDate, daysCount);
+    const safeStartDate = startDate && /^\d{4}-\d{2}-\d{2}$/.test(startDate) ? startDate : getTodayDateString();
+    const computedEnd = calculateEndDate(safeStartDate, Math.max(1, Math.min(daysCount, 365)));
 
     addTrip({
-      name: name.trim(),
+      name: cleanName,
       category: category,
       budget: numBudget,
       currency: currency,
-      startDate: startDate,
+      startDate: safeStartDate,
       endDate: computedEnd,
       status: 'Active',
       type: type,
@@ -104,7 +106,7 @@ export const CreateTripModal: React.FC = () => {
             <div>
               <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Folder</h3>
               <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                {type === 'SAVING' ? 'House, Gadget & Saving Goals' : 'Travel & Event Organizer'}
+                {type === 'SAVING' ? 'Vault' : 'Organizer'}
               </span>
             </div>
           </div>

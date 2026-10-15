@@ -30,19 +30,21 @@ export const CreateSavingFolderModal: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const numBudget = parseFloat(budget);
-    if (!name.trim() || isNaN(numBudget) || numBudget <= 0) {
-      alert('Please enter a valid target amount and title.');
+    const cleanName = name.trim().slice(0, 100);
+    if (!cleanName || isNaN(numBudget) || numBudget <= 0 || numBudget > 1000000000) {
+      alert('Invalid');
       return;
     }
 
-    const computedEnd = calculateEndDate(startDate, daysCount);
+    const safeStartDate = startDate && /^\d{4}-\d{2}-\d{2}$/.test(startDate) ? startDate : getTodayDateString();
+    const computedEnd = calculateEndDate(safeStartDate, Math.max(1, Math.min(daysCount, 365)));
 
     addTrip({
-      name: name.trim(),
+      name: cleanName,
       category: category,
       budget: numBudget,
       currency: currency,
-      startDate: startDate,
+      startDate: safeStartDate,
       endDate: computedEnd,
       status: 'Active',
       type: 'SAVING',
@@ -89,8 +91,8 @@ export const CreateSavingFolderModal: React.FC = () => {
               <FolderPlus size={20} />
             </div>
             <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Saving Folder</h3>
-              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>House, Gadget & Goals</span>
+              <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Folder</h3>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Vault</span>
             </div>
           </div>
           <button
@@ -105,7 +107,7 @@ export const CreateSavingFolderModal: React.FC = () => {
         {/* Goal Templates Selector */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Goal Templates
+            Templates
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '4px' }}>
             {templates.map(t => {

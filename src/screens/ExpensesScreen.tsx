@@ -167,8 +167,8 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
     if (!activePreset) return;
 
     const num = parseFloat(presetAmount);
-    if (isNaN(num) || num <= 0) {
-      alert('Please enter a valid amount.');
+    if (isNaN(num) || num <= 0 || num > 1000000000) {
+      alert('Invalid');
       return;
     }
 
@@ -224,8 +224,8 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
   const handleSaveBudget = (e: React.FormEvent) => {
     e.preventDefault();
     const val = parseFloat(customBudgetInput);
-    if (isNaN(val) || val <= 0) {
-      alert('Please enter a valid budget amount.');
+    if (isNaN(val) || val <= 0 || val > 1000000000) {
+      alert('Invalid');
       return;
     }
     setBudgetTarget(editBudgetPeriod, val);
@@ -266,8 +266,9 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
   const handleCreateNewPreset = (e: React.FormEvent) => {
     e.preventDefault();
     const num = parseFloat(newPresetAmount);
-    if (!newPresetTitle.trim() || isNaN(num) || num <= 0) {
-      alert('Please enter a valid title and amount.');
+    const cleanTitle = newPresetTitle.trim().slice(0, 100);
+    if (!cleanTitle || isNaN(num) || num <= 0 || num > 1000000000) {
+      alert('Invalid');
       return;
     }
 
@@ -277,7 +278,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
 
     const newPreset: QuickPreset = {
       id: 'preset-custom-' + Date.now(),
-      title: newPresetTitle.trim(),
+      title: cleanTitle,
       amount: amountUSD,
       currency: newPresetCurrency,
       categoryId: cat.id,

@@ -38,15 +38,17 @@ export const ExpenseDetailModal: React.FC = () => {
 
   const handleUpdate = async () => {
     const num = parseFloat(amount);
-    if (!title.trim() || isNaN(num) || num <= 0) {
-      alert('Please enter a valid title and positive amount.');
+    const cleanTitle = title.trim().slice(0, 150);
+    if (!cleanTitle || isNaN(num) || num <= 0 || num > 1000000000) {
+      alert('Invalid');
       return;
     }
 
     const selectedCat = categories.find(c => c.id === categoryId) || categories[0];
+    const safeDate = dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? dateStr : getTodayDateString();
 
     await updateExpense(selectedExpenseForEdit.id, {
-      title: title.trim(),
+      title: cleanTitle,
       amount: num,
       type,
       categoryId: selectedCat.id,
@@ -54,8 +56,8 @@ export const ExpenseDetailModal: React.FC = () => {
       categoryIcon: selectedCat.icon,
       categoryColor: selectedCat.color,
       paymentMethod,
-      date: dateStr,
-      notes: notes.trim(),
+      date: safeDate,
+      notes: notes.trim().slice(0, 500),
     });
     setSelectedExpenseForEdit(null);
   };
@@ -90,7 +92,7 @@ export const ExpenseDetailModal: React.FC = () => {
             >
               <CategoryIconRenderer icon={selectedExpenseForEdit.categoryIcon || 'receipt-outline'} size={18} />
             </div>
-            <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Edit Record</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Edit</h3>
           </div>
           <button
             onClick={() => setSelectedExpenseForEdit(null)}
@@ -103,7 +105,7 @@ export const ExpenseDetailModal: React.FC = () => {
         {/* Transaction Type Selector */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Transaction Type
+            Type
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '4px' }}>
             {[
@@ -140,7 +142,7 @@ export const ExpenseDetailModal: React.FC = () => {
         {/* Title Input */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Title / Name
+            Title
           </label>
           <input
             type="text"
@@ -164,7 +166,7 @@ export const ExpenseDetailModal: React.FC = () => {
         {/* Amount Input */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Amount (USD $)
+            Amount
           </label>
           <input
             type="number"
@@ -216,7 +218,7 @@ export const ExpenseDetailModal: React.FC = () => {
         {/* Payment Method Selector */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Payment Method
+            Payment
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
             {(['Cash', 'Bank'] as const).map(pm => {
@@ -242,7 +244,7 @@ export const ExpenseDetailModal: React.FC = () => {
         {/* Date Input */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Date (YYYY-MM-DD)
+            Date
           </label>
           <input
             type="date"
@@ -266,7 +268,7 @@ export const ExpenseDetailModal: React.FC = () => {
         {/* Notes Input */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Notes / Memo
+            Notes
           </label>
           <textarea
             value={notes}
@@ -329,7 +331,7 @@ export const ExpenseDetailModal: React.FC = () => {
             }}
           >
             <Check size={16} />
-            Save Changes
+            Save
           </button>
         </div>
       </div>

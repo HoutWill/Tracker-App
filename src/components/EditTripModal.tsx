@@ -26,17 +26,21 @@ export const EditTripModal: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const numBudget = parseFloat(budget);
-    if (!name.trim() || isNaN(numBudget) || numBudget <= 0) {
-      alert('Please enter a valid title and budget.');
+    const cleanName = name.trim().slice(0, 100);
+    if (!cleanName || isNaN(numBudget) || numBudget <= 0 || numBudget > 1000000000) {
+      alert('Invalid');
       return;
     }
 
+    const safeStartDate = startDate && /^\d{4}-\d{2}-\d{2}$/.test(startDate) ? startDate : selectedTripForEdit.startDate;
+    const validEndDate = (endDate && endDate >= safeStartDate) ? endDate : safeStartDate;
+
     updateTrip(selectedTripForEdit.id, {
-      name: name.trim(),
+      name: cleanName,
       category: category,
       budget: numBudget,
-      startDate: startDate,
-      endDate: endDate,
+      startDate: safeStartDate,
+      endDate: validEndDate,
     });
 
     setSelectedTripForEdit(null);
@@ -79,7 +83,7 @@ export const EditTripModal: React.FC = () => {
             </div>
             <div>
               <h3 style={{ fontSize: '16px', fontWeight: 800 }}>Edit</h3>
-              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Modify folder properties</span>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Properties</span>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

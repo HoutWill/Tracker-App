@@ -182,8 +182,17 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   const addTrip = (item: Omit<TripFolder, 'id' | 'createdAt'>) => {
+    const rawBudget = typeof item.budget === 'number' ? item.budget : parseFloat(String(item.budget));
+    const cleanName = (item.name || '').trim();
+    if (!cleanName || isNaN(rawBudget) || !isFinite(rawBudget) || rawBudget <= 0) {
+      console.warn('Invalid trip folder data');
+      return;
+    }
+
     const newTrip: TripFolder = {
       ...item,
+      name: cleanName.slice(0, 50),
+      budget: rawBudget,
       id: 'trip-' + Date.now(),
       createdAt: Date.now(),
     };
@@ -194,16 +203,34 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateTrip = (id: string, updated: Partial<TripFolder>) => {
-    const updatedList = trips.map(t => (t.id === id ? { ...t, ...updated } : t));
+    if (!id || typeof id !== 'string') return;
+    const cleanId = id.trim();
+
+    if (updated.budget !== undefined) {
+      const rawBudget = typeof updated.budget === 'number' ? updated.budget : parseFloat(String(updated.budget));
+      if (isNaN(rawBudget) || !isFinite(rawBudget) || rawBudget <= 0) {
+        return;
+      }
+      updated.budget = rawBudget;
+    }
+    if (updated.name !== undefined) {
+      const cleanName = updated.name.trim();
+      if (!cleanName) return;
+      updated.name = cleanName.slice(0, 50);
+    }
+
+    const updatedList = trips.map(t => (t.id === cleanId ? { ...t, ...updated } : t));
     setTrips(updatedList);
     StorageService.saveTrips(updatedList);
   };
 
   const deleteTrip = (id: string) => {
-    const updated = trips.filter(t => t.id !== id);
+    if (!id || typeof id !== 'string') return;
+    const cleanId = id.trim();
+    const updated = trips.filter(t => t.id !== cleanId);
     setTrips(updated);
     StorageService.saveTrips(updated);
-    if (selectedTripId === id) {
+    if (selectedTripId === cleanId) {
       setSelectedTripId(null);
     }
   };
@@ -234,6 +261,17 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addExpense = async (item: Omit<ExpenseItem, 'id' | 'createdAt'>) => {
+    const rawAmount = typeof item.amount === 'number' ? item.amount : parseFloat(String(item.amount));
+    if (isNaN(rawAmount) || !isFinite(rawAmount) || rawAmount <= 0) {
+      console.warn('Invalid amount rejected in addExpense:', item.amount);
+      return;
+    }
+    const cleanTitle = (item.title || '').trim();
+    if (!cleanTitle) {
+      console.warn('Empty title rejected in addExpense');
+      return;
+    }
+
     let assignedTripId = item.tripId;
     if (!assignedTripId && selectedTripId) {
       assignedTripId = selectedTripId;
@@ -249,6 +287,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const newItem: ExpenseItem = {
       ...item,
+      title: cleanTitle.slice(0, 150),
+      amount: rawAmount,
       tripId: assignedTripId,
       id: 'exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
       createdAt: Date.now(),
@@ -261,19 +301,40 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateExpense = (id: string, updated: Partial<ExpenseItem>) => {
+    if (!id || typeof id !== 'string') return;
+    const cleanId = id.trim();
+
+    if (updated.amount !== undefined) {
+      const rawAmount = typeof updated.amount === 'number' ? updated.amount : parseFloat(String(updated.amount));
+      if (isNaN(rawAmount) || !isFinite(rawAmount) || rawAmount <= 0) {
+        console.warn('Invalid amount in updateExpense:', updated.amount);
+        return;
+      }
+      updated.amount = rawAmount;
+    }
+
+    if (updated.title !== undefined) {
+      const cleanTitle = updated.title.trim();
+      if (!cleanTitle) return;
+      updated.title = cleanTitle.slice(0, 150);
+    }
+
     // 1. Instant Optimistic State Update
-    setExpenses(prev => prev.map(e => (e.id === id ? { ...e, ...updated } : e)));
+    setExpenses(prev => prev.map(e => (e.id === cleanId ? { ...e, ...updated } : e)));
 
     // 2. Non-blocking background sync
-    StorageService.updateExpense(id, updated);
+    StorageService.updateExpense(cleanId, updated);
   };
 
   const deleteExpense = (id: string) => {
+    if (!id || typeof id !== 'string') return;
+    const cleanId = id.trim();
+
     // 1. Instant Optimistic State Update
-    setExpenses(prev => prev.filter(e => e.id !== id));
+    setExpenses(prev => prev.filter(e => e.id !== cleanId));
 
     // 2. Non-blocking background sync
-    StorageService.deleteExpense(id);
+    StorageService.deleteExpense(cleanId);
   };
 
   const clearAllData = async () => {
