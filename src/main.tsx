@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { ExpenseProvider } from './context/ExpenseContext';
 import App from './App';
 import './index.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

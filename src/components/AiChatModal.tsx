@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
 import { parseNaturalLanguageExpense } from '../services/aiAgentService';
+import { getTodayDateString } from '../services/storageService';
 import { Sparkles, X, Send, Bot, User, Zap, Mic } from 'lucide-react';
 import { startVoiceRecognition } from '../services/speechService';
 
@@ -55,7 +56,7 @@ export const AiChatModal: React.FC = () => {
     }
   }, [messages, isProcessing]);
 
-  return null;
+  if (!isAiChatOpen) return null;
 
   const handleSendPrompt = async (textToSend?: string) => {
     const query = textToSend || promptText;
@@ -91,7 +92,7 @@ export const AiChatModal: React.FC = () => {
           categoryName: result.categoryName || categories[0].name,
           categoryIcon: result.categoryIcon || categories[0].icon,
           categoryColor: result.categoryColor || categories[0].color,
-          date: new Date().toISOString().split('T')[0],
+          date: getTodayDateString(),
           paymentMethod: 'Cash',
           notes: 'Added via Agent Assistant',
         });

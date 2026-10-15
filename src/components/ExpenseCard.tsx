@@ -31,7 +31,7 @@ const formatSecondaryVal = (amountUSD: number, primaryCurrency: string) => {
 };
 
 export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
-  const { currency, hideBalances, setSelectedExpenseForEdit } = useExpenses();
+  const { currency, setSelectedExpenseForEdit } = useExpenses();
 
   const isSaving = item.type === 'SAVING' || item.categoryId.startsWith('cat-saving');
   const isIncome = item.type === 'INCOME' || item.categoryId === 'cat-income';
@@ -152,9 +152,7 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
               color: isSaving || isIncome ? '#30D158' : '#FF5B5B',
             }}
           >
-            {hideBalances
-              ? '••••'
-              : isSaving
+            {isSaving
               ? `+${formattedMain}`
               : isIncome
               ? `+${formattedMain}`
@@ -168,7 +166,7 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ item, onPress }) => {
               fontWeight: 500,
             }}
           >
-            {hideBalances ? '••••' : secondaryFormatted}
+            {secondaryFormatted}
           </div>
         </div>
       </div>

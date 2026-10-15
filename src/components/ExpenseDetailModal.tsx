@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
+import { getTodayDateString } from '../services/storageService';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
 import { PaymentMethod, TransactionType } from '../types';
 import { X, Trash2, Check, PiggyBank, ArrowDownRight, ArrowUpRight } from 'lucide-react';
@@ -28,7 +29,7 @@ export const ExpenseDetailModal: React.FC = () => {
       setType(selectedExpenseForEdit.type || (selectedExpenseForEdit.categoryId === 'cat-saving' ? 'SAVING' : 'EXPENSE'));
       setCategoryId(selectedExpenseForEdit.categoryId || categories[0]?.id || 'cat-food');
       setPaymentMethod(selectedExpenseForEdit.paymentMethod || 'Cash');
-      setDateStr(selectedExpenseForEdit.date || new Date().toISOString().split('T')[0]);
+      setDateStr(selectedExpenseForEdit.date || getTodayDateString());
       setNotes(selectedExpenseForEdit.notes || '');
     }
   }, [selectedExpenseForEdit]);

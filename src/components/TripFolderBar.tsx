@@ -23,7 +23,6 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
     deleteTrip,
     expenses,
     currency,
-    hideBalances,
   } = useExpenses();
 
   // Filter trips by screen type
@@ -60,8 +59,8 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
   const tripBudgetUSD = activeTrip?.budget || 0;
   const tripProgress = tripBudgetUSD > 0 ? Math.min(100, Math.round((tripSpentUSD / tripBudgetUSD) * 100)) : 0;
 
-  const formattedSpent = hideBalances ? '••••' : formatCurrency(tripSpentUSD, currency);
-  const formattedBudget = hideBalances ? '••••' : formatCurrency(tripBudgetUSD, currency);
+  const formattedSpent = formatCurrency(tripSpentUSD, currency);
+  const formattedBudget = formatCurrency(tripBudgetUSD, currency);
 
   const accentColor = isSaving ? 'var(--accent-success)' : 'var(--accent)';
   const borderAccent = isSaving ? 'rgba(126, 231, 135, 0.4)' : 'rgba(46, 170, 220, 0.4)';

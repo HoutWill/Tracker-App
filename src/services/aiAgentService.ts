@@ -67,7 +67,7 @@ export const parseNaturalLanguageExpense = async (
     return {
       type: 'FINANCIAL_QUERY',
       responseText: sanitizeResponseText(
-        'Hello! 😊 How are you doing today? What would you like to chat about or work on?'
+        'Hello! How are you doing today? What would you like to chat about or work on?'
       ),
     };
   }
@@ -136,7 +136,7 @@ export const parseNaturalLanguageExpense = async (
         categoryIcon: savingCat.icon,
         categoryColor: savingCat.color,
         responseText: sanitizeResponseText(
-          `Awesome work! Recorded +$${targetAmount.toFixed(2)} to Vault (${formattedTitle}). Your total savings is now $${(totalSavingUSD + targetAmount).toFixed(2)}! 🎉`
+          `Awesome work! Recorded +$${targetAmount.toFixed(2)} to Vault (${formattedTitle}). Your total savings is now $${(totalSavingUSD + targetAmount).toFixed(2)}!`
         ),
       };
     }
@@ -182,7 +182,7 @@ export const parseNaturalLanguageExpense = async (
       categoryIcon: selectedCat.icon,
       categoryColor: selectedCat.color,
       responseText: sanitizeResponseText(
-        `Logged -$${targetAmount.toFixed(2)} under ${selectedCat.name} (${formattedTitle}). You have $${remBudget.toFixed(2)} remaining in your monthly budget! 💳`
+        `Logged -$${targetAmount.toFixed(2)} under ${selectedCat.name} (${formattedTitle}). You have $${remBudget.toFixed(2)} remaining in your monthly budget!`
       ),
     };
   }
@@ -204,11 +204,11 @@ export const parseNaturalLanguageExpense = async (
       return {
         type: 'FINANCIAL_PLAN',
         responseText: sanitizeResponseText(
-          `🎯 Smart Savings Plan for $${goalVal}:\n\n` +
+          `Smart Savings Plan for $${goalVal}:\n\n` +
             `• Monthly Deposit: $${monthlyDeposit} / mo\n` +
             `• Weekly Deposit: $${weeklyDeposit} / wk\n` +
             `• Daily Deposit: $${dailyDeposit} / day\n\n` +
-            `💡 Tip: Automate a $${monthlyDeposit} transfer into your Vault at the start of every month to guarantee hitting your target in 6 months!`
+            `Tip: Automate a $${monthlyDeposit} transfer into your Vault at the start of every month to guarantee hitting your target in 6 months!`
         ),
       };
     }
@@ -222,11 +222,11 @@ export const parseNaturalLanguageExpense = async (
     return {
       type: 'FINANCIAL_PLAN',
       responseText: sanitizeResponseText(
-        `📊 Recommended 50/30/20 Budget Plan for $${budgetVal}:\n\n` +
-          `🏠 Needs (50%): $${needs} (Rent, Groceries, Bills, Transport)\n` +
-          `☕ Wants (30%): $${wants} (Dining, Coffee, Fun, Shopping)\n` +
-          `🔒 Savings (20%): $${savings} (Vault, Emergency & Goal Targets)\n\n` +
-          `💡 Current Status: You spent $${totalExpenseUSD.toFixed(2)} and saved $${totalSavingUSD.toFixed(2)} this month.`
+        `Recommended 50/30/20 Budget Plan for $${budgetVal}:\n\n` +
+          `• Needs (50%): $${needs} (Rent, Groceries, Bills, Transport)\n` +
+          `• Wants (30%): $${wants} (Dining, Coffee, Fun, Shopping)\n` +
+          `• Savings (20%): $${savings} (Vault, Emergency & Goal Targets)\n\n` +
+          `• Current Status: You spent $${totalExpenseUSD.toFixed(2)} and saved $${totalSavingUSD.toFixed(2)} this month.`
       ),
     };
   }
@@ -236,7 +236,7 @@ export const parseNaturalLanguageExpense = async (
     return {
       type: 'FINANCIAL_QUERY',
       responseText: sanitizeResponseText(
-        '💡 **Investment Overview**:\n\n' +
+        '**Investment Overview**:\n\n' +
           '• **Emergency Vault First**: Ensure you have 3–6 months of living expenses saved in your Vault before investing.\n' +
           '• **Diversification**: Spread investments across low-risk assets (Gold/High-yield savings) and index funds for long-term growth.'
       ),
@@ -247,7 +247,7 @@ export const parseNaturalLanguageExpense = async (
     return {
       type: 'FINANCIAL_QUERY',
       responseText: sanitizeResponseText(
-        '💡 **Top 3 Money-Saving Tips**:\n\n' +
+        '**Top 3 Money-Saving Tips**:\n\n' +
           '1. **Pay Yourself First**: Transfer 20% of your income to your Vault on payday.\n' +
           '2. **Audit Subscriptions**: Cancel unused memberships & recurring bills.\n' +
           '3. **The 48-Hour Rule**: Wait 2 days before buying non-essentials over $30 to stop impulse buys.'
@@ -262,7 +262,7 @@ export const parseNaturalLanguageExpense = async (
       return {
         type: 'FINANCIAL_QUERY',
         responseText: sanitizeResponseText(
-          `🔢 Calculation: 15% of $${targetAmount} is **$${pctVal}**.`
+          `Calculation: 15% of $${targetAmount} is **$${pctVal}**.`
         ),
       };
     }

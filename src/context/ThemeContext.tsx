@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 export interface HolidayTheme {
   id: string;
   name: string;
-  emoji: string;
+  icon: string;
   description: string;
   bgMain: string;
   bgCard: string;
@@ -17,8 +17,8 @@ export const HOLIDAY_THEMES: HolidayTheme[] = [
   {
     id: 'DEFAULT',
     name: 'Default',
-    emoji: '✨',
-    description: 'Liquid Glass Dark',
+    icon: 'sparkles',
+    description: 'Dark',
     bgMain: '#0B131E',
     bgCard: '#151720',
     bgCardHover: '#1C1E2B',
@@ -29,8 +29,8 @@ export const HOLIDAY_THEMES: HolidayTheme[] = [
   {
     id: 'CHRISTMAS',
     name: 'Christmas',
-    emoji: '❄️',
-    description: 'Falling Snow & Pines',
+    icon: 'gift',
+    description: 'Pines',
     bgMain: '#0B1A15',
     bgCard: '#142721',
     bgCardHover: '#1A332B',
@@ -41,8 +41,8 @@ export const HOLIDAY_THEMES: HolidayTheme[] = [
   {
     id: 'CHINESE',
     name: 'Chinese',
-    emoji: '🏮',
-    description: 'Spring Lanterns & Gold',
+    icon: 'flame',
+    description: 'Lanterns',
     bgMain: '#1C0B0E',
     bgCard: '#2F1117',
     bgCardHover: '#3C161E',
@@ -50,12 +50,11 @@ export const HOLIDAY_THEMES: HolidayTheme[] = [
     bgCardLight: '#FFFFFF',
     bgCardHoverLight: '#FBE4E7',
   },
-
   {
     id: 'HALLOWEEN',
     name: 'Halloween',
-    emoji: '🎃',
-    description: 'Spooky Embers & Fog',
+    icon: 'moon',
+    description: 'Embers',
     bgMain: '#140A1A',
     bgCard: '#24132F',
     bgCardHover: '#2E193C',

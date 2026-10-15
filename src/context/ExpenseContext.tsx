@@ -171,6 +171,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const reloadExpenses = async () => {
+    StorageService.checkAndRunMonthlyRollover();
     const list = await StorageService.getExpenses();
     setExpenses(list);
     setCycleHistory(StorageService.getCycleHistory());

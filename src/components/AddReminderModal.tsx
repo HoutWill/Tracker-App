@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useReminders } from '../context/ReminderContext';
-import { getTodayDateString } from '../services/storageService';
+import { getTodayDateString, getNowTimeString } from '../services/storageService';
 import { ReminderCategory } from '../types';
 import { X, Bell, Check, Calendar, Clock, AlertCircle, Mic, Square } from 'lucide-react';
 import { RichTextNotesEditor } from './RichTextNotesEditor';
@@ -9,8 +9,7 @@ import { startVoiceRecognition } from '../services/speechService';
 
 const getFutureTimeString = (minutesToAdd: number = 5) => {
   const now = new Date(Date.now() + minutesToAdd * 60 * 1000);
-  const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
-  return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  return getNowTimeString(now);
 };
 
 const REMINDER_CATEGORIES = [

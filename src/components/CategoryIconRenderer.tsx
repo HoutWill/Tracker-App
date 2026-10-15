@@ -1,4 +1,5 @@
 import React from 'react';
+import { BootstrapIcon } from './BootstrapIcon';
 import {
   Utensils,
   Coffee,
@@ -55,6 +56,10 @@ interface Props {
 
 export const CategoryIconRenderer: React.FC<Props> = ({ icon, size = 16, color = 'currentColor', className = '' }) => {
   const props = { size, color, className };
+
+  if (icon && (icon.startsWith('bi-') || icon.startsWith('bi '))) {
+    return <BootstrapIcon name={icon} size={size} color={color} className={className} />;
+  }
 
   switch (icon) {
     case 'fast-food-outline':

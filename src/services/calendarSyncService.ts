@@ -60,7 +60,7 @@ export const getGoogleCalendarUrl = (event: CalendarEventPayload): string => {
   try {
     const { startStr, endStr } = getEventStartAndEndDates(event);
     const cleanNotes = (event.notes || '').replace(/<[^>]*>/g, '');
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${startStr}/${endStr}&details=${encodeURIComponent(cleanNotes)}`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${startStr}/${endStr}&details=${encodeURIComponent(cleanNotes)}&ctz=Asia/Phnom_Penh`;
   } catch (e) {
     return 'https://calendar.google.com';
   }

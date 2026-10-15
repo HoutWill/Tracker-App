@@ -5,6 +5,7 @@ import { ExportModal } from '../components/ExportModal';
 import { AppearanceModal } from '../components/AppearanceModal';
 import { AuthModal, UserAccount } from '../components/AuthModal';
 import { getGuestId, setGuestId } from '../services/storageService';
+import { BootstrapIcon } from '../components/BootstrapIcon';
 import { Settings, Shield, Eye, EyeOff, Download, Trash2, Palette, CheckCircle2, Sparkles, Key, Copy, RefreshCw, User, ShieldCheck, LogIn } from 'lucide-react';
 
 export const SettingsScreen: React.FC = () => {
@@ -140,6 +141,71 @@ export const SettingsScreen: React.FC = () => {
             {userAccount ? 'Profile' : 'Login'}
           </button>
         </div>
+
+        {/* Sync Key Row with Copy & Restore */}
+        <div
+          style={{
+            marginTop: '12px',
+            paddingTop: '12px',
+            borderTop: '1px solid var(--border-glass)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+            <BootstrapIcon name="key-fill" size={13} color="var(--text-muted)" />
+            <span style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>
+              {currentSyncKey}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={handleCopySyncKey}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-glass)',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-primary)',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+              title="Copy"
+            >
+              <Copy size={12} />
+              <span>Copy</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleRestoreAccount}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-glass)',
+                backgroundColor: 'var(--pill-bg)',
+                color: 'var(--text-primary)',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+              title="Restore"
+            >
+              <RefreshCw size={12} />
+              <span>Restore</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Unified Appearance Customizer Card (Themes, Colors & Presets) */}
@@ -177,6 +243,46 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       {/* Privacy Mode (Hide Balances Toggle) */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <BootstrapIcon name="incognito" size={18} color="var(--accent)" />
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Privacy</h4>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Blur dashboard spending</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setHideBalances(!hideBalances)}
+            style={{
+              width: '46px',
+              height: '26px',
+              borderRadius: '13px',
+              backgroundColor: hideBalances ? 'var(--accent)' : 'rgba(255, 255, 255, 0.12)',
+              border: 'none',
+              cursor: 'pointer',
+              position: 'relative',
+              transition: 'background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              padding: '2px',
+            }}
+            title="Privacy"
+          >
+            <div
+              style={{
+                width: '22px',
+                height: '22px',
+                borderRadius: '11px',
+                backgroundColor: '#FFFFFF',
+                transform: hideBalances ? 'translateX(20px)' : 'translateX(0px)',
+                transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
+              }}
+            />
+          </button>
+        </div>
+      </div>
 
 
       {/* Ultra-Clean 1-Row Export CSV Card */}

@@ -232,7 +232,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               position: 'fixed',
               inset: 0,
               backgroundColor: 'rgba(0, 0, 0, 0.75)',
-              backdropFilter: 'blur(12px)',
               zIndex: 110,
               display: 'flex',
               alignItems: 'center',

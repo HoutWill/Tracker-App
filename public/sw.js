@@ -20,9 +20,11 @@ self.addEventListener('notificationclick', (event) => {
       }
     })
   );
+});
+
 // Background push event listener for closed-app iOS Lock Screen notifications
 self.addEventListener('push', (event) => {
-  let payload = { title: '🔔 Tracker Alert', body: 'You have a scheduled reminder!' };
+  let payload = { title: 'Alert', body: 'Scheduled reminder due' };
   if (event.data) {
     try {
       payload = event.data.json();

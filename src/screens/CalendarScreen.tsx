@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
 import { formatCurrency, getTodayDateString } from '../services/storageService';
-import { getDateDetails, CAMBODIA_NATIONAL_HOLIDAYS, WORLD_CELEBRATION_DAYS } from '../services/khmerCalendarService';
+import { getDateDetails, CAMBODIA_NATIONAL_HOLIDAYS, WORLD_CELEBRATION_DAYS, getCambodiaHolidaysForYear } from '../services/khmerCalendarService';
 import { ExpenseCard } from '../components/ExpenseCard';
+import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { BuddhaIcon, BenOfferingIcon, CambodiaFlagBadge } from '../components/CalendarCustomIcons';
 import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Flag, Sparkles, Sun, Heart, Globe, Users } from 'lucide-react';
 
@@ -19,7 +20,7 @@ const SHORT_MONTH_NAMES = [
 ];
 
 export const CalendarScreen: React.FC = () => {
-  const { expenses, currency, hideBalances, setSelectedExpenseForEdit } = useExpenses();
+  const { expenses, currency, setSelectedExpenseForEdit } = useExpenses();
 
   const [viewMode, setViewMode] = useState<CalendarViewMode>('MONTH');
   const [viewDate, setViewDate] = useState<Date>(new Date());
@@ -103,7 +104,6 @@ export const CalendarScreen: React.FC = () => {
   const selectedDayNetUSD = selectedDaySavSum - selectedDayExpSum;
 
   const formatCellAmount = (netUSD: number) => {
-    if (hideBalances) return '••';
     if (netUSD === 0) return '';
 
     const absUSD = Math.abs(netUSD);
@@ -132,7 +132,7 @@ export const CalendarScreen: React.FC = () => {
   };
 
   const currentMonthPrefix = `${year}-${(month + 1).toString().padStart(2, '0')}`;
-  const monthHolidays = CAMBODIA_NATIONAL_HOLIDAYS.filter(h => h.dateStr.startsWith(currentMonthPrefix));
+  const monthHolidays = getCambodiaHolidaysForYear(year).filter(h => h.dateStr.startsWith(currentMonthPrefix));
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
@@ -163,13 +163,13 @@ export const CalendarScreen: React.FC = () => {
               <CambodiaFlagBadge size={18} />
             </div>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
-                Holidays • បុណ្យជាតិ
+              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
+                Holidays
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>
                 {monthHolidays.length > 0
-                  ? `${monthHolidays.length} Public Holidays in ${MONTH_NAMES[month]}`
-                  : `No Public Holidays in ${MONTH_NAMES[month]}`}
+                  ? `${monthHolidays.length} Holidays`
+                  : 'None'}
               </div>
             </div>
           </div>
@@ -369,11 +369,11 @@ export const CalendarScreen: React.FC = () => {
                   letterSpacing: '0.3px',
                 }}
               >
-                Public Holiday
+                Holiday
               </span>
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 400 }}>
-              {selectedDateDetails.holiday.nameEn} • National Day Off
+              {selectedDateDetails.holiday.nameEn}
             </div>
           </div>
         </div>
@@ -400,7 +400,7 @@ export const CalendarScreen: React.FC = () => {
           <div>
             <div>{selectedDateDetails.culturalEvent}</div>
             <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 400 }}>
-              Pchum Ben Season
+              Season
             </div>
           </div>
         </div>
@@ -423,11 +423,11 @@ export const CalendarScreen: React.FC = () => {
             marginBottom: '12px',
           }}
         >
-          <span style={{ fontSize: '18px' }}>{selectedDateDetails.worldDay.emoji || '💖'}</span>
+          <CategoryIconRenderer icon={selectedDateDetails.worldDay.icon || 'heart'} size={18} color="#EC4899" />
           <div>
             <div>{selectedDateDetails.worldDay.nameKh} ({selectedDateDetails.worldDay.nameEn})</div>
             <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 400 }}>
-              World Celebration & Appreciation Day
+              Celebration
             </div>
           </div>
         </div>
@@ -454,7 +454,7 @@ export const CalendarScreen: React.FC = () => {
           <div>
             <div>{selectedDateDetails.buddhaDayName}</div>
             <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 400 }}>
-              Buddhist Holy Day (Uposatha)
+              Uposatha
             </div>
           </div>
         </div>
@@ -507,12 +507,12 @@ export const CalendarScreen: React.FC = () => {
               gap: '4px',
             }}
           >
-            <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', padding: '2px 4px', marginBottom: '2px' }}>
-              CALENDAR VIEW
+            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', padding: '2px 4px', marginBottom: '2px' }}>
+              View
             </div>
             {[
-              { id: 'YEAR', label: 'Year View', desc: '12-month annual overview' },
-              { id: 'MONTH', label: 'Month View', desc: '30-day interactive grid' },
+              { id: 'YEAR', label: 'Year', desc: '12-month annual overview' },
+              { id: 'MONTH', label: 'Month', desc: '30-day interactive grid' },
             ].map(item => {
               const isActive = viewMode === item.id;
               return (
@@ -561,7 +561,7 @@ export const CalendarScreen: React.FC = () => {
                 color: totalYearNetUSD >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)',
               }}
             >
-              {hideBalances ? '••••' : (totalYearNetUSD >= 0 ? '+' : '') + formatCurrency(totalYearNetUSD, currency)}
+              {(totalYearNetUSD >= 0 ? '+' : '') + formatCurrency(totalYearNetUSD, currency)}
             </div>
           </div>
 
@@ -630,7 +630,7 @@ export const CalendarScreen: React.FC = () => {
 
             {days.map(item => {
               const isSel = selectedDay === item.dateStr;
-              const isToday = item.dateStr === new Date().toISOString().split('T')[0];
+              const isToday = item.dateStr === getTodayDateString();
               const isHoliday = !!item.dateDetails.holiday;
               const isBuddhaDay = item.dateDetails.isBuddhaDay;
               const isCultural = !!item.dateDetails.culturalEvent;
@@ -686,7 +686,7 @@ export const CalendarScreen: React.FC = () => {
                     {isBuddhaDay && !isHoliday && <BuddhaIcon size={11} color="#F59E0B" />}
                     {isCultural && !isHoliday && !isBuddhaDay && <BenOfferingIcon size={10} color="#3B82F6" />}
                     {item.dateDetails.worldDay && !isHoliday && !isBuddhaDay && !isCultural && (
-                      <span style={{ fontSize: '9px', lineHeight: 1 }}>{item.dateDetails.worldDay.emoji || '💖'}</span>
+                      <CategoryIconRenderer icon={item.dateDetails.worldDay.icon || 'heart'} size={10} color="#EC4899" />
                     )}
                   </div>
 
@@ -730,9 +730,7 @@ export const CalendarScreen: React.FC = () => {
               color: selectedDayNetUSD > 0 ? 'var(--accent-success)' : selectedDayNetUSD < 0 ? 'var(--accent-danger)' : 'var(--text-primary)',
             }}
           >
-            {hideBalances
-              ? '••••'
-              : (selectedDayNetUSD > 0 ? '+' : '') + formatCurrency(selectedDayNetUSD, currency)}
+            {(selectedDayNetUSD > 0 ? '+' : '') + formatCurrency(selectedDayNetUSD, currency)}
           </span>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
             Exp: {formatCurrency(selectedDayExpSum, currency)} | Sav: {formatCurrency(selectedDaySavSum, currency)}

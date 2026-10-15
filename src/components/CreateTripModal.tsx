@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
+import { getTodayDateString } from '../services/storageService';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
 import { X, Check, Plane, Users, PartyPopper, Calendar, DollarSign, FolderPlus, PiggyBank, Shield, Target, Home, Laptop, Smartphone, Car } from 'lucide-react';
 import { TransactionType } from '../types';
@@ -12,15 +13,15 @@ export const CreateTripModal: React.FC = () => {
   const [category, setCategory] = useState(activeTypeTab === 'SAVING' ? 'House' : 'Travel');
   const [budget, setBudget] = useState(activeTypeTab === 'SAVING' ? '2000' : '300');
   const [daysCount, setDaysCount] = useState<number>(activeTypeTab === 'SAVING' ? 30 : 3);
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(getTodayDateString());
 
   if (!isCreateTripOpen) return null;
 
   // Calculate end date based on daysCount
   const calculateEndDate = (startStr: string, days: number): string => {
-    const d = new Date(startStr);
-    d.setDate(d.getDate() + Math.max(0, days - 1));
-    return d.toISOString().split('T')[0];
+    const [y, m, d] = startStr.split('-').map(Number);
+    const dateObj = new Date(Date.UTC(y, m - 1, d + Math.max(0, days - 1), 12, 0, 0));
+    return getTodayDateString(dateObj);
   };
 
   const handleTemplateSelect = (templateName: string, iconCategory: string, defaultBudget: number, defaultDays: number) => {

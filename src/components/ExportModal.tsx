@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
+import { getTodayDateString } from '../services/storageService';
 import { X, Download, FileSpreadsheet, Calendar, Check } from 'lucide-react';
 
 interface ExportModalProps {
@@ -12,8 +13,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
 
   const [exportPeriod, setExportPeriod] = useState<'ALL' | 'MONTH' | 'RANGE'>('ALL');
   const [exportType, setExportType] = useState<'ALL' | 'EXPENSE' | 'SAVING'>('ALL');
-  const [exportStartDate, setExportStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [exportEndDate, setExportEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [exportStartDate, setExportStartDate] = useState(getTodayDateString());
+  const [exportEndDate, setExportEndDate] = useState(getTodayDateString());
 
   if (!isOpen) return null;
 
@@ -22,9 +23,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
     let end: string | undefined = undefined;
 
     if (exportPeriod === 'MONTH') {
-      const now = new Date();
-      start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      const todayStr = getTodayDateString();
+      const [year, month] = todayStr.split('-').map(Number);
+      const mPad = String(month).padStart(2, '0');
+      start = `${year}-${mPad}-01`;
+      const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+      end = `${year}-${mPad}-${String(lastDay).padStart(2, '0')}`;
     } else if (exportPeriod === 'RANGE') {
       start = exportStartDate;
       end = exportEndDate;
@@ -35,7 +39,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `export_${exportType.toLowerCase()}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `export_${exportType.toLowerCase()}_${getTodayDateString()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -29,8 +29,8 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
   if (!isOpen) return null;
 
   const pageNames: { key: keyof PageColors; label: string }[] = [
-    { key: 'EXPENSES', label: 'Expenses Page' },
-    { key: 'SAVING', label: 'Saving Page' },
+    { key: 'EXPENSES', label: 'Expenses' },
+    { key: 'SAVING', label: 'Savings' },
   ];
 
   const handleSetAllPresetsToWhite = () => {
@@ -71,9 +71,9 @@ export const AppearanceModal: React.FC<AppearanceModalProps> = ({ isOpen, onClos
             </div>
             <div>
               <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
-                Appearance & Theme
+                Appearance
               </h3>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Colors & Preset Customizer</span>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Customizer</span>
             </div>
           </div>
 

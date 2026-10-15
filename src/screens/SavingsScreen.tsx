@@ -9,7 +9,7 @@ import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { SAVING_QUICK_PRESETS } from '../constants/presets';
 import { formatCurrency, StorageService, getTodayDateString, getStartOfWeekDateString, getEndOfWeekDateString } from '../services/storageService';
 import { PaymentMethod, QuickPreset, BudgetPeriod } from '../types';
-import { Plus, Zap, CheckCircle2, Layers, SearchX, X, Check, PiggyBank, Target, TrendingUp, Trash2, CreditCard, Eye, EyeOff, Edit3, Wallet } from 'lucide-react';
+import { Plus, Zap, CheckCircle2, Layers, SearchX, X, Check, PiggyBank, Target, TrendingUp, Trash2, CreditCard, Edit3, Wallet } from 'lucide-react';
 
 const SAVING_PRESET_ICONS = [
   'piggy-bank', 'vault', 'wallet', 'shield-check', 'target', 'trending-up',
@@ -38,8 +38,6 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
     setSavingPeriod,
     cycleHistory,
     archiveCycleSnapshot,
-    hideBalances,
-    toggleHideBalances,
     addExpense,
     setIsAddSavingOpen,
     setSelectedExpenseForEdit,
@@ -326,7 +324,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
           </div>
         </div>
 
-        {/* Main Big Saved Amount with Eye Toggle directly next to price */}
+        {/* Main Big Saved Amount */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
           <div
             className="tabular-nums"
@@ -336,37 +334,15 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
               letterSpacing: '-1px',
               color: 'var(--text-primary)',
               lineHeight: 1.1,
-              filter: hideBalances ? 'blur(9px)' : 'none',
-              transition: 'filter 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              userSelect: hideBalances ? 'none' : 'auto',
             }}
           >
             {formatCurrency(totalSavingUSD, currency)}
           </div>
-
-          <button
-            type="button"
-            onClick={() => toggleHideBalances()}
-            style={{
-              padding: '4px',
-              background: 'none',
-              border: 'none',
-              color: hideBalances ? '#4A99E9' : 'var(--text-muted)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-            title={hideBalances ? 'Show Balance' : 'Hide Balance'}
-          >
-            {hideBalances ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
         </div>
 
-        {/* Middle Info Row: Remaining Goal Label (Left) & Green Amount (Right) */}
+        {/* Middle Info Row: Remaining Label (Left) & Green Amount (Right) */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', marginBottom: '8px' }}>
-          <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Remaining goal</span>
+          <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Remaining</span>
           <span className="tabular-nums" style={{ color: '#30D158', fontWeight: 800 }}>
             {formatCurrency(Math.max(0, currentGoal - totalSavingUSD), currency)}
           </span>
@@ -432,8 +408,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.65)',
-            backdropFilter: 'blur(12px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.78)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'center',
@@ -581,8 +556,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(10px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.78)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'center',

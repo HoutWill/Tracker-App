@@ -6,10 +6,11 @@ import { FilterControlBar } from '../components/FilterControlBar';
 import { TripFolderBar } from '../components/TripFolderBar';
 import { ArtPresetGrid } from '../components/ArtPresetGrid';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
+import { BootstrapIcon } from '../components/BootstrapIcon';
 import { EXPENSE_QUICK_PRESETS } from '../constants/presets';
 import { formatCurrency, StorageService, getTodayDateString, getStartOfWeekDateString, getEndOfWeekDateString, formatCleanDate } from '../services/storageService';
 import { PaymentMethod, QuickPreset, BudgetPeriod } from '../types';
-import { Plus, Zap, TrendingUp, Filter, CheckCircle2, Layers, SearchX, X, Check, ArrowDownRight, Trash2, Target, Edit3, CreditCard, PiggyBank, Calendar, ChevronDown, Hash, Award, Eye, EyeOff, Wallet } from 'lucide-react';
+import { Plus, Zap, TrendingUp, Filter, CheckCircle2, Layers, SearchX, X, Check, ArrowDownRight, Trash2, Target, Edit3, CreditCard, PiggyBank, Calendar, ChevronDown, ChevronLeft, ChevronRight, Hash, Award, Eye, EyeOff, Wallet } from 'lucide-react';
 
 const PRESET_ICONS = [
   'receipt', 'laptop', 'coffee', 'utensils', 'car', 'shopping-cart',
@@ -62,6 +63,31 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
   // Date Check filter state
   const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
 
+  // Month Selection state (defaults to current month in Cambodia UTC+7 e.g. "2026-10")
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => getTodayDateString().slice(0, 7));
+
+  const currentMonthKey = getTodayDateString().slice(0, 7);
+  const isCurrentMonth = selectedMonth === currentMonthKey;
+
+  const monthDate = new Date(`${selectedMonth}-01T12:00:00Z`);
+  const monthName = monthDate.toLocaleString('en-US', { month: 'long', timeZone: 'Asia/Phnom_Penh' });
+
+  const goToPrevMonth = () => {
+    const [y, m] = selectedMonth.split('-').map(Number);
+    const prevDate = new Date(y, m - 2, 1);
+    const prevStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+    setSelectedMonth(prevStr);
+    setSelectedDateFilter(null);
+  };
+
+  const goToNextMonth = () => {
+    const [y, m] = selectedMonth.split('-').map(Number);
+    const nextDate = new Date(y, m, 1);
+    const nextStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
+    setSelectedMonth(nextStr);
+    setSelectedDateFilter(null);
+  };
+
   // Edit Budget Target state
   const [isEditingBudget, setIsEditingBudget] = useState<boolean>(false);
   const [customBudgetInput, setCustomBudgetInput] = useState<string>(monthlyBudget.toString());
@@ -96,6 +122,28 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
 
   const totalExpenseUSD = expenseItems.reduce((sum, e) => sum + e.amount, 0);
 
+  // Monthly spending (strictly scoped to selectedMonth so expenses reset each month)
+  const monthExpenseItems = rawExpenseItems.filter(e => e.date.startsWith(selectedMonth));
+  const monthSpendUSD = monthExpenseItems.reduce((sum, e) => sum + e.amount, 0);
+
+  // Spending shown in the hero card (either single filtered date or selected active month)
+  const displaySpendUSD = selectedDateFilter
+    ? expenseItems.reduce((sum, e) => sum + e.amount, 0)
+    : monthSpendUSD;
+
+  // Active budget limit (monthly target)
+  const currentBudget = monthlyBudget || (budgetPeriod === 'DAILY' ? 35 : budgetPeriod === 'WEEKLY' ? 250 : 1000);
+  const remainingBudgetUSD = Math.max(0, currentBudget - displaySpendUSD);
+  const budgetProgress = Math.min(100, Math.round((displaySpendUSD / currentBudget) * 100));
+
+  // Allowance & Pacing calculation (Cambodia UTC+7)
+  const [todayY, todayM, todayD] = getTodayDateString().split('-').map(Number);
+  const daysInMonth = new Date(todayY, todayM, 0).getDate();
+  const daysRemaining = isCurrentMonth ? Math.max(1, daysInMonth - todayD + 1) : 1;
+  const dailyAllowanceUSD = isCurrentMonth && remainingBudgetUSD > 0
+    ? remainingBudgetUSD / daysRemaining
+    : (isCurrentMonth ? 0 : Math.max(0, currentBudget - displaySpendUSD) / daysInMonth);
+
   // Reworked Financial Insights:
   // 1. Daily Average across active days
   const uniqueDays = Array.from(new Set(rawExpenseItems.map(e => e.date)));
@@ -106,26 +154,6 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
 
   // 3. Peak Transaction Amount
   const maxTxUSD = expenseItems.length > 0 ? Math.max(...expenseItems.map(e => e.amount)) : 0;
-
-  // Period Expense Calculation for Multi-Period Budgeting (Daily / Weekly / Monthly)
-  const getActivePeriodExpenseUSD = () => {
-    const todayStr = getTodayDateString();
-    if (budgetPeriod === 'DAILY') {
-      return expenseItems.filter(e => e.date === todayStr).reduce((sum, e) => sum + e.amount, 0);
-    }
-    if (budgetPeriod === 'WEEKLY') {
-      const startW = getStartOfWeekDateString();
-      const endW = getEndOfWeekDateString();
-      return expenseItems.filter(e => e.date >= startW && e.date <= endW).reduce((sum, e) => sum + e.amount, 0);
-    }
-    const monthPrefix = todayStr.substring(0, 7);
-    return expenseItems.filter(e => e.date.startsWith(monthPrefix)).reduce((sum, e) => sum + e.amount, 0);
-  };
-
-  const activePeriodExpenseUSD = getActivePeriodExpenseUSD();
-  const currentBudget = monthlyBudget || (budgetPeriod === 'DAILY' ? 35 : budgetPeriod === 'WEEKLY' ? 250 : 1000);
-  const remainingBudgetUSD = Math.max(0, currentBudget - activePeriodExpenseUSD);
-  const budgetProgress = Math.min(100, Math.round((activePeriodExpenseUSD / currentBudget) * 100));
 
   const handleOpenPresetModal = (preset: QuickPreset) => {
     setActivePreset(preset);
@@ -218,7 +246,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
       period: budgetPeriod,
       periodKey: getTodayDateString(),
       targetAmount: currentBudget,
-      actualAmount: activePeriodExpenseUSD,
+      actualAmount: displaySpendUSD,
       status: 'SURPLUS',
       surplusAmount: remainingBudgetUSD,
     });
@@ -353,11 +381,66 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
           marginBottom: '12px',
         }}
       >
-        {/* Top Row: Period Title (Left) | Interactive Month & Date Picker (Right) */}
+        {/* Top Row: Month Selector & Navigation */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
-            {selectedDateFilter ? `Date: ${formatCleanDate(selectedDateFilter)}` : 'This month'}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={goToPrevMonth}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '4px',
+                borderRadius: '6px',
+              }}
+              title="Previous"
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
+              {selectedDateFilter ? selectedDateFilter : monthName}
+            </span>
+
+            <button
+              type="button"
+              onClick={goToNextMonth}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '4px',
+                borderRadius: '6px',
+              }}
+              title="Next"
+            >
+              <ChevronRight size={16} />
+            </button>
+
+            {isCurrentMonth && (
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 800,
+                  padding: '2px 7px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(74, 153, 233, 0.15)',
+                  color: '#4A99E9',
+                }}
+              >
+                Current
+              </span>
+            )}
+          </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {/* Interactive Date Check Picker */}
@@ -377,7 +460,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                 <span>
                   {selectedDateFilter
                     ? formatCleanDate(selectedDateFilter)
-                    : new Date().toLocaleString('en-US', { month: 'short', year: '2-digit' })}
+                    : selectedMonth}
                 </span>
               </div>
               <input
@@ -401,7 +484,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                   padding: 0,
                   WebkitAppearance: 'none',
                 }}
-                title="Filter by Date"
+                title="Date"
               />
             </div>
 
@@ -419,7 +502,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
                   fontWeight: 700,
                   cursor: 'pointer',
                 }}
-                title="Show All Dates"
+                title="All"
               >
                 All
               </button>
@@ -442,7 +525,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               userSelect: hideBalances ? 'none' : 'auto',
             }}
           >
-            {formatCurrency(totalExpenseUSD, currency)}
+            {formatCurrency(displaySpendUSD, currency)}
           </div>
 
           <button
@@ -459,7 +542,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               cursor: 'pointer',
               transition: 'all 0.15s ease',
             }}
-            title={hideBalances ? 'Show Balance' : 'Hide Balance'}
+            title={hideBalances ? 'Show' : 'Hide'}
           >
             {hideBalances ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
@@ -468,7 +551,16 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
         {/* Middle Info Row: Remaining Label (Left) & Green Amount (Right) */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', marginBottom: '8px' }}>
           <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Remaining</span>
-          <span className="tabular-nums" style={{ color: '#30D158', fontWeight: 800 }}>
+          <span
+            className="tabular-nums"
+            style={{
+              color: '#30D158',
+              fontWeight: 800,
+              filter: hideBalances ? 'blur(6px)' : 'none',
+              transition: 'filter 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              userSelect: hideBalances ? 'none' : 'auto',
+            }}
+          >
             {formatCurrency(remainingBudgetUSD, currency)}
           </span>
         </div>
@@ -515,15 +607,145 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               alignItems: 'center',
               gap: '4px',
             }}
-            title="Tap to Set Budget Target"
+            title="Budget"
           >
             <span>Budget: {formatCurrency(currentBudget, currency)}</span>
             <Edit3 size={11} color="var(--text-muted)" />
           </button>
 
           <span style={{ fontWeight: 500 }}>
-            Avg/day: {formatCurrency(dailyAvgUSD, currency)}
+            Average: {formatCurrency(dailyAvgUSD, currency)}
           </span>
+        </div>
+      </div>
+
+      {/* 2. iOS 18 Muted Pastel Bento Grid: Allowance & Pacing (New Feature with Bootstrap Icons) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+        {/* Bento Tile 1: Allowance */}
+        <div
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-glass)',
+            borderRadius: '20px',
+            padding: '14px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(74, 153, 233, 0.15)',
+                  border: '1px solid rgba(74, 153, 233, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <BootstrapIcon name="speedometer2" size={15} color="#4A99E9" />
+              </div>
+              <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Allowance</span>
+            </div>
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 800,
+                padding: '2px 7px',
+                borderRadius: '6px',
+                backgroundColor: dailyAllowanceUSD > 0 ? 'rgba(48, 209, 88, 0.15)' : 'rgba(237, 108, 108, 0.15)',
+                color: dailyAllowanceUSD > 0 ? '#30D158' : '#ED6C6C',
+              }}
+            >
+              {dailyAllowanceUSD > 20 ? 'Safe' : dailyAllowanceUSD > 0 ? 'Paced' : 'Limit'}
+            </span>
+          </div>
+          <div style={{ marginTop: '10px' }}>
+            <div
+              className="tabular-nums"
+              style={{
+                fontSize: '22px',
+                fontWeight: 900,
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.5px',
+                lineHeight: 1.1,
+                filter: hideBalances ? 'blur(6px)' : 'none',
+                transition: 'filter 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                userSelect: hideBalances ? 'none' : 'auto',
+              }}
+            >
+              {formatCurrency(dailyAllowanceUSD, currency)}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: 600 }}>
+              Daily
+            </div>
+          </div>
+        </div>
+
+        {/* Bento Tile 2: Pacing */}
+        <div
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-glass)',
+            borderRadius: '20px',
+            padding: '14px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(243, 168, 91, 0.15)',
+                  border: '1px solid rgba(243, 168, 91, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <BootstrapIcon name="graph-up-arrow" size={14} color="#F3A85B" />
+              </div>
+              <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Pacing</span>
+            </div>
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 800,
+                padding: '2px 7px',
+                borderRadius: '6px',
+                backgroundColor: budgetProgress <= 80 ? 'rgba(48, 209, 88, 0.15)' : 'rgba(237, 108, 108, 0.15)',
+                color: budgetProgress <= 80 ? '#30D158' : '#ED6C6C',
+              }}
+            >
+              {budgetProgress <= 80 ? 'Normal' : budgetProgress < 100 ? 'Caution' : 'Exceeded'}
+            </span>
+          </div>
+          <div style={{ marginTop: '10px' }}>
+            <div
+              className="tabular-nums"
+              style={{
+                fontSize: '22px',
+                fontWeight: 900,
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.5px',
+                lineHeight: 1.1,
+              }}
+            >
+              {budgetProgress}%
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: 600 }}>
+              {daysRemaining}d
+            </div>
+          </div>
         </div>
       </div>
 
@@ -533,8 +755,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(10px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.78)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'center',
@@ -683,8 +904,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(10px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.78)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'center',

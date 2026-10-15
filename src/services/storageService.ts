@@ -20,6 +20,16 @@ export const getTodayDateString = (d: Date = new Date()): string => {
   return formatter.format(d);
 };
 
+export const getNowTimeString = (d: Date = new Date()): string => {
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Phnom_Penh',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  return formatter.format(d);
+};
+
 export const getStartOfWeekDateString = (d: Date = new Date()): string => {
   const todayStr = getTodayDateString(d);
   const [year, month, day] = todayStr.split('-').map(Number);
@@ -506,8 +516,8 @@ export const StorageService = {
         category: 'Travel',
         budget: 350,
         currency: 'USD',
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
+        startDate: getTodayDateString(),
+        endDate: getTodayDateString(new Date(Date.now() + 2 * 86400000)),
         createdAt: Date.now(),
         status: 'Active',
         type: 'EXPENSE',
@@ -518,8 +528,8 @@ export const StorageService = {
         category: 'Team',
         budget: 200,
         currency: 'USD',
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 1 * 86400000).toISOString().split('T')[0],
+        startDate: getTodayDateString(),
+        endDate: getTodayDateString(new Date(Date.now() + 1 * 86400000)),
         createdAt: Date.now() - 1000,
         status: 'Active',
         type: 'EXPENSE',
@@ -530,8 +540,8 @@ export const StorageService = {
         category: 'Vault',
         budget: 500,
         currency: 'USD',
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+        startDate: getTodayDateString(),
+        endDate: getTodayDateString(new Date(Date.now() + 30 * 86400000)),
         createdAt: Date.now() - 2000,
         status: 'Active',
         type: 'SAVING',
@@ -542,8 +552,8 @@ export const StorageService = {
         category: 'Emergency',
         budget: 1000,
         currency: 'USD',
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 60 * 86400000).toISOString().split('T')[0],
+        startDate: getTodayDateString(),
+        endDate: getTodayDateString(new Date(Date.now() + 60 * 86400000)),
         createdAt: Date.now() - 3000,
         status: 'Active',
         type: 'SAVING',
@@ -626,5 +636,66 @@ export const StorageService = {
     try {
       localStorage.setItem('pitrack_hide_balances', String(hide));
     } catch (e) {}
+  },
+
+  getLastActiveMonth(): string | null {
+    const guestId = getGuestId();
+    try {
+      return localStorage.getItem(`pitrack_active_month_${guestId}`) || localStorage.getItem('pitrack_active_month');
+    } catch (e) {
+      return null;
+    }
+  },
+
+  setLastActiveMonth(month: string): void {
+    const guestId = getGuestId();
+    try {
+      localStorage.setItem(`pitrack_active_month_${guestId}`, month);
+      localStorage.setItem('pitrack_active_month', month);
+    } catch (e) {}
+  },
+
+  checkAndRunMonthlyRollover(): CycleSnapshot | null {
+    const currentMonth = getTodayDateString().slice(0, 7);
+    const lastMonth = this.getLastActiveMonth();
+
+    if (!lastMonth) {
+      this.setLastActiveMonth(currentMonth);
+      return null;
+    }
+
+    if (lastMonth !== currentMonth) {
+      const history = this.getCycleHistory();
+      const alreadyArchived = history.some(h => h.period === 'MONTHLY' && h.periodKey === lastMonth);
+
+      let snapshotCreated: CycleSnapshot | null = null;
+      if (!alreadyArchived) {
+        const allExpenses = this.getCachedExpenses();
+        const lastMonthExpenses = allExpenses.filter(e =>
+          (e.type === 'EXPENSE' || (!e.type && !e.categoryId.startsWith('cat-saving'))) &&
+          e.date.startsWith(lastMonth)
+        );
+
+        const totalSpent = lastMonthExpenses.reduce((s, e) => s + e.amount, 0);
+        const targets = this.getBudgetTargets();
+        const targetMonthly = targets.MONTHLY || 1000;
+        const surplusOrDeficit = targetMonthly - totalSpent;
+
+        snapshotCreated = this.addCycleSnapshot({
+          type: 'BUDGET',
+          period: 'MONTHLY',
+          periodKey: lastMonth,
+          targetAmount: targetMonthly,
+          actualAmount: totalSpent,
+          status: surplusOrDeficit >= 0 ? 'SURPLUS' : 'OVERRUN',
+          surplusAmount: Math.max(0, surplusOrDeficit),
+        });
+      }
+
+      this.setLastActiveMonth(currentMonth);
+      return snapshotCreated;
+    }
+
+    return null;
   },
 };

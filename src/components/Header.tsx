@@ -40,8 +40,6 @@ export const Header: React.FC = () => {
         padding: '0 16px',
         borderBottom: '1px solid var(--border-glass)',
         backgroundColor: 'var(--bg-card)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
         position: 'sticky',
         top: 0,
         zIndex: 50,

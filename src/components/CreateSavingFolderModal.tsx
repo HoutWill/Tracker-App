@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
+import { getTodayDateString } from '../services/storageService';
 import { X, Check, PiggyBank, Shield, Target, Home, Laptop, Smartphone, Car, FolderPlus } from 'lucide-react';
 
 export const CreateSavingFolderModal: React.FC = () => {
@@ -9,14 +10,14 @@ export const CreateSavingFolderModal: React.FC = () => {
   const [category, setCategory] = useState('House');
   const [budget, setBudget] = useState('2000');
   const [daysCount, setDaysCount] = useState<number>(30);
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(getTodayDateString());
 
   if (!isCreateSavingFolderOpen) return null;
 
   const calculateEndDate = (startStr: string, days: number): string => {
-    const d = new Date(startStr);
-    d.setDate(d.getDate() + Math.max(0, days - 1));
-    return d.toISOString().split('T')[0];
+    const [y, m, d] = startStr.split('-').map(Number);
+    const dateObj = new Date(Date.UTC(y, m - 1, d + Math.max(0, days - 1), 12, 0, 0));
+    return getTodayDateString(dateObj);
   };
 
   const handleTemplateSelect = (templateName: string, iconCategory: string, defaultBudget: number, defaultDays: number) => {

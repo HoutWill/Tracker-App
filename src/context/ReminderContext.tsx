@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ReminderItem } from '../types';
-import { StorageService, getTodayDateString } from '../services/storageService';
+import { StorageService, getTodayDateString, getNowTimeString } from '../services/storageService';
 import { playAlertChime, triggerHaptic } from '../services/soundService';
 import { Bell, CheckCircle2, X } from 'lucide-react';
 
@@ -87,7 +87,7 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     try {
-      new Notification('🔔 PiTrack Alert Test', {
+      new Notification('PiTrack Alert Test', {
         body: 'Red badge (3) set on Home Screen icon. Tap to open!',
         icon: '/icon-192.png',
         badge: '/icon-192.png',
@@ -139,10 +139,7 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     const interval = setInterval(() => {
       const todayStr = getTodayDateString();
-      const now = new Date();
-      const currentHours = String(now.getHours()).padStart(2, '0');
-      const currentMins = String(now.getMinutes()).padStart(2, '0');
-      const nowTimeStr = `${currentHours}:${currentMins}`; // HH:mm
+      const nowTimeStr = getNowTimeString(); // HH:mm aligned with Asia/Phnom_Penh
 
       let hasStateChanges = false;
       let triggeredAlarmItem: ReminderItem | null = null;
@@ -187,7 +184,7 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
             const cleanNotes = item.notes ? item.notes.replace(/<[^>]*>/g, '') : '';
-            new Notification(`🔔 Alert: ${item.title}`, {
+            new Notification(`Alert: ${item.title}`, {
               body: `${item.dueTime || 'Scheduled'} — ${cleanNotes || item.category}`,
               icon: '/icon-192.png',
               badge: '/icon-192.png',

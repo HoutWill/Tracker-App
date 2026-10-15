@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
+import { getTodayDateString } from '../services/storageService';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
 import { PaymentMethod } from '../types';
 import { X, Check, PiggyBank, Trash2 } from 'lucide-react';
@@ -25,7 +26,7 @@ export const EditSavingModal: React.FC = () => {
       setAmount(selectedExpenseForEdit.amount ? selectedExpenseForEdit.amount.toString() : '0');
       setCategoryId(selectedExpenseForEdit.categoryId || savingCategories[0]?.id || 'cat-saving-vault');
       setPaymentMethod(selectedExpenseForEdit.paymentMethod || 'Bank');
-      setDateStr(selectedExpenseForEdit.date || new Date().toISOString().split('T')[0]);
+      setDateStr(selectedExpenseForEdit.date || getTodayDateString());
       setNotes(selectedExpenseForEdit.notes || '');
     }
   }, [selectedExpenseForEdit]);
