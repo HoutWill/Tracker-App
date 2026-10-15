@@ -47,10 +47,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
       // Default checklist if none exists
       const initialChecklist = reminder.checklist && reminder.checklist.length > 0
         ? reminder.checklist
-        : [
-            { id: 'cl-1', text: 'Review scope & objectives', done: true },
-            { id: 'cl-2', text: 'Confirm schedule & timeline', done: false },
-          ];
+        : [];
       setChecklist(initialChecklist);
       setIsEditing(false);
     }
@@ -398,7 +395,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                   flexShrink: 0,
                 }}
               >
-                {reminder.level === 'URGENT' ? 'High Priority' : reminder.level === 'FLAGGED' ? 'Flagged' : 'Simple'}
+                {reminder.level === 'URGENT' ? 'Urgent' : reminder.level === 'FLAGGED' ? 'Flagged' : 'Simple'}
               </span>
             </div>
 
@@ -406,7 +403,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', padding: '12px 0', borderTop: '1px solid var(--border-glass)', borderBottom: '1px solid var(--border-glass)' }}>
               <div>
                 <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px', fontWeight: 500 }}>
-                  Due date
+                  Date
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                   <Calendar size={15} color="var(--text-secondary)" />
@@ -435,7 +432,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
             {/* Check List Section matching user screenshot */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Check List</h4>
+                <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Checklist</h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <button
                     type="button"
@@ -498,7 +495,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                       type="text"
                       value={newChecklistItemText}
                       onChange={e => setNewChecklistItemText(e.target.value)}
-                      placeholder="New checklist item..."
+                      placeholder="Subtask..."
                       autoFocus
                       style={{
                         flex: 1,
@@ -555,7 +552,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                   }}
                 >
                   <CheckCircle2 size={16} />
-                  <span>{reminder.completed ? 'Mark Pending' : 'Complete Task'}</span>
+                  <span>{reminder.completed ? 'Pending' : 'Complete'}</span>
                 </button>
 
                 <button
@@ -574,7 +571,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
-                  title="Delete Task"
+                  title="Delete"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -600,7 +597,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                   }}
                 >
                   <Share2 size={13} />
-                  <span>Apple Reminders</span>
+                  <span>Reminders</span>
                 </button>
 
                 <button
@@ -622,7 +619,7 @@ export const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({ remind
                   }}
                 >
                   <Calendar size={13} />
-                  <span>Apple Calendar</span>
+                  <span>Calendar</span>
                 </button>
               </div>
             </div>

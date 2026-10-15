@@ -25,6 +25,8 @@ import {
   ShieldCheck,
   Clock,
   Flag,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface PlannerPresetGridProps {
@@ -125,11 +127,11 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
 
   return (
     <div style={{ marginBottom: '20px' }}>
-      {/* Header Row: Quick Add Title & Edit Action Button */}
+      {/* Header Row: Presets Title & Edit Action Button */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Zap size={16} color="var(--accent)" />
-          <h3 style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '-0.1px', color: 'var(--text-primary)' }}>Quick Add</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '-0.1px', color: 'var(--text-primary)' }}>Presets</h3>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -183,7 +185,7 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
             border: '1px solid var(--border-glass)',
           }}
         >
-          Drag preset cards to relocate positions
+          Organize
         </div>
       )}
 
@@ -323,7 +325,7 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
                       type="button"
                       onClick={() => handleMoveItem(idx, 'LEFT')}
                       style={{
-                        padding: '2px 6px',
+                        padding: '3px 6px',
                         fontSize: '9px',
                         fontWeight: 700,
                         borderRadius: '6px',
@@ -331,9 +333,13 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
                         border: '1px solid var(--border-glass)',
                         color: 'var(--text-secondary)',
                         cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
+                      title="Move"
                     >
-                      ◀
+                      <ChevronLeft size={10} />
                     </button>
                   )}
                   {idx < presetsList.length - 1 && (
@@ -341,7 +347,7 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
                       type="button"
                       onClick={() => handleMoveItem(idx, 'RIGHT')}
                       style={{
-                        padding: '2px 6px',
+                        padding: '3px 6px',
                         fontSize: '9px',
                         fontWeight: 700,
                         borderRadius: '6px',
@@ -349,9 +355,13 @@ export const PlannerPresetGrid: React.FC<PlannerPresetGridProps> = ({
                         border: '1px solid var(--border-glass)',
                         color: 'var(--text-secondary)',
                         cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
+                      title="Move"
                     >
-                      ▶
+                      <ChevronRight size={10} />
                     </button>
                   )}
                 </div>

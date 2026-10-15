@@ -61,6 +61,7 @@ export const PlannerScreen: React.FC = () => {
     reminders,
     addReminder,
     toggleReminder,
+    updateReminder,
     deleteReminder,
     setIsAddReminderOpen,
     openAddReminderWithPreset,
@@ -133,8 +134,27 @@ export const PlannerScreen: React.FC = () => {
   // Search & Category Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ReminderCategory | 'ALL'>('ALL');
+  const [quickTaskTitle, setQuickTaskTitle] = useState('');
   const [isListeningSearch, setIsListeningSearch] = useState(false);
   const recognitionRef = useRef<any>(null);
+
+  const handleQuickInlineAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanTitle = quickTaskTitle.trim().slice(0, 150);
+    if (!cleanTitle) return;
+    triggerHaptic(12);
+    addReminder({
+      title: cleanTitle,
+      notes: '',
+      category: categoryFilter !== 'ALL' ? categoryFilter : 'TASK',
+      priority: activeFilter === 'FLAGGED' ? 'HIGH' : activeFilter === 'URGENT' ? 'HIGH' : 'LOW',
+      level: activeFilter === 'URGENT' ? 'URGENT' : activeFilter === 'FLAGGED' ? 'FLAGGED' : 'SIMPLE',
+      dueDate: selectedDayFilter || today,
+      dueTime: '09:00',
+      alertEnabled: true,
+    });
+    setQuickTaskTitle('');
+  };
 
   const handleVoiceSearch = () => {
     if (isListeningSearch) {
@@ -184,9 +204,40 @@ export const PlannerScreen: React.FC = () => {
     }
   }, [calSelectedDate, plannerTab]);
 
+  const toggleSubtask = (reminderId: string, subtaskId: string) => {
+    triggerHaptic(10);
+    const reminder = reminders.find(item => item.id === reminderId);
+    if (!reminder || !reminder.checklist) return;
+    const updatedChecklist = reminder.checklist.map(st =>
+      st.id === subtaskId ? { ...st, done: !st.done } : st
+    );
+    const allDone = updatedChecklist.length > 0 && updatedChecklist.every(st => st.done);
+    updateReminder(reminderId, {
+      checklist: updatedChecklist,
+      ...(allDone && !reminder.completed ? { completed: true } : {})
+    });
+  };
+
+  const toggleFlagReminder = (reminder: ReminderItem) => {
+    triggerHaptic(12);
+    const isCurrentlyFlagged = reminder.priority === 'HIGH' || reminder.level === 'FLAGGED';
+    updateReminder(reminder.id, {
+      priority: isCurrentlyFlagged ? 'LOW' : 'HIGH',
+      level: isCurrentlyFlagged ? 'SIMPLE' : 'FLAGGED',
+    });
+  };
+
+  const handleClearCompleted = () => {
+    if (completedReminders.length === 0) return;
+    triggerHaptic(15);
+    if (window.confirm('Clear completed?')) {
+      completedReminders.forEach(r => deleteReminder(r.id));
+    }
+  };
+
   const todayReminders = reminders.filter(r => r.dueDate === today && !r.completed);
   const scheduledReminders = reminders.filter(r => r.dueDate > today && !r.completed);
-  const flaggedReminders = reminders.filter(r => r.priority === 'HIGH' && !r.completed);
+  const flaggedReminders = reminders.filter(r => (r.priority === 'HIGH' || r.level === 'FLAGGED') && !r.completed);
   const urgentReminders = reminders.filter(r => r.level === 'URGENT' && !r.completed);
   const completedReminders = reminders.filter(r => r.completed);
 
@@ -230,7 +281,7 @@ export const PlannerScreen: React.FC = () => {
       // Filter tab
       if (activeFilter === 'TODAY') return r.dueDate === today && !r.completed;
       if (activeFilter === 'SCHEDULED') return r.dueDate > today && !r.completed;
-      if (activeFilter === 'FLAGGED') return r.priority === 'HIGH' && !r.completed;
+      if (activeFilter === 'FLAGGED') return (r.priority === 'HIGH' || r.level === 'FLAGGED') && !r.completed;
       if (activeFilter === 'URGENT') return r.level === 'URGENT' && !r.completed;
       if (activeFilter === 'COMPLETED') return r.completed;
       return true; // ALL
@@ -508,15 +559,100 @@ export const PlannerScreen: React.FC = () => {
             <div style={{ width: `${completionPct}%`, height: '100%', backgroundColor: '#00E5FF', borderRadius: '2px', transition: 'width 0.4s ease' }} />
           </div>
 
-          {/* Sub Footer Row: Remaining count & Keep it up! */}
+          {/* Sub Footer Row: Remaining count & Active Status */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-secondary)' }}>
             <span style={{ fontWeight: 600 }}>
-              {activeRemainingCount} remaining
+              {activeRemainingCount}
             </span>
             <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>
-              Keep it up!
+              Active
             </span>
           </div>
+        </div>
+
+        {/* 2. iOS 18 Muted Pastel Bento Grid System */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '10px',
+            marginBottom: '16px',
+          }}
+        >
+          {[
+            { id: 'TODAY', label: 'Today', count: todayReminders.length, color: '#4A99E9', icon: Calendar },
+            { id: 'SCHEDULED', label: 'Scheduled', count: scheduledReminders.length, color: '#ED6C6C', icon: Clock },
+            { id: 'ALL', label: 'All', count: reminders.filter(r => !r.completed).length, color: '#48484A', icon: Inbox },
+            { id: 'FLAGGED', label: 'Flagged', count: flaggedReminders.length, color: '#F3A85B', icon: Flag },
+            { id: 'URGENT', label: 'Urgent', count: urgentReminders.length, color: '#EC668C', icon: AlertCircle },
+            { id: 'COMPLETED', label: 'Completed', count: completedReminders.length, color: '#6C7B8A', icon: CheckCircle2 },
+          ].map(card => {
+            const isCardActive = activeFilter === card.id;
+            const IconComp = card.icon;
+            return (
+              <div
+                key={card.id}
+                onClick={() => {
+                  triggerHaptic(10);
+                  setActiveFilter(prev => prev === card.id ? 'ALL' : card.id as FilterTab);
+                }}
+                style={{
+                  padding: '14px 16px',
+                  borderRadius: '20px',
+                  backgroundColor: isCardActive ? hexToRgba(card.color, 0.18) : 'var(--bg-card)',
+                  border: isCardActive ? `1.5px solid ${card.color}` : '1px solid var(--border-glass)',
+                  boxShadow: isCardActive ? `0 0 0 1px ${card.color}, 0 4px 12px rgba(0, 0, 0, 0.2)` : 'var(--shadow-card)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  minHeight: '82px',
+                  transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                  userSelect: 'none',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '10px',
+                      backgroundColor: card.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#FFFFFF',
+                      boxShadow: `0 2px 8px ${hexToRgba(card.color, 0.4)}`,
+                    }}
+                  >
+                    <IconComp size={16} strokeWidth={2.5} />
+                  </div>
+                  <span
+                    className="tabular-nums"
+                    style={{
+                      fontSize: '22px',
+                      fontWeight: 900,
+                      color: 'var(--text-primary)',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {card.count}
+                  </span>
+                </div>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    color: isCardActive ? card.color : 'var(--text-secondary)',
+                    marginTop: '8px',
+                    letterSpacing: '-0.1px',
+                  }}
+                >
+                  {card.label}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Dynamic Interactive Planner Preset Grid with Drag-and-Drop Relocate & Move */}
@@ -679,7 +815,7 @@ export const PlannerScreen: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.3px', margin: 0 }}>Todos</h3>
             <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-              {reminders.length} items
+              ({reminders.length})
             </span>
           </div>
 
@@ -719,7 +855,7 @@ export const PlannerScreen: React.FC = () => {
                 justifyContent: 'center',
                 cursor: 'pointer',
               }}
-              title="Filter Options"
+              title="Filter"
             >
               <SlidersHorizontal size={16} />
             </button>
@@ -768,7 +904,7 @@ export const PlannerScreen: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder={isListeningSearch ? 'Listening... Speak now' : 'Search...'}
+              placeholder={isListeningSearch ? 'Listening...' : 'Search...'}
               style={{
                 flex: 1,
                 background: 'none',
@@ -783,7 +919,7 @@ export const PlannerScreen: React.FC = () => {
               type="button"
               onClick={handleVoiceSearch}
               style={{ background: 'none', border: 'none', color: isListeningSearch ? '#EC668C' : pageAccent, cursor: 'pointer', padding: '2px 4px' }}
-              title="Voice Search"
+              title="Voice"
             >
               <Mic size={16} />
             </button>
@@ -875,210 +1011,397 @@ export const PlannerScreen: React.FC = () => {
 
 
 
+      {/* Quick Inline Todo Add Bar */}
+      <form
+        onSubmit={handleQuickInlineAdd}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '6px 8px 6px 14px',
+          borderRadius: '16px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-glass)',
+          marginBottom: '16px',
+          boxShadow: 'var(--shadow-card)',
+        }}
+      >
+        <Plus size={16} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
+        <input
+          type="text"
+          value={quickTaskTitle}
+          onChange={(e) => setQuickTaskTitle(e.target.value)}
+          placeholder="Add..."
+          maxLength={150}
+          style={{
+            flex: 1,
+            background: 'transparent',
+            border: 'none',
+            outline: 'none',
+            color: 'var(--text-primary)',
+            fontSize: '13px',
+            fontFamily: 'inherit',
+          }}
+        />
+        <button
+          type="submit"
+          disabled={!quickTaskTitle.trim()}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '10px',
+            backgroundColor: quickTaskTitle.trim() ? pageAccent : 'var(--pill-bg)',
+            border: 'none',
+            color: quickTaskTitle.trim() ? '#FFFFFF' : 'var(--text-muted)',
+            fontSize: '11px',
+            fontWeight: 800,
+            cursor: quickTaskTitle.trim() ? 'pointer' : 'default',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <span>Add</span>
+        </button>
+      </form>
+
       {/* Reminders & Todo Checklist Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', padding: '0 2px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
-          {activeFilter === 'TODAY' ? 'Today' : activeFilter === 'SCHEDULED' ? 'Scheduled' : activeFilter === 'FLAGGED' ? 'Flagged' : activeFilter === 'URGENT' ? 'Urgent' : activeFilter === 'COMPLETED' ? 'Completed' : 'Todos'}
-        </h3>
-        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
-          {displayedReminders.length} Items
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.1px', margin: 0 }}>
+            {activeFilter === 'TODAY' ? 'Today' : activeFilter === 'SCHEDULED' ? 'Scheduled' : activeFilter === 'FLAGGED' ? 'Flagged' : activeFilter === 'URGENT' ? 'Urgent' : activeFilter === 'COMPLETED' ? 'Completed' : 'Todos'}
+          </h3>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+            ({displayedReminders.length})
+          </span>
+        </div>
+
+        {completedReminders.length > 0 && (
+          <button
+            type="button"
+            onClick={handleClearCompleted}
+            style={{
+              padding: '4px 10px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(237, 108, 108, 0.12)',
+              border: '1px solid rgba(237, 108, 108, 0.25)',
+              color: '#ED6C6C',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <Trash2 size={11} />
+            <span>Clear</span>
+          </button>
+        )}
       </div>
 
       {/* Checklist List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {displayedReminders.length > 0 ? (
-          displayedReminders.map(r => (
-            <div
-              key={r.id}
-              className="glass-panel"
-              onClick={() => {
-                triggerHaptic(12);
-                setSelectedReminderForDetail(r);
-              }}
-              style={{
-                padding: '14px 16px',
-                borderRadius: '20px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                opacity: r.completed ? 0.55 : 1,
-                border: r.completed ? '1px solid var(--border-subtle)' : '1px solid var(--border-glass)',
-                backgroundColor: 'var(--bg-card)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {/* Top Row: Checkbox + Title (Left), Capsule Priority Badge (Right) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
-                  {/* Checkbox */}
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      triggerHaptic(12);
-                      toggleReminder(r.id);
-                    }}
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '6px',
-                      backgroundColor: r.completed ? '#30D158' : 'transparent',
-                      border: r.completed ? 'none' : '1.5px solid var(--border-glass)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#FFFFFF',
-                      flexShrink: 0,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    {r.completed && <Check size={13} strokeWidth={3} />}
-                  </div>
+          displayedReminders.map(r => {
+            const isOverdue = !r.completed && r.dueDate < today;
+            const isFlagged = r.priority === 'HIGH' || r.level === 'FLAGGED';
+            const hasSubtasks = Boolean(r.checklist && r.checklist.length > 0);
+            const subtasksDone = r.checklist ? r.checklist.filter(s => s.done).length : 0;
+            const subtasksTotal = r.checklist ? r.checklist.length : 0;
 
-                  {/* Title */}
-                  <span
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: 700,
-                      textDecoration: r.completed ? 'line-through' : 'none',
-                      color: r.completed ? 'var(--text-muted)' : 'var(--text-primary)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {r.title}
-                  </span>
-                </div>
-
-                {/* Capsule Priority Pill Badge */}
-                {r.completed ? (
-                  <span
-                    style={{
-                      fontSize: '9px',
-                      fontWeight: 800,
-                      padding: '3px 10px',
-                      borderRadius: '9999px',
-                      backgroundColor: 'rgba(48, 209, 88, 0.15)',
-                      border: '1px solid rgba(48, 209, 88, 0.35)',
-                      color: '#30D158',
-                      letterSpacing: '0.04em',
-                      textTransform: 'uppercase',
-                      flexShrink: 0,
-                    }}
-                  >
-                    DONE
-                  </span>
-                ) : (
-                  <span
-                    style={{
-                      fontSize: '9px',
-                      fontWeight: 800,
-                      padding: '3px 10px',
-                      borderRadius: '9999px',
-                      backgroundColor: r.level === 'URGENT' ? 'rgba(236, 102, 140, 0.18)' : r.level === 'FLAGGED' ? 'rgba(243, 168, 91, 0.18)' : 'rgba(74, 153, 233, 0.18)',
-                      border: `1px solid ${r.level === 'URGENT' ? 'rgba(236, 102, 140, 0.35)' : r.level === 'FLAGGED' ? 'rgba(243, 168, 91, 0.35)' : 'rgba(74, 153, 233, 0.35)'}`,
-                      color: r.level === 'URGENT' ? '#EC668C' : r.level === 'FLAGGED' ? '#F3A85B' : '#4A99E9',
-                      letterSpacing: '0.04em',
-                      textTransform: 'uppercase',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {r.level || 'SIMPLE'}
-                  </span>
-                )}
-              </div>
-
-              {/* Middle Row: Description/Notes with Rich Text Formatting */}
-              {r.notes && (
-                <div
-                  style={{
-                    fontSize: '12px',
-                    color: 'var(--text-secondary)',
-                    margin: '0 0 2px 0',
-                    lineHeight: '1.4',
-                    paddingLeft: '30px',
-                  }}
-                >
-                  {renderRichFormattedText(r.notes)}
-                </div>
-              )}
-
-              {/* Bottom Row: Date & Category Pill (Left), Info & Delete Icons (Right) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingLeft: '30px', marginTop: '2px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Calendar size={12} color="var(--text-secondary)" />
-                    {formatCleanDate(r.dueDate)} {r.dueTime ? `@ ${r.dueTime}` : ''}
-                  </span>
-
-                  {r.category && (
-                    <span
+            return (
+              <div
+                key={r.id}
+                className="glass-panel"
+                onClick={() => {
+                  triggerHaptic(12);
+                  setSelectedReminderForDetail(r);
+                }}
+                style={{
+                  padding: '14px 16px',
+                  borderRadius: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  opacity: r.completed ? 0.55 : 1,
+                  border: r.completed ? '1px solid var(--border-subtle)' : isOverdue ? '1px solid rgba(237, 108, 108, 0.35)' : '1px solid var(--border-glass)',
+                  backgroundColor: 'var(--bg-card)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {/* Top Row: Checkbox + Title (Left), Badges (Right) */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                    {/* Checkbox */}
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        triggerHaptic(12);
+                        toggleReminder(r.id);
+                      }}
                       style={{
-                        fontSize: '10px',
-                        fontWeight: 600,
-                        padding: '2px 8px',
-                        borderRadius: '12px',
-                        backgroundColor: 'var(--pill-bg)',
-                        color: 'var(--text-secondary)',
-                        border: '1px solid var(--border-glass)',
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '6px',
+                        backgroundColor: r.completed ? '#30D158' : 'transparent',
+                        border: r.completed ? 'none' : '1.5px solid var(--border-glass)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#FFFFFF',
+                        flexShrink: 0,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
                       }}
                     >
-                      {r.category.charAt(0) + r.category.slice(1).toLowerCase()}
+                      {r.completed && <Check size={13} strokeWidth={3} />}
+                    </div>
+
+                    {/* Title */}
+                    <span
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 700,
+                        textDecoration: r.completed ? 'line-through' : 'none',
+                        color: r.completed ? 'var(--text-muted)' : 'var(--text-primary)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {r.title}
                     </span>
-                  )}
+                  </div>
+
+                  {/* Badges Pill Row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
+                    {isOverdue && (
+                      <span
+                        style={{
+                          fontSize: '9px',
+                          fontWeight: 800,
+                          padding: '3px 8px',
+                          borderRadius: '9999px',
+                          backgroundColor: 'rgba(237, 108, 108, 0.18)',
+                          border: '1px solid rgba(237, 108, 108, 0.4)',
+                          color: '#ED6C6C',
+                          letterSpacing: '0.04em',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        OVERDUE
+                      </span>
+                    )}
+
+                    {r.completed ? (
+                      <span
+                        style={{
+                          fontSize: '9px',
+                          fontWeight: 800,
+                          padding: '3px 8px',
+                          borderRadius: '9999px',
+                          backgroundColor: 'rgba(48, 209, 88, 0.15)',
+                          border: '1px solid rgba(48, 209, 88, 0.35)',
+                          color: '#30D158',
+                          letterSpacing: '0.04em',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        DONE
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          fontSize: '9px',
+                          fontWeight: 800,
+                          padding: '3px 8px',
+                          borderRadius: '9999px',
+                          backgroundColor: r.level === 'URGENT' ? 'rgba(236, 102, 140, 0.18)' : isFlagged ? 'rgba(243, 168, 91, 0.18)' : 'rgba(74, 153, 233, 0.18)',
+                          border: `1px solid ${r.level === 'URGENT' ? 'rgba(236, 102, 140, 0.35)' : isFlagged ? 'rgba(243, 168, 91, 0.35)' : 'rgba(74, 153, 233, 0.35)'}`,
+                          color: r.level === 'URGENT' ? '#EC668C' : isFlagged ? '#F3A85B' : '#4A99E9',
+                          letterSpacing: '0.04em',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {r.level || 'SIMPLE'}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedReminderForDetail(r);
-                    }}
+                {/* Middle Row: Description/Notes with Rich Text Formatting */}
+                {r.notes && (
+                  <div
                     style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--text-muted)',
-                      cursor: 'pointer',
-                      padding: '2px',
-                      display: 'flex',
-                      alignItems: 'center',
+                      fontSize: '12px',
+                      color: 'var(--text-secondary)',
+                      margin: '0 0 2px 0',
+                      lineHeight: '1.4',
+                      paddingLeft: '30px',
                     }}
-                    title="View Detail"
                   >
-                    <AlertCircle size={14} />
-                  </button>
+                    {renderRichFormattedText(r.notes)}
+                  </div>
+                )}
 
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      triggerHaptic(15);
-                      deleteReminder(r.id);
-                    }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--text-muted)',
-                      cursor: 'pointer',
-                      padding: '2px',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                    title="Delete"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                {/* Interactive Subtasks Checklist Preview */}
+                {hasSubtasks && (
+                  <div style={{ paddingLeft: '30px', marginTop: '2px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '2px' }}>
+                      <span style={{ fontWeight: 700 }}>Checklist</span>
+                      <span className="tabular-nums" style={{ fontSize: '10px', fontWeight: 800 }}>
+                        {subtasksDone}/{subtasksTotal}
+                      </span>
+                    </div>
+                    {r.checklist!.map(subtask => (
+                      <div
+                        key={subtask.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSubtask(r.id, subtask.id);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '4px 8px',
+                          borderRadius: '8px',
+                          backgroundColor: subtask.done ? 'transparent' : 'var(--pill-bg)',
+                          cursor: 'pointer',
+                          transition: 'all 0.12s ease',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: '15px',
+                            height: '15px',
+                            borderRadius: '4px',
+                            backgroundColor: subtask.done ? '#30D158' : 'transparent',
+                            border: subtask.done ? 'none' : '1.2px solid var(--border-glass)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#FFFFFF',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {subtask.done && <Check size={10} strokeWidth={3} />}
+                        </div>
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            color: subtask.done ? 'var(--text-muted)' : 'var(--text-primary)',
+                            textDecoration: subtask.done ? 'line-through' : 'none',
+                            flex: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {subtask.text}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Bottom Row: Date & Category Pill (Left), Flag, Info & Delete Icons (Right) */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingLeft: '30px', marginTop: '2px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Calendar size={12} color="var(--text-secondary)" />
+                      {formatCleanDate(r.dueDate)} {r.dueTime ? `@ ${r.dueTime}` : ''}
+                    </span>
+
+                    {r.category && (
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontWeight: 600,
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          backgroundColor: 'var(--pill-bg)',
+                          color: 'var(--text-secondary)',
+                          border: '1px solid var(--border-glass)',
+                        }}
+                      >
+                        {r.category.charAt(0) + r.category.slice(1).toLowerCase()}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {/* Quick Flag Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFlagReminder(r);
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: isFlagged ? '#F3A85B' : 'var(--text-muted)',
+                        cursor: 'pointer',
+                        padding: '2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                      title="Flag"
+                    >
+                      <Flag size={14} fill={isFlagged ? '#F3A85B' : 'none'} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedReminderForDetail(r);
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        padding: '2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                      title="Detail"
+                    >
+                      <AlertCircle size={14} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        triggerHaptic(15);
+                        deleteReminder(r.id);
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        padding: '2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                      title="Delete"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
-          <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
-            No reminders found in this category.
+          <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', fontWeight: 700 }}>
+            Empty
           </div>
         )}
       </div>
