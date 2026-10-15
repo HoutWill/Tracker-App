@@ -368,14 +368,38 @@ export const RichTextNotesEditor: React.FC<RichTextNotesEditorProps> = ({
   );
 };
 
+// Security: Sanitize HTML against XSS (script injection, onload/onerror handlers, javascript: pseudo-protocols)
+export const sanitizeHtml = (dirtyHtml: string): string => {
+  if (!dirtyHtml || typeof dirtyHtml !== 'string') return '';
+
+  // 1. Remove dangerous tags and their content
+  let clean = dirtyHtml
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '');
+
+  // 2. Remove inline event handlers (onerror=, onclick=, onload=, etc.)
+  clean = clean.replace(/\son\w+\s*=\s*(['"]).*?\1/gi, '');
+  clean = clean.replace(/\son\w+\s*=\s*[^\s>]+/gi, '');
+
+  // 3. Remove javascript: pseudo-protocols
+  clean = clean.replace(/href\s*=\s*(['"])\s*javascript:[^'"]*\1/gi, 'href="#"');
+  clean = clean.replace(/src\s*=\s*(['"])\s*javascript:[^'"]*\1/gi, 'src=""');
+
+  return clean;
+};
+
 // Helper function to safely render formatted rich text in detail views / list items
 export const renderRichFormattedText = (text: string) => {
   if (!text) return null;
+  const safeHtml = sanitizeHtml(text);
 
   return (
     <div
       className="rich-notes-view"
-      dangerouslySetInnerHTML={{ __html: text }}
+      dangerouslySetInnerHTML={{ __html: safeHtml }}
       style={{
         fontSize: '13px',
         lineHeight: 1.5,

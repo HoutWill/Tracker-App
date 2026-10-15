@@ -9,11 +9,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.disable('x-powered-by');
 let PORT = parseInt(process.env.PORT || '3000', 10);
 const DATA_DIR = path.join(__dirname, 'data');
 
-// Security: Enforce JSON Payload Body Size Limits (Prevent DoS memory flood)
-app.use(cors());
+// Security: Add Standard HTTP Security Headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  next();
+});
+
+// Security: Enforce JSON Payload Body Size Limits & Safe CORS
+app.use(cors({
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-guest-id'],
+}));
 app.use(express.json({ limit: '500kb' }));
 
 // Ensure data directory exists
@@ -56,17 +71,23 @@ const hashPassword = (pwd) => {
   return crypto.createHash('sha256').update(pwd + 'PITRACK_SECURE_PEPPER_2026').digest('hex');
 };
 
+// Helper to sanitize guest/user identifiers (Prevent Path Traversal & DOS)
+const sanitizeId = (id) => {
+  if (!id) return 'default_guest';
+  return String(id).replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 64);
+};
+
 // Helper to get sanitized guest DB filepath (Prevent Path Traversal Attack)
 const getDbFilePath = (req) => {
   const rawId = req.headers['x-guest-id'] || 'default_guest';
-  const cleanId = String(rawId).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const cleanId = sanitizeId(rawId);
   return path.join(DATA_DIR, `expenses_${cleanId}.json`);
 };
 
 // Helper to read DB for specific guest/user
 const readExpenses = (req) => {
   const rawId = req.headers['x-guest-id'] || 'default_guest';
-  const cleanId = String(rawId).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const cleanId = sanitizeId(rawId);
 
   try {
     if (fs.existsSync(DATA_DIR)) {
@@ -114,13 +135,19 @@ app.get('/api/expenses', (req, res) => {
 });
 
 app.post('/api/expenses', (req, res) => {
+  const { amount, title } = req.body || {};
+  if (amount !== undefined && (typeof amount !== 'number' || isNaN(amount) || amount < 0 || amount > 1000000000)) {
+    return res.status(400).json({ error: 'Invalid expense amount' });
+  }
+  const cleanTitle = typeof title === 'string' ? title.slice(0, 150) : 'Expense';
   const expenses = readExpenses(req);
   const newItem = {
     ...req.body,
-    id: req.body.id || ('exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000)),
+    title: cleanTitle,
+    id: req.body.id ? String(req.body.id).slice(0, 100) : ('exp-' + Date.now() + '-' + Math.floor(Math.random() * 1000)),
     createdAt: req.body.createdAt || Date.now(),
   };
-  const updated = [newItem, ...expenses.filter(e => e.id !== newItem.id)];
+  const updated = [newItem, ...expenses.filter(e => e.id !== newItem.id)].slice(0, 5000);
   writeExpenses(req, updated);
   res.status(201).json(newItem);
 });
@@ -199,8 +226,8 @@ app.post('/api/auth/register', authRateLimit, (req, res) => {
 
   // If user has existing guest data, migrate/bind it to pkid
   if (guestId) {
-    const guestFile = path.join(DATA_DIR, `expenses_${String(guestId).replace(/[^a-zA-Z0-9_-]/g, '_')}.json`);
-    const userFile = path.join(DATA_DIR, `expenses_${pkid}.json`);
+    const guestFile = path.join(DATA_DIR, `expenses_${sanitizeId(guestId)}.json`);
+    const userFile = path.join(DATA_DIR, `expenses_${newUser.pkid}.json`);
     if (fs.existsSync(guestFile) && !fs.existsSync(userFile)) {
       fs.copyFileSync(guestFile, userFile);
     }
@@ -242,7 +269,7 @@ app.post('/api/auth/login', authRateLimit, (req, res) => {
 app.get('/api/sync', (req, res) => {
   const pkid = req.query.pkid || req.query.accountId || req.headers['x-guest-id'];
   if (!pkid) return res.status(400).json({ error: 'pkid parameter is required' });
-  const cleanId = String(pkid).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const cleanId = sanitizeId(pkid);
   const accountFile = path.join(DATA_DIR, `account_${cleanId}.json`);
 
   if (fs.existsSync(accountFile)) {
@@ -265,7 +292,7 @@ app.get('/api/sync', (req, res) => {
 app.post('/api/sync', (req, res) => {
   const accountId = req.body.accountId || req.headers['x-guest-id'];
   if (!accountId) return res.status(400).json({ error: 'Account ID required' });
-  const cleanId = String(accountId).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const cleanId = sanitizeId(accountId);
   const accountFile = path.join(DATA_DIR, `account_${cleanId}.json`);
 
   try {
