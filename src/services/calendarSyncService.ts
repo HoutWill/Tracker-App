@@ -66,50 +66,69 @@ export const getGoogleCalendarUrl = (event: CalendarEventPayload): string => {
   }
 };
 
+export const createICalContent = (event: CalendarEventPayload): string => {
+  const { startStr, endStr } = getEventStartAndEndDates(event);
+  const cleanNotes = (event.notes || '').replace(/<[^>]*>/g, '');
+
+  const icsLines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//PiTrack//AppleCalendar//EN',
+    'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    'TRANSP:OPAQUE',
+    `UID:tracker-${Date.now()}@pitrack.app`,
+    `DTSTART:${startStr}`,
+    `DTEND:${endStr}`,
+    `SUMMARY:${event.title}`,
+    `DESCRIPTION:${cleanNotes}`,
+    'BEGIN:VALARM',
+    'ACTION:DISPLAY',
+    'TRIGGER:-PT15M',
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ];
+
+  return icsLines.join('\r\n');
+};
+
 export const getAppleCalendarUrl = (event: CalendarEventPayload): string => {
   try {
-    const { startStr, endStr } = getEventStartAndEndDates(event);
-    const cleanNotes = (event.notes || '').replace(/<[^>]*>/g, '');
-
-    const icsLines = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//PiTrack//AppleCalendar//EN',
-      'CALSCALE:GREGORIAN',
-      'BEGIN:VEVENT',
-      'TRANSP:OPAQUE',
-      `UID:tracker-${Date.now()}@pitrack.app`,
-      `DTSTART:${startStr}`,
-      `DTEND:${endStr}`,
-      `SUMMARY:${event.title}`,
-      `DESCRIPTION:${cleanNotes}`,
-      'BEGIN:VALARM',
-      'ACTION:DISPLAY',
-      'TRIGGER:-PT15M',
-      'END:VALARM',
-      'END:VEVENT',
-      'END:VCALENDAR',
-    ];
-
-    const icsContent = icsLines.join('\r\n');
+    const icsContent = createICalContent(event);
     return `data:text/calendar;charset=utf8,${encodeURIComponent(icsContent)}`;
   } catch (e) {
     return '';
   }
 };
 
-export const syncToAppleCalendar = (event: CalendarEventPayload) => {
+export const syncToAppleCalendar = async (event: CalendarEventPayload): Promise<boolean> => {
   try {
-    const dataUrl = getAppleCalendarUrl(event);
-    const fileName = `${event.title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
+    const icsContent = createICalContent(event);
+    const fileName = `${event.title.replace(/[^a-zA-Z0-9]/g, '_') || 'event'}.ics`;
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const file = new File([blob], fileName, { type: 'text/calendar' });
 
+    if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          title: event.title,
+          files: [file],
+        });
+        return true;
+      } catch (err: any) {
+        if (err.name === 'AbortError') return false;
+      }
+    }
+
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = dataUrl;
+    a.href = url;
     a.download = fileName;
-    a.target = '_blank';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
     return true;
   } catch (e) {
     console.error('Apple Calendar sync error:', e);
