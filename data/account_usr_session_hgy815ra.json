@@ -99,7 +99,20 @@
       "createdAt": 1786262144302
     }
   ],
-  "trips": [],
+  "trips": [
+    {
+      "id": "trip-1792076819599",
+      "name": "Travel",
+      "category": "Travel",
+      "budget": 150,
+      "currency": "USD",
+      "startDate": "2026-10-15",
+      "endDate": "2026-10-17",
+      "status": "Active",
+      "type": "EXPENSE",
+      "createdAt": 1792076819599
+    }
+  ],
   "targets": {
     "DAILY": 35,
     "WEEKLY": 250,
@@ -111,5 +124,5 @@
     "MONTHLY": 500
   },
   "cycleHistory": [],
-  "updatedAt": 1792075407289
+  "updatedAt": 1792076819602
 }

@@ -19,7 +19,7 @@ const formatFolderDate = (dateStr: string): string => {
 
 export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }) => {
   const isSaving = type === 'SAVING';
-  const { pageColors } = useTheme();
+  const { pageColors, isDark } = useTheme();
   const {
     trips,
     selectedTripId,
@@ -98,6 +98,11 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
   const folderColors = ['#4A99E9', '#ED6C6C', '#F3A85B', '#EC668C', '#30D158', '#6C7B8A', '#8B5CF6'];
   const activeColor = folderColors[Math.max(0, activeTripIndex) % folderColors.length];
 
+  // Theme-aware card surface and border styles
+  const cardBg = isDark ? 'var(--bg-card)' : '#FFFFFF';
+  const defaultBorder = isDark ? '1px solid var(--border-glass)' : '1px solid rgba(0, 0, 0, 0.08)';
+  const trackBg = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+
   return (
     <div style={{ marginBottom: '16px' }}>
       {/* 1. iOS 18 Section Header */}
@@ -136,7 +141,7 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
             alignItems: 'center',
             gap: '4px',
             cursor: 'pointer',
-            boxShadow: `0 2px 8px ${hexToRgba(accentColor, 0.35)}`,
+            boxShadow: `0 2px 8px ${hexToRgba(accentColor, 0.3)}`,
             transition: 'all 0.15s ease',
           }}
         >
@@ -165,13 +170,15 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
             minWidth: '120px',
             padding: '12px 14px',
             borderRadius: '18px',
-            border: selectedTripId === null ? `1.5px solid ${accentColor}` : '1px solid var(--border-glass)',
-            backgroundColor: selectedTripId === null ? hexToRgba(accentColor, 0.14) : 'var(--bg-card)',
+            border: selectedTripId === null ? `2px solid ${accentColor}` : defaultBorder,
+            backgroundColor: cardBg,
             cursor: 'pointer',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            boxShadow: 'var(--shadow-card)',
+            boxShadow: selectedTripId === null
+              ? `0 4px 14px ${hexToRgba(accentColor, isDark ? 0.25 : 0.15)}`
+              : '0 2px 8px rgba(0, 0, 0, 0.04)',
             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             transform: selectedTripId === null ? 'scale(1.02)' : 'none',
             flexShrink: 0,
@@ -180,14 +187,14 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div
               style={{
-                width: '32px',
-                height: '32px',
+                width: '34px',
+                height: '34px',
                 borderRadius: '10px',
-                backgroundColor: selectedTripId === null ? hexToRgba(accentColor, 0.22) : 'rgba(255, 255, 255, 0.06)',
+                backgroundColor: hexToRgba(accentColor, isDark ? 0.2 : 0.12),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: selectedTripId === null ? accentColor : 'var(--text-secondary)',
+                color: accentColor,
               }}
             >
               <Folder size={16} />
@@ -199,7 +206,7 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
                   fontWeight: 800,
                   padding: '2px 6px',
                   borderRadius: '6px',
-                  backgroundColor: hexToRgba(accentColor, 0.25),
+                  backgroundColor: hexToRgba(accentColor, isDark ? 0.25 : 0.15),
                   color: accentColor,
                 }}
               >
@@ -244,13 +251,15 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
                 minWidth: '142px',
                 padding: '12px 14px',
                 borderRadius: '18px',
-                border: isSelected ? `1.5px solid ${cardColor}` : '1px solid var(--border-glass)',
-                backgroundColor: isSelected ? hexToRgba(cardColor, 0.14) : 'var(--bg-card)',
+                border: isSelected ? `2px solid ${cardColor}` : defaultBorder,
+                backgroundColor: cardBg,
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                boxShadow: 'var(--shadow-card)',
+                boxShadow: isSelected
+                  ? `0 4px 14px ${hexToRgba(cardColor, isDark ? 0.25 : 0.15)}`
+                  : '0 2px 8px rgba(0, 0, 0, 0.04)',
                 transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                 transform: isSelected ? 'scale(1.02)' : 'none',
                 flexShrink: 0,
@@ -259,10 +268,10 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div
                   style={{
-                    width: '32px',
-                    height: '32px',
+                    width: '34px',
+                    height: '34px',
                     borderRadius: '10px',
-                    backgroundColor: hexToRgba(cardColor, 0.18),
+                    backgroundColor: hexToRgba(cardColor, isDark ? 0.2 : 0.12),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -279,7 +288,7 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
                       fontWeight: 800,
                       padding: '2px 6px',
                       borderRadius: '6px',
-                      backgroundColor: hexToRgba(cardColor, 0.25),
+                      backgroundColor: hexToRgba(cardColor, isDark ? 0.25 : 0.15),
                       color: cardColor,
                     }}
                   >
@@ -334,7 +343,7 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
                   style={{
                     height: '4px',
                     borderRadius: '2px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    backgroundColor: trackBg,
                     overflow: 'hidden',
                     marginTop: '8px',
                   }}
@@ -362,8 +371,8 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
             minWidth: '96px',
             padding: '12px 14px',
             borderRadius: '18px',
-            border: '1.5px dashed rgba(255, 255, 255, 0.18)',
-            backgroundColor: 'rgba(255, 255, 255, 0.02)',
+            border: `1.5px dashed ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.16)'}`,
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
             cursor: 'pointer',
             display: 'flex',
             flexDirection: 'column',
@@ -377,10 +386,10 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
         >
           <div
             style={{
-              width: '32px',
-              height: '32px',
+              width: '34px',
+              height: '34px',
               borderRadius: '10px',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -402,8 +411,8 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
             marginTop: '8px',
             padding: '10px 14px',
             borderRadius: '14px',
-            backgroundColor: 'rgba(255, 255, 255, 0.02)',
-            border: '1px dashed var(--border-glass)',
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+            border: `1px dashed ${isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)'}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -425,8 +434,8 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
                 style={{
                   padding: '3px 8px',
                   borderRadius: '6px',
-                  border: '1px solid var(--border-glass)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: defaultBorder,
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
                   color: 'var(--text-secondary)',
                   fontSize: '10px',
                   fontWeight: 700,
@@ -440,150 +449,157 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
         </div>
       )}
 
-      {/* 4. Active Selected Folder Bento Action Panel */}
+      {/* 4. REDESIGNED iOS 18 Compact Envelope Control Strip */}
       {activeTrip && activeMetrics && (
         <div
-          className="glass-panel"
           style={{
             marginTop: '10px',
-            padding: '14px 16px',
-            borderRadius: '18px',
-            border: `1px solid ${hexToRgba(activeColor, 0.35)}`,
-            backgroundColor: hexToRgba(activeColor, 0.08),
-            boxShadow: 'var(--shadow-card)',
+            padding: '8px 12px',
+            borderRadius: '16px',
+            border: `1px solid ${hexToRgba(activeColor, isDark ? 0.35 : 0.25)}`,
+            backgroundColor: cardBg,
+            boxShadow: isDark
+              ? `0 4px 14px ${hexToRgba(activeColor, 0.15)}`
+              : '0 2px 10px rgba(0, 0, 0, 0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '8px',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Left: Icon & Dates */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '10px',
+                backgroundColor: hexToRgba(activeColor, isDark ? 0.2 : 0.12),
+                color: activeColor,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <CategoryIconRenderer icon={activeTrip.category.toLowerCase()} size={16} color={activeColor} />
+            </div>
+            <div style={{ minWidth: 0 }}>
               <div
                 style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '12px',
-                  backgroundColor: hexToRgba(activeColor, 0.2),
-                  color: activeColor,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <CategoryIconRenderer icon={activeTrip.category.toLowerCase()} size={20} color={activeColor} />
-              </div>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
-                    {activeTrip.name}
-                  </h4>
-                  <span
-                    style={{
-                      fontSize: '10px',
-                      fontWeight: 800,
-                      padding: '2px 6px',
-                      borderRadius: '6px',
-                      backgroundColor: hexToRgba(activeColor, 0.22),
-                      color: activeColor,
-                    }}
-                  >
-                    {isSaving ? 'Vault' : 'Folder'}
-                  </span>
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', fontWeight: 500 }}>
-                  {formatFolderDate(activeTrip.startDate)} → {formatFolderDate(activeTrip.endDate)} • {activeMetrics.itemCount} Items
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <button
-                type="button"
-                onClick={() => (isSaving ? setIsAddSavingOpen(true) : setIsAddExpenseOpen(true))}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '6px 10px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: activeColor,
-                  color: '#FFFFFF',
-                  fontSize: '11px',
+                  fontSize: '12px',
                   fontWeight: 800,
-                  cursor: 'pointer',
+                  color: 'var(--text-primary)',
+                  letterSpacing: '-0.2px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
                 }}
               >
-                <Plus size={14} />
-                <span>Add</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTripForEdit(activeTrip)}
-                style={{
-                  padding: '6px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-glass)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  color: 'var(--text-secondary)',
-                  cursor: 'pointer',
-                }}
-                title="Edit"
-              >
-                <Edit3 size={14} />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (window.confirm(`Delete folder "${activeTrip.name}"?`)) {
-                    deleteTrip(activeTrip.id);
-                  }
-                }}
-                style={{
-                  padding: '6px',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(237, 108, 108, 0.3)',
-                  backgroundColor: 'rgba(237, 108, 108, 0.1)',
-                  color: '#ED6C6C',
-                  cursor: 'pointer',
-                }}
-                title="Delete"
-              >
-                <Trash2 size={14} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTripId(null)}
-                style={{
-                  padding: '6px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-glass)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                }}
-                title="Close"
-              >
-                <X size={14} />
-              </button>
+                {formatFolderDate(activeTrip.startDate)} – {formatFolderDate(activeTrip.endDate)}
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                {activeMetrics.itemCount} Items • Budget {formatCurrency(activeMetrics.budgetUSD, currency)}
+              </div>
             </div>
           </div>
 
-          {/* Progress and Breakdown */}
-          <div style={{ marginTop: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Spent: {formatCurrency(activeMetrics.spentUSD, currency)}</span>
-              <span style={{ color: 'var(--text-muted)' }}>Left: {formatCurrency(activeMetrics.remainingUSD, currency)}</span>
-              <span style={{ color: 'var(--text-muted)' }}>Budget: {formatCurrency(activeMetrics.budgetUSD, currency)}</span>
-            </div>
-            <div style={{ height: '6px', width: '100%', backgroundColor: 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', overflow: 'hidden' }}>
-              <div
-                style={{
-                  height: '100%',
-                  width: `${activeMetrics.progress}%`,
-                  backgroundColor: activeMetrics.progress >= 100 ? '#ED6C6C' : activeColor,
-                  borderRadius: '3px',
-                  transition: 'width 0.3s ease',
-                }}
-              />
-            </div>
+          {/* Center: Clean Financial Remaining Pill */}
+          <div
+            style={{
+              padding: '4px 10px',
+              borderRadius: '8px',
+              backgroundColor: hexToRgba(activeColor, isDark ? 0.18 : 0.1),
+              border: `1px solid ${hexToRgba(activeColor, isDark ? 0.3 : 0.2)}`,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              Left
+            </span>
+            <span className="tabular-nums" style={{ fontSize: '12px', fontWeight: 900, color: activeColor }}>
+              {formatCurrency(activeMetrics.remainingUSD, currency)}
+            </span>
+          </div>
+
+          {/* Right: Unified Action Group */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+            <button
+              type="button"
+              onClick={() => (isSaving ? setIsAddSavingOpen(true) : setIsAddExpenseOpen(true))}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '6px 10px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: activeColor,
+                color: '#FFFFFF',
+                fontSize: '11px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: `0 2px 6px ${hexToRgba(activeColor, 0.25)}`,
+              }}
+            >
+              <Plus size={13} />
+              <span>Add</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedTripForEdit(activeTrip)}
+              style={{
+                padding: '6px',
+                borderRadius: '8px',
+                border: defaultBorder,
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+              }}
+              title="Edit"
+            >
+              <Edit3 size={13} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm(`Delete folder "${activeTrip.name}"?`)) {
+                  deleteTrip(activeTrip.id);
+                }
+              }}
+              style={{
+                padding: '6px',
+                borderRadius: '8px',
+                border: '1px solid rgba(237, 108, 108, 0.25)',
+                backgroundColor: isDark ? 'rgba(237, 108, 108, 0.12)' : 'rgba(237, 108, 108, 0.08)',
+                color: '#ED6C6C',
+                cursor: 'pointer',
+              }}
+              title="Delete"
+            >
+              <Trash2 size={13} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedTripId(null)}
+              style={{
+                padding: '6px',
+                borderRadius: '8px',
+                border: defaultBorder,
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+              }}
+              title="Close"
+            >
+              <X size={13} />
+            </button>
           </div>
         </div>
       )}
