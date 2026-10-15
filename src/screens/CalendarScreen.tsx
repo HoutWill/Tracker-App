@@ -430,9 +430,11 @@ export const CalendarScreen: React.FC = () => {
                         </span>
                       </div>
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {h.nameKh || h.nameEn}
-                        </div>
+                        {h.nameKh && (
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-khmer)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
+                            {h.nameKh}
+                          </div>
+                        )}
                         <div style={{ fontSize: '10px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {h.nameEn}
                         </div>
@@ -580,18 +582,17 @@ export const CalendarScreen: React.FC = () => {
               const isToday = item.dateStr === getTodayDateString();
               const isHoliday = !!item.dateDetails.holiday;
               const isBuddhaDay = item.dateDetails.isBuddhaDay;
+              const isCultural = !!item.dateDetails.culturalEvent;
               const net = item.netDailyBalance;
               const dayOfWeekNum = new Date(item.dateStr + 'T00:00:00').getDay();
               const isWeekend = dayOfWeekNum === 0 || dayOfWeekNum === 6;
               const hasExpense = item.dayExpSum > 0;
               const hasSaving = item.daySavSum > 0;
 
-              // Up to 3 discrete micro-dots underneath
+              // Up to 3 discrete micro-dots underneath for transactions
               const dots: { color: string; id: string }[] = [];
-              if (isHoliday) dots.push({ color: '#ED6C6C', id: 'h' });
-              if (isBuddhaDay && dots.length < 3) dots.push({ color: '#F3A85B', id: 'b' });
-              if (hasExpense && dots.length < 3) dots.push({ color: '#4A99E9', id: 'e' });
-              if (hasSaving && dots.length < 3) dots.push({ color: '#30D158', id: 's' });
+              if (hasExpense) dots.push({ color: '#4A99E9', id: 'e' });
+              if (hasSaving) dots.push({ color: '#30D158', id: 's' });
 
               return (
                 <div
@@ -603,6 +604,8 @@ export const CalendarScreen: React.FC = () => {
                     borderRadius: '12px',
                     border: isSel
                       ? '1.5px solid #4A99E9'
+                      : isHoliday
+                      ? '1px solid rgba(237, 108, 108, 0.4)'
                       : isToday
                       ? '1px solid rgba(74, 153, 233, 0.4)'
                       : '1px solid var(--border-subtle)',
@@ -620,43 +623,53 @@ export const CalendarScreen: React.FC = () => {
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  {/* Day Number Badge */}
-                  {isToday ? (
-                    <div
-                      style={{
-                        width: '22px',
-                        height: '22px',
-                        borderRadius: '50%',
-                        backgroundColor: '#4A99E9',
-                        color: '#FFFFFF',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '11px',
-                        fontWeight: 800,
-                        lineHeight: 1,
-                      }}
-                    >
-                      {item.dayNum}
-                    </div>
-                  ) : (
-                    <span
-                      style={{
-                        fontSize: '11px',
-                        fontWeight: isSel ? 800 : 600,
-                        color: isHoliday
-                          ? '#ED6C6C'
-                          : isSel
-                          ? 'var(--text-primary)'
-                          : isWeekend
-                          ? '#ED6C6C'
-                          : 'var(--text-secondary)',
-                        lineHeight: '22px',
-                      }}
-                    >
-                      {item.dayNum}
-                    </span>
-                  )}
+                  {/* Day Number and Visual Indicators (Same as before) */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px', minHeight: '22px' }}>
+                    {isToday ? (
+                      <div
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          backgroundColor: '#4A99E9',
+                          color: '#FFFFFF',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          lineHeight: 1,
+                        }}
+                      >
+                        {item.dayNum}
+                      </div>
+                    ) : (
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: isSel ? 800 : 600,
+                          color: isHoliday
+                            ? '#ED6C6C'
+                            : isSel
+                            ? 'var(--text-primary)'
+                            : isWeekend
+                            ? '#ED6C6C'
+                            : 'var(--text-secondary)',
+                          lineHeight: '20px',
+                        }}
+                      >
+                        {item.dayNum}
+                      </span>
+                    )}
+
+                    {/* Emoji & Vector Indicators Same As Before */}
+                    {isHoliday && <CambodiaFlagBadge size={10} />}
+                    {isBuddhaDay && !isHoliday && <BuddhaIcon size={11} color="#F59E0B" />}
+                    {isCultural && !isHoliday && !isBuddhaDay && <BenOfferingIcon size={10} color="#3B82F6" />}
+                    {item.dateDetails.worldDay && !isHoliday && !isBuddhaDay && !isCultural && (
+                      <CategoryIconRenderer icon={item.dateDetails.worldDay.icon || 'heart'} size={10} color="#EC4899" />
+                    )}
+                  </div>
 
                   {/* Net Cashflow Amount Display */}
                   {net !== 0 ? (
@@ -811,7 +824,9 @@ export const CalendarScreen: React.FC = () => {
               }}
             >
               <CambodiaFlagBadge size={12} />
-              <span>{selectedDateDetails.holiday.nameEn}</span>
+              <span style={{ fontFamily: 'var(--font-khmer)' }}>
+                {selectedDateDetails.holiday.nameKh || selectedDateDetails.holiday.nameEn}
+              </span>
             </span>
           )}
 
@@ -832,7 +847,9 @@ export const CalendarScreen: React.FC = () => {
               }}
             >
               <BuddhaIcon size={12} color="#F3A85B" />
-              <span>Uposatha</span>
+              <span style={{ fontFamily: 'var(--font-khmer)' }}>
+                {selectedDateDetails.buddhaDayName}
+              </span>
             </span>
           )}
 
@@ -853,7 +870,9 @@ export const CalendarScreen: React.FC = () => {
               }}
             >
               <BenOfferingIcon size={12} color="#4A99E9" />
-              <span>Season</span>
+              <span style={{ fontFamily: 'var(--font-khmer)' }}>
+                {selectedDateDetails.culturalEvent}
+              </span>
             </span>
           )}
         </div>
@@ -1031,36 +1050,6 @@ export const CalendarScreen: React.FC = () => {
             </div>
           </div>
         )}
-
-        {/* Quick Add Action Button */}
-        <button
-          type="button"
-          onClick={() => {
-            setSelectedDate(selectedDay);
-            setIsAddExpenseOpen(true);
-          }}
-          style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '14px',
-            backgroundColor: '#4A99E9',
-            color: '#FFFFFF',
-            fontWeight: 700,
-            fontSize: '13px',
-            border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            cursor: 'pointer',
-            marginTop: '12px',
-            boxShadow: '0 4px 14px rgba(74, 153, 233, 0.25)',
-            transition: 'opacity 0.15s ease',
-          }}
-        >
-          <Plus size={15} strokeWidth={2.5} />
-          <span>Add</span>
-        </button>
       </div>
     </div>
   );
