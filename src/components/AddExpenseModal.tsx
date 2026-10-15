@@ -7,7 +7,7 @@ import { X, Plus, ArrowDownRight, Mic, Square } from 'lucide-react';
 import { startVoiceRecognition } from '../services/speechService';
 
 export const AddExpenseModal: React.FC = () => {
-  const { isAddExpenseOpen, setIsAddExpenseOpen, addExpense, categories, currency, trips, selectedTripId } = useExpenses();
+  const { isAddExpenseOpen, setIsAddExpenseOpen, addExpense, categories, currency, trips, selectedTripId, selectedDate } = useExpenses();
 
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
@@ -64,10 +64,10 @@ export const AddExpenseModal: React.FC = () => {
     if (isAddExpenseOpen) {
       setCategoryId(expenseCategories[0]?.id || 'cat-food');
       setPaymentMethod('Cash');
-      setDateStr(getTodayDateString());
+      setDateStr(selectedDate || getTodayDateString());
       setTripId(selectedTripId || undefined);
     }
-  }, [isAddExpenseOpen, selectedTripId]);
+  }, [isAddExpenseOpen, selectedTripId, selectedDate]);
 
   if (!isAddExpenseOpen) return null;
 

@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
-import { formatCurrency, getTodayDateString } from '../services/storageService';
-import { getDateDetails, CAMBODIA_NATIONAL_HOLIDAYS, WORLD_CELEBRATION_DAYS, getCambodiaHolidaysForYear } from '../services/khmerCalendarService';
-import { ExpenseCard } from '../components/ExpenseCard';
+import { formatCurrency, getTodayDateString, KHR_PER_USD } from '../services/storageService';
+import { getDateDetails, getCambodiaHolidaysForYear } from '../services/khmerCalendarService';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
 import { BuddhaIcon, BenOfferingIcon, CambodiaFlagBadge } from '../components/CalendarCustomIcons';
-import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Check, Flag, Sparkles, Sun, Heart, Globe, Users } from 'lucide-react';
+import {
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Trash2,
+  PiggyBank,
+} from 'lucide-react';
 
-type CalendarViewMode = 'YEAR' | 'MONTH';
+type CalendarViewMode = 'MONTH' | 'YEAR';
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -20,12 +28,18 @@ const SHORT_MONTH_NAMES = [
 ];
 
 export const CalendarScreen: React.FC = () => {
-  const { expenses, currency, setSelectedExpenseForEdit } = useExpenses();
+  const {
+    expenses,
+    currency,
+    setSelectedExpenseForEdit,
+    deleteExpense,
+    setIsAddExpenseOpen,
+    setSelectedDate,
+  } = useExpenses();
 
   const [viewMode, setViewMode] = useState<CalendarViewMode>('MONTH');
   const [viewDate, setViewDate] = useState<Date>(new Date());
   const [selectedDay, setSelectedDay] = useState<string>(getTodayDateString());
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isHolidaysOpen, setIsHolidaysOpen] = useState(false);
 
   const year = viewDate.getFullYear();
@@ -46,14 +60,13 @@ export const CalendarScreen: React.FC = () => {
     const dayItems = expenses.filter(e => e.date === dateStr);
 
     const dayExpSum = dayItems
-      .filter(e => e.type === 'EXPENSE' || (!e.type && !e.categoryId.startsWith('cat-saving') && e.categoryId !== 'cat-income'))
+      .filter(e => e.type === 'EXPENSE' || (!e.type && !e.categoryId?.startsWith('cat-saving') && e.categoryId !== 'cat-income'))
       .reduce((sum, e) => sum + e.amount, 0);
 
     const daySavSum = dayItems
-      .filter(e => e.type === 'SAVING' || e.categoryId.startsWith('cat-saving'))
+      .filter(e => e.type === 'SAVING' || e.categoryId?.startsWith('cat-saving'))
       .reduce((sum, e) => sum + e.amount, 0);
 
-    // Net Daily Balance = Savings - Expenses
     const netDailyBalance = daySavSum - dayExpSum;
 
     days.push({
@@ -64,6 +77,7 @@ export const CalendarScreen: React.FC = () => {
       netDailyBalance,
       count: dayItems.length,
       dateDetails,
+      dayItems,
     });
   }
 
@@ -74,11 +88,11 @@ export const CalendarScreen: React.FC = () => {
     const mExpenses = expenses.filter(e => e.date.startsWith(monthPrefix));
 
     const mExpSum = mExpenses
-      .filter(e => e.type === 'EXPENSE' || (!e.type && !e.categoryId.startsWith('cat-saving') && e.categoryId !== 'cat-income'))
+      .filter(e => e.type === 'EXPENSE' || (!e.type && !e.categoryId?.startsWith('cat-saving') && e.categoryId !== 'cat-income'))
       .reduce((sum, e) => sum + e.amount, 0);
 
     const mSavSum = mExpenses
-      .filter(e => e.type === 'SAVING' || e.categoryId.startsWith('cat-saving'))
+      .filter(e => e.type === 'SAVING' || e.categoryId?.startsWith('cat-saving'))
       .reduce((sum, e) => sum + e.amount, 0);
 
     const netUSD = mSavSum - mExpSum;
@@ -94,18 +108,23 @@ export const CalendarScreen: React.FC = () => {
   const prevMonth = () => setViewDate(new Date(year, month - 1, 1));
   const nextMonth = () => setViewDate(new Date(year, month + 1, 1));
 
+  const handleTodayClick = () => {
+    const today = new Date();
+    setViewDate(today);
+    setSelectedDay(getTodayDateString());
+  };
+
   const selectedDayItems = expenses.filter(e => e.date === selectedDay);
   const selectedDayExpSum = selectedDayItems
-    .filter(e => e.type === 'EXPENSE' || (!e.type && !e.categoryId.startsWith('cat-saving') && e.categoryId !== 'cat-income'))
+    .filter(e => e.type === 'EXPENSE' || (!e.type && !e.categoryId?.startsWith('cat-saving') && e.categoryId !== 'cat-income'))
     .reduce((sum, e) => sum + e.amount, 0);
   const selectedDaySavSum = selectedDayItems
-    .filter(e => e.type === 'SAVING' || e.categoryId.startsWith('cat-saving'))
+    .filter(e => e.type === 'SAVING' || e.categoryId?.startsWith('cat-saving'))
     .reduce((sum, e) => sum + e.amount, 0);
   const selectedDayNetUSD = selectedDaySavSum - selectedDayExpSum;
 
   const formatCellAmount = (netUSD: number) => {
     if (netUSD === 0) return '';
-
     const absUSD = Math.abs(netUSD);
     const prefix = netUSD > 0 ? '+' : '-';
 
@@ -116,9 +135,40 @@ export const CalendarScreen: React.FC = () => {
     return prefix + '$' + (absUSD >= 1000 ? (absUSD / 1000).toFixed(1) + 'k' : (absUSD % 1 === 0 ? absUSD : absUSD.toFixed(1)));
   };
 
-  const getHeaderTitleLabel = () => {
-    if (viewMode === 'YEAR') return `Year ${year}`;
-    return `${MONTH_NAMES[month]} ${year}`;
+  const formatSecondaryVal = (amountUSD: number, primaryCurrency: string) => {
+    if (primaryCurrency === 'USD') {
+      const khrVal = Math.round(amountUSD * KHR_PER_USD);
+      return `៛${khrVal.toLocaleString()}`;
+    } else {
+      return `$${amountUSD.toFixed(2)}`;
+    }
+  };
+
+  const getCategoryTheme = (item: any) => {
+    const isSaving = item.type === 'SAVING' || item.categoryId?.startsWith('cat-saving');
+    const isIncome = item.type === 'INCOME' || item.categoryId === 'cat-income';
+    if (isSaving) return { color: '#30D158', bg: 'rgba(48, 209, 88, 0.12)' };
+    if (isIncome) return { color: '#4A99E9', bg: 'rgba(74, 153, 233, 0.12)' };
+    switch ((item.categoryName || '').toLowerCase()) {
+      case 'food':
+        return { color: '#F3A85B', bg: 'rgba(243, 168, 91, 0.12)' };
+      case 'drink':
+      case 'coffee':
+        return { color: '#ED6C6C', bg: 'rgba(237, 108, 108, 0.12)' };
+      case 'transport':
+        return { color: '#4A99E9', bg: 'rgba(74, 153, 233, 0.12)' };
+      case 'groceries':
+        return { color: '#30D158', bg: 'rgba(48, 209, 88, 0.12)' };
+      case 'bills':
+      case 'shopping':
+      case 'party':
+        return { color: '#EC668C', bg: 'rgba(236, 102, 140, 0.12)' };
+      case 'fun':
+      case 'team':
+        return { color: '#A78BFA', bg: 'rgba(167, 139, 250, 0.12)' };
+      default:
+        return { color: '#F3A85B', bg: 'rgba(243, 168, 91, 0.12)' };
+    }
   };
 
   const formatHolidayDate = (dateStr: string) => {
@@ -136,13 +186,141 @@ export const CalendarScreen: React.FC = () => {
 
   return (
     <div style={{ padding: '16px', paddingBottom: '90px' }}>
-      {/* Collapsible Cambodian National Holidays Bar (Filtered by Selected Month) */}
+      {/* Top Header Bar: Month Navigation, Today Pill, and Segmented Selector */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '14px',
+          gap: '8px',
+          flexWrap: 'wrap',
+        }}
+      >
+        {/* Month Title & Chevron Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2
+            style={{
+              fontSize: '18px',
+              fontWeight: 800,
+              color: 'var(--text-primary)',
+              margin: 0,
+              letterSpacing: '-0.3px',
+            }}
+          >
+            {viewMode === 'YEAR' ? `Year ${year}` : `${MONTH_NAMES[month]} ${year}`}
+          </h2>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <button
+              type="button"
+              className="glass-pill"
+              onClick={viewMode === 'YEAR' ? prevYear : prevMonth}
+              style={{
+                width: '28px',
+                height: '28px',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
+              title="Previous"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              type="button"
+              className="glass-pill"
+              onClick={viewMode === 'YEAR' ? nextYear : nextMonth}
+              style={{
+                width: '28px',
+                height: '28px',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
+              title="Next"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Right Controls: Today Button & Segmented View Switcher */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button
+            type="button"
+            className="glass-pill"
+            onClick={handleTodayClick}
+            style={{
+              padding: '5px 12px',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+            }}
+          >
+            Today
+          </button>
+
+          <div
+            style={{
+              display: 'flex',
+              backgroundColor: 'var(--pill-bg)',
+              borderRadius: '10px',
+              padding: '2px',
+              border: '1px solid var(--border-glass)',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setViewMode('MONTH')}
+              style={{
+                padding: '4px 10px',
+                fontSize: '11px',
+                fontWeight: 600,
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                backgroundColor: viewMode === 'MONTH' ? '#4A99E9' : 'transparent',
+                color: viewMode === 'MONTH' ? '#FFFFFF' : 'var(--text-secondary)',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Month
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('YEAR')}
+              style={{
+                padding: '4px 10px',
+                fontSize: '11px',
+                fontWeight: 600,
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                backgroundColor: viewMode === 'YEAR' ? '#4A99E9' : 'transparent',
+                color: viewMode === 'YEAR' ? '#FFFFFF' : 'var(--text-secondary)',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Year
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Slim Month Holidays Collapsible Bar */}
       <div
         className="glass-panel"
         style={{
-          padding: '12px 14px',
+          padding: '10px 14px',
           marginBottom: '14px',
-          borderRadius: '14px',
+          borderRadius: '16px',
           borderColor: 'var(--border-glass)',
           backgroundColor: 'var(--bg-card)',
         }}
@@ -151,51 +329,48 @@ export const CalendarScreen: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
               style={{
-                width: '32px',
-                height: '32px',
+                width: '28px',
+                height: '28px',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                backgroundColor: 'rgba(237, 108, 108, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <CambodiaFlagBadge size={18} />
+              <CambodiaFlagBadge size={16} />
             </div>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
                 Holidays
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                {monthHolidays.length > 0
-                  ? `${monthHolidays.length} Holidays`
-                  : 'None'}
-              </div>
+              </span>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '6px', fontWeight: 500 }}>
+                {monthHolidays.length}
+              </span>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={() => setIsHolidaysOpen(!isHolidaysOpen)}
             className="glass-pill"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '4px 10px',
+              padding: '3px 8px',
               fontSize: '11px',
               fontWeight: 500,
               color: 'var(--text-secondary)',
-              borderColor: 'var(--border-glass)',
-              backgroundColor: 'var(--pill-bg)',
               cursor: 'pointer',
             }}
           >
             {isHolidaysOpen ? 'Hide' : 'Show'}
-            {isHolidaysOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            {isHolidaysOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
         </div>
 
-        {/* Collapsible List of Holidays in Khmer & English for Selected Month */}
+        {/* Collapsible List of Holidays */}
         {isHolidaysOpen && (
           <div
             style={{
@@ -204,8 +379,8 @@ export const CalendarScreen: React.FC = () => {
               borderTop: '1px solid var(--border-subtle)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '8px',
-              maxHeight: '260px',
+              gap: '6px',
+              maxHeight: '220px',
               overflowY: 'auto',
             }}
           >
@@ -227,22 +402,19 @@ export const CalendarScreen: React.FC = () => {
                       justifyContent: 'space-between',
                       padding: '8px 10px',
                       borderRadius: '10px',
-                      backgroundColor: isSelected ? 'var(--pill-hover)' : 'var(--pill-bg)',
-                      border: isSelected ? '1px solid var(--accent-danger)' : '1px solid var(--border-subtle)',
+                      backgroundColor: isSelected ? 'rgba(237, 108, 108, 0.15)' : 'var(--pill-bg)',
+                      border: isSelected ? '1px solid #ED6C6C' : '1px solid var(--border-subtle)',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    {/* Left Side: Date Card + Holiday Title */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
-                      {/* Mini Calendar Ticket Badge */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
                       <div
                         style={{
-                          width: '42px',
-                          height: '42px',
+                          width: '36px',
+                          height: '36px',
                           borderRadius: '8px',
-                          backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                          border: '1px solid rgba(239, 68, 68, 0.2)',
+                          backgroundColor: 'rgba(237, 108, 108, 0.1)',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
@@ -250,315 +422,68 @@ export const CalendarScreen: React.FC = () => {
                           flexShrink: 0,
                         }}
                       >
-                        <span
-                          style={{
-                            fontSize: '9px',
-                            fontWeight: 700,
-                            color: 'var(--accent-danger)',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            lineHeight: 1,
-                          }}
-                        >
+                        <span style={{ fontSize: '8px', fontWeight: 700, color: '#ED6C6C', textTransform: 'uppercase' }}>
                           {dateInfo.monthName}
                         </span>
-                        <span
-                          className="tabular-nums"
-                          style={{
-                            fontSize: '15px',
-                            fontWeight: 700,
-                            color: 'var(--text-primary)',
-                            lineHeight: 1.1,
-                            marginTop: '2px',
-                          }}
-                        >
+                        <span className="tabular-nums" style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
                           {dateInfo.dayNum}
                         </span>
                       </div>
-
-                      {/* Holiday Names in Khmer & English */}
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        {h.nameKh && (
-                          <div
-                            style={{
-                              fontSize: '13px',
-                              fontWeight: 600,
-                              color: 'var(--text-primary)',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              lineHeight: 1.3,
-                            }}
-                          >
-                            {h.nameKh}
-                          </div>
-                        )}
-                        <div
-                          style={{
-                            fontSize: '11px',
-                            color: 'var(--text-secondary)',
-                            fontWeight: 400,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {h.nameEn} • {dateInfo.dayOfWeek}
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {h.nameKh || h.nameEn}
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {h.nameEn}
                         </div>
                       </div>
                     </div>
-
-                    {/* Right Side Tag */}
-                    <div style={{ flexShrink: 0, marginLeft: '8px' }}>
-                      <span
-                        style={{
-                          fontSize: '10px',
-                          fontWeight: 600,
-                          color: 'var(--accent-danger)',
-                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          border: '1px solid rgba(239, 68, 68, 0.2)',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        Holiday
-                      </span>
-                    </div>
+                    <span
+                      style={{
+                        fontSize: '9px',
+                        fontWeight: 600,
+                        color: '#ED6C6C',
+                        backgroundColor: 'rgba(237, 108, 108, 0.12)',
+                        padding: '2px 6px',
+                        borderRadius: '6px',
+                        flexShrink: 0,
+                      }}
+                    >
+                      Holiday
+                    </span>
                   </div>
                 );
               })
             ) : (
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', padding: '10px 0' }}>
-                No national public holidays scheduled for {MONTH_NAMES[month]} {year}
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>
+                None
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* National Public Holiday Banner (Red Day Off Theme) */}
-      {selectedDateDetails.holiday && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px 14px',
-            borderRadius: '12px',
-            border: '1px solid rgba(239, 68, 68, 0.25)',
-            backgroundColor: 'rgba(239, 68, 68, 0.08)',
-            marginBottom: '12px',
-          }}
-        >
-          <CambodiaFlagBadge size={22} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                {selectedDateDetails.holiday.nameKh || selectedDateDetails.holiday.nameEn}
-              </span>
-              <span
-                style={{
-                  fontSize: '9px',
-                  fontWeight: 600,
-                  color: 'var(--accent-danger)',
-                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                  padding: '1px 6px',
-                  borderRadius: '4px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.3px',
-                }}
-              >
-                Holiday
-              </span>
-            </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 400 }}>
-              {selectedDateDetails.holiday.nameEn}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Cultural Festival Season Banner */}
-      {selectedDateDetails.culturalEvent && !selectedDateDetails.holiday && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '10px 14px',
-            borderRadius: '12px',
-            border: '1px solid rgba(59, 130, 246, 0.3)',
-            backgroundColor: 'rgba(59, 130, 246, 0.08)',
-            color: 'var(--accent-light)',
-            fontSize: '13px',
-            fontWeight: 600,
-            marginBottom: '12px',
-          }}
-        >
-          <BenOfferingIcon size={20} color="var(--accent-light)" />
-          <div>
-            <div>{selectedDateDetails.culturalEvent}</div>
-            <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 400 }}>
-              Season
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* World Appreciation & Celebration Days Banner */}
-      {selectedDateDetails.worldDay && !selectedDateDetails.holiday && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '10px 14px',
-            borderRadius: '12px',
-            border: '1px solid rgba(236, 72, 153, 0.3)',
-            backgroundColor: 'rgba(236, 72, 153, 0.08)',
-            color: '#EC4899',
-            fontSize: '13px',
-            fontWeight: 600,
-            marginBottom: '12px',
-          }}
-        >
-          <CategoryIconRenderer icon={selectedDateDetails.worldDay.icon || 'heart'} size={18} color="#EC4899" />
-          <div>
-            <div>{selectedDateDetails.worldDay.nameKh} ({selectedDateDetails.worldDay.nameEn})</div>
-            <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 400 }}>
-              Celebration
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Buddhist Holy Day Banner */}
-      {selectedDateDetails.isBuddhaDay && !selectedDateDetails.holiday && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '10px 14px',
-            borderRadius: '12px',
-            border: '1px solid rgba(245, 158, 11, 0.3)',
-            backgroundColor: 'rgba(245, 158, 11, 0.08)',
-            color: '#F59E0B',
-            fontSize: '13px',
-            fontWeight: 600,
-            marginBottom: '12px',
-          }}
-        >
-          <BuddhaIcon size={20} color="#F59E0B" />
-          <div>
-            <div>{selectedDateDetails.buddhaDayName}</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 400 }}>
-              Uposatha
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Top Glass View & Date Selector Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', position: 'relative' }}>
-        {/* Dropdown Selector Trigger */}
-        <button
-          className="glass-pill"
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          style={{ padding: '6px 12px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', gap: '6px' }}
-        >
-          <Calendar size={15} style={{ color: 'var(--accent)' }} />
-          <span>{getHeaderTitleLabel()}</span>
-          <ChevronDown size={14} style={{ color: 'var(--text-secondary)' }} />
-        </button>
-
-        {/* Navigation Arrow Controls */}
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <button
-            className="glass-pill"
-            onClick={viewMode === 'YEAR' ? prevYear : prevMonth}
-            style={{ width: '32px', height: '32px', padding: 0, justifyContent: 'center' }}
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button
-            className="glass-pill"
-            onClick={viewMode === 'YEAR' ? nextYear : nextMonth}
-            style={{ width: '32px', height: '32px', padding: 0, justifyContent: 'center' }}
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-
-        {/* Dropdown Popover Modal */}
-        {isDropdownOpen && (
-          <div
-            className="glass-panel"
-            style={{
-              position: 'absolute',
-              top: '42px',
-              left: 0,
-              zIndex: 50,
-              width: '260px',
-              padding: '10px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px',
-            }}
-          >
-            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', padding: '2px 4px', marginBottom: '2px' }}>
-              View
-            </div>
-            {[
-              { id: 'YEAR', label: 'Year', desc: '12-month annual overview' },
-              { id: 'MONTH', label: 'Month', desc: '30-day interactive grid' },
-            ].map(item => {
-              const isActive = viewMode === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setViewMode(item.id as CalendarViewMode);
-                    setIsDropdownOpen(false);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '8px 10px',
-                    borderRadius: '8px',
-                    border: isActive ? '1px solid var(--border-glass)' : '1px solid transparent',
-                    backgroundColor: isActive ? 'var(--pill-hover)' : 'transparent',
-                    color: 'var(--text-primary)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: 600 }}>{item.label}</div>
-                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{item.desc}</div>
-                  </div>
-                  {isActive && <Check size={15} style={{ color: 'var(--accent)' }} />}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
       {/* YEAR VIEW MODE */}
       {viewMode === 'YEAR' && (
-        <div className="glass-panel" style={{ padding: '16px', marginBottom: '16px' }}>
-          <div style={{ textAlign: 'center', padding: '12px', borderRadius: '10px', backgroundColor: 'var(--pill-bg)', marginBottom: '12px', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>Net Cashflow in {year}</div>
+        <div className="glass-panel" style={{ padding: '16px', marginBottom: '16px', borderRadius: '20px' }}>
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '12px',
+              borderRadius: '12px',
+              backgroundColor: 'var(--pill-bg)',
+              marginBottom: '14px',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Net</div>
             <div
               className="tabular-nums"
               style={{
                 fontSize: '22px',
-                fontWeight: 700,
+                fontWeight: 800,
                 marginTop: '2px',
-                color: totalYearNetUSD >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)',
+                color: totalYearNetUSD >= 0 ? '#30D158' : '#ED6C6C',
               }}
             >
               {(totalYearNetUSD >= 0 ? '+' : '') + formatCurrency(totalYearNetUSD, currency)}
@@ -575,25 +500,29 @@ export const CalendarScreen: React.FC = () => {
                 }}
                 className="glass-panel"
                 style={{
-                  padding: '10px 6px',
+                  padding: '12px 6px',
                   textAlign: 'center',
                   cursor: 'pointer',
                   borderColor: 'var(--border-glass)',
                   backgroundColor: 'var(--bg-card)',
+                  borderRadius: '14px',
                 }}
               >
-                <div style={{ fontSize: '13px', fontWeight: 600 }}>{m.monthName}</div>
+                <div style={{ fontSize: '13px', fontWeight: 700 }}>{m.monthName}</div>
                 <div
                   className="tabular-nums"
                   style={{
                     fontSize: '11px',
-                    fontWeight: 600,
-                    color: m.netUSD > 0 ? 'var(--accent-success)' : m.netUSD < 0 ? 'var(--accent-danger)' : 'var(--text-muted)',
+                    fontWeight: 700,
+                    marginTop: '2px',
+                    color: m.netUSD > 0 ? '#30D158' : m.netUSD < 0 ? '#ED6C6C' : 'var(--text-muted)',
                   }}
                 >
                   {m.netUSD !== 0 ? formatCellAmount(m.netUSD) : '-'}
                 </div>
-                <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>{m.count} entries</div>
+                <div style={{ fontSize: '9px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  {m.count}
+                </div>
               </div>
             ))}
           </div>
@@ -602,9 +531,26 @@ export const CalendarScreen: React.FC = () => {
 
       {/* MONTH VIEW GRID MODE */}
       {viewMode === 'MONTH' && (
-        <div className="glass-panel" style={{ padding: '12px', marginBottom: '16px' }}>
-          {/* Day Headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '6px' }}>
+        <div
+          className="glass-panel"
+          style={{
+            padding: '12px 10px',
+            marginBottom: '16px',
+            borderRadius: '20px',
+            borderColor: 'var(--border-glass)',
+            backgroundColor: 'var(--bg-card)',
+          }}
+        >
+          {/* Day of Week Headers */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, 1fr)',
+              gap: '4px',
+              textAlign: 'center',
+              marginBottom: '6px',
+            }}
+          >
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, idx) => {
               const isWeekendHeader = idx === 0 || idx === 6;
               return (
@@ -612,8 +558,9 @@ export const CalendarScreen: React.FC = () => {
                   key={d}
                   style={{
                     fontSize: '11px',
-                    fontWeight: 600,
-                    color: isWeekendHeader ? 'var(--accent-danger)' : 'var(--text-muted)',
+                    fontWeight: 700,
+                    color: isWeekendHeader ? '#ED6C6C' : 'var(--text-muted)',
+                    padding: '2px 0',
                   }}
                 >
                   {d}
@@ -622,10 +569,10 @@ export const CalendarScreen: React.FC = () => {
             })}
           </div>
 
-          {/* Grid Cells */}
+          {/* 7-Column Grid Cells */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
             {emptyLeadingCells.map((_, i) => (
-              <div key={'empty-' + i} style={{ height: '48px' }} />
+              <div key={'empty-' + i} style={{ height: '54px' }} />
             ))}
 
             {days.map(item => {
@@ -633,10 +580,18 @@ export const CalendarScreen: React.FC = () => {
               const isToday = item.dateStr === getTodayDateString();
               const isHoliday = !!item.dateDetails.holiday;
               const isBuddhaDay = item.dateDetails.isBuddhaDay;
-              const isCultural = !!item.dateDetails.culturalEvent;
               const net = item.netDailyBalance;
               const dayOfWeekNum = new Date(item.dateStr + 'T00:00:00').getDay();
               const isWeekend = dayOfWeekNum === 0 || dayOfWeekNum === 6;
+              const hasExpense = item.dayExpSum > 0;
+              const hasSaving = item.daySavSum > 0;
+
+              // Up to 3 discrete micro-dots underneath
+              const dots: { color: string; id: string }[] = [];
+              if (isHoliday) dots.push({ color: '#ED6C6C', id: 'h' });
+              if (isBuddhaDay && dots.length < 3) dots.push({ color: '#F3A85B', id: 'b' });
+              if (hasExpense && dots.length < 3) dots.push({ color: '#4A99E9', id: 'e' });
+              if (hasSaving && dots.length < 3) dots.push({ color: '#30D158', id: 's' });
 
               return (
                 <div
@@ -644,65 +599,105 @@ export const CalendarScreen: React.FC = () => {
                   onClick={() => setSelectedDay(item.dateStr)}
                   style={{
                     position: 'relative',
-                    height: '48px',
-                    borderRadius: '8px',
+                    height: '54px',
+                    borderRadius: '12px',
                     border: isSel
-                      ? '1.5px solid var(--accent)'
-                      : isHoliday
-                      ? '1px solid var(--accent-danger)'
+                      ? '1.5px solid #4A99E9'
                       : isToday
-                      ? '1px solid var(--accent-light)'
+                      ? '1px solid rgba(74, 153, 233, 0.4)'
                       : '1px solid var(--border-subtle)',
-                    backgroundColor: isSel
+                    backgroundColor: isHoliday
+                      ? 'rgba(237, 108, 108, 0.12)'
+                      : isSel
                       ? 'var(--pill-hover)'
                       : 'var(--pill-bg)',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '4px 2px',
+                    padding: '3px 1px',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  {/* Top Day Number & Distinct Indicator */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  {/* Day Number Badge */}
+                  {isToday ? (
+                    <div
+                      style={{
+                        width: '22px',
+                        height: '22px',
+                        borderRadius: '50%',
+                        backgroundColor: '#4A99E9',
+                        color: '#FFFFFF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {item.dayNum}
+                    </div>
+                  ) : (
                     <span
                       style={{
                         fontSize: '11px',
-                        fontWeight: isSel || isToday ? 700 : 500,
+                        fontWeight: isSel ? 800 : 600,
                         color: isHoliday
-                          ? 'var(--accent-danger)'
+                          ? '#ED6C6C'
                           : isSel
                           ? 'var(--text-primary)'
                           : isWeekend
-                          ? 'var(--accent-danger)'
+                          ? '#ED6C6C'
                           : 'var(--text-secondary)',
+                        lineHeight: '22px',
                       }}
                     >
                       {item.dayNum}
                     </span>
-                    {isHoliday && <CambodiaFlagBadge size={10} />}
-                    {isBuddhaDay && !isHoliday && <BuddhaIcon size={11} color="#F59E0B" />}
-                    {isCultural && !isHoliday && !isBuddhaDay && <BenOfferingIcon size={10} color="#3B82F6" />}
-                    {item.dateDetails.worldDay && !isHoliday && !isBuddhaDay && !isCultural && (
-                      <CategoryIconRenderer icon={item.dateDetails.worldDay.icon || 'heart'} size={10} color="#EC4899" />
-                    )}
-                  </div>
+                  )}
 
                   {/* Net Cashflow Amount Display */}
-                  {net !== 0 && (
+                  {net !== 0 ? (
                     <div
                       className="tabular-nums"
                       style={{
-                        fontSize: '9px',
-                        fontWeight: 600,
-                        color: net > 0 ? 'var(--accent-success)' : 'var(--accent-danger)',
+                        fontSize: '8.5px',
+                        fontWeight: 700,
+                        color: net > 0 ? '#30D158' : '#ED6C6C',
+                        lineHeight: 1,
                       }}
                     >
                       {formatCellAmount(net)}
                     </div>
+                  ) : (
+                    <div style={{ height: '8px' }} />
                   )}
+
+                  {/* Micro-Dots Indicators */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '2.5px',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '4px',
+                    }}
+                  >
+                    {dots.map(d => (
+                      <span
+                        key={d.id}
+                        style={{
+                          width: '3.5px',
+                          height: '3.5px',
+                          borderRadius: '50%',
+                          backgroundColor: d.color,
+                          display: 'inline-block',
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
               );
             })}
@@ -710,45 +705,362 @@ export const CalendarScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Selected Day Details Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 2px' }}>
-        <div>
-          <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.1px' }}>
-            Transactions on {selectedDay}
-          </h4>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 400 }}>
-            {selectedDateDetails.formattedDateEn}
+      {/* Selected Day Agenda Bento Section */}
+      <div
+        className="glass-panel"
+        style={{
+          padding: '16px',
+          borderRadius: '20px',
+          borderColor: 'var(--border-glass)',
+          backgroundColor: 'var(--bg-card)',
+        }}
+      >
+        {/* Bento Header: Title & Day Net Balance */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '10px',
+          }}
+        >
+          <div>
+            <h3
+              style={{
+                fontSize: '16px',
+                fontWeight: 800,
+                color: 'var(--text-primary)',
+                margin: 0,
+                letterSpacing: '-0.2px',
+              }}
+            >
+              Activity
+            </h3>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500, marginTop: '2px' }}>
+              {selectedDateDetails.formattedDateEn}
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'right' }}>
+            <span
+              className="tabular-nums"
+              style={{
+                fontSize: '16px',
+                fontWeight: 800,
+                color: selectedDayNetUSD > 0 ? '#30D158' : selectedDayNetUSD < 0 ? '#ED6C6C' : 'var(--text-secondary)',
+              }}
+            >
+              {(selectedDayNetUSD > 0 ? '+' : '') + formatCurrency(selectedDayNetUSD, currency)}
+            </span>
           </div>
         </div>
 
-        <div style={{ textAlign: 'right' }}>
+        {/* Status Metrics Pills Bar */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
           <span
-            className="tabular-nums"
+            className="glass-pill"
             style={{
-              fontSize: '13px',
-              fontWeight: 700,
-              color: selectedDayNetUSD > 0 ? 'var(--accent-success)' : selectedDayNetUSD < 0 ? 'var(--accent-danger)' : 'var(--text-primary)',
+              padding: '4px 8px',
+              fontSize: '11px',
+              fontWeight: 600,
+              color: 'var(--text-secondary)',
+              backgroundColor: 'var(--pill-bg)',
             }}
           >
-            {(selectedDayNetUSD > 0 ? '+' : '') + formatCurrency(selectedDayNetUSD, currency)}
+            Items: {selectedDayItems.length}
           </span>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-            Exp: {formatCurrency(selectedDayExpSum, currency)} | Sav: {formatCurrency(selectedDaySavSum, currency)}
-          </div>
-        </div>
-      </div>
+          <span
+            className="glass-pill"
+            style={{
+              padding: '4px 8px',
+              fontSize: '11px',
+              fontWeight: 600,
+              color: selectedDayExpSum > 0 ? '#ED6C6C' : 'var(--text-secondary)',
+              backgroundColor: 'var(--pill-bg)',
+            }}
+          >
+            Expenses: {formatCurrency(selectedDayExpSum, currency)}
+          </span>
+          <span
+            className="glass-pill"
+            style={{
+              padding: '4px 8px',
+              fontSize: '11px',
+              fontWeight: 600,
+              color: selectedDaySavSum > 0 ? '#30D158' : 'var(--text-secondary)',
+              backgroundColor: 'var(--pill-bg)',
+            }}
+          >
+            Savings: {formatCurrency(selectedDaySavSum, currency)}
+          </span>
 
-      {/* Day Transactions List */}
-      <div>
+          {/* Holiday Badge */}
+          {selectedDateDetails.holiday && (
+            <span
+              className="glass-pill"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 8px',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#ED6C6C',
+                backgroundColor: 'rgba(237, 108, 108, 0.12)',
+                borderColor: 'rgba(237, 108, 108, 0.25)',
+              }}
+            >
+              <CambodiaFlagBadge size={12} />
+              <span>{selectedDateDetails.holiday.nameEn}</span>
+            </span>
+          )}
+
+          {/* Buddhist Holy Day Badge */}
+          {selectedDateDetails.isBuddhaDay && !selectedDateDetails.holiday && (
+            <span
+              className="glass-pill"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 8px',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#F3A85B',
+                backgroundColor: 'rgba(243, 168, 91, 0.12)',
+                borderColor: 'rgba(243, 168, 91, 0.25)',
+              }}
+            >
+              <BuddhaIcon size={12} color="#F3A85B" />
+              <span>Uposatha</span>
+            </span>
+          )}
+
+          {/* Cultural Season Badge */}
+          {selectedDateDetails.culturalEvent && !selectedDateDetails.holiday && (
+            <span
+              className="glass-pill"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 8px',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#4A99E9',
+                backgroundColor: 'rgba(74, 153, 233, 0.12)',
+                borderColor: 'rgba(74, 153, 233, 0.25)',
+              }}
+            >
+              <BenOfferingIcon size={12} color="#4A99E9" />
+              <span>Season</span>
+            </span>
+          )}
+        </div>
+
+        {/* Transactions Stack for Selected Day */}
         {selectedDayItems.length > 0 ? (
-          selectedDayItems.map(item => (
-            <ExpenseCard key={item.id} item={item} onPress={() => setSelectedExpenseForEdit(item)} />
-          ))
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {selectedDayItems.map(item => {
+              const theme = getCategoryTheme(item);
+              const isSaving = item.type === 'SAVING' || item.categoryId?.startsWith('cat-saving');
+              const isIncome = item.type === 'INCOME' || item.categoryId === 'cat-income';
+              const formattedMain = formatCurrency(item.amount, currency);
+              const secondaryFormatted = formatSecondaryVal(item.amount, currency);
+
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedExpenseForEdit(item)}
+                  className="glass-panel"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 14px',
+                    borderRadius: '16px',
+                    border: '1px solid var(--border-glass)',
+                    backgroundColor: 'var(--bg-card)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {/* Left: Category Icon Badge & Information */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '14px',
+                        backgroundColor: theme.bg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: theme.color,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {isSaving ? (
+                        <PiggyBank size={20} color={theme.color} />
+                      ) : (
+                        <CategoryIconRenderer icon={item.categoryIcon || 'receipt-outline'} size={20} color={theme.color} />
+                      )}
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          color: 'var(--text-primary)',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          letterSpacing: '-0.2px',
+                        }}
+                      >
+                        {item.title || item.categoryName}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          color: 'var(--text-secondary)',
+                          fontWeight: 500,
+                          marginTop: '2px',
+                        }}
+                      >
+                        {item.paymentMethod || 'Cash'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Amounts & Quick Delete Button */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <div
+                        className="tabular-nums"
+                        style={{
+                          fontSize: '15px',
+                          fontWeight: 800,
+                          letterSpacing: '-0.2px',
+                          color: isSaving || isIncome ? '#30D158' : '#ED6C6C',
+                        }}
+                      >
+                        {isSaving || isIncome ? `+${formattedMain}` : `-${formattedMain}`}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '10px',
+                          color: 'var(--text-secondary)',
+                          marginTop: '1px',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {secondaryFormatted}
+                      </div>
+                    </div>
+
+                    {/* Inline Quick Delete Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Delete?')) {
+                          deleteExpense(item.id);
+                        }
+                      }}
+                      className="glass-pill"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        padding: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '10px',
+                        border: '1px solid var(--border-glass)',
+                        backgroundColor: 'rgba(237, 108, 108, 0.08)',
+                        color: '#ED6C6C',
+                        cursor: 'pointer',
+                      }}
+                      title="Delete"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
-          <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
-            No transactions recorded on {selectedDay}.
+          <div
+            className="glass-panel"
+            style={{
+              padding: '24px 16px',
+              textAlign: 'center',
+              borderRadius: '16px',
+              border: '1px solid var(--border-glass)',
+              backgroundColor: 'var(--bg-card)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+            }}
+          >
+            <div
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(74, 153, 233, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#4A99E9',
+                marginBottom: '2px',
+              }}
+            >
+              <Calendar size={18} />
+            </div>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              Quiet
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              None
+            </div>
           </div>
         )}
+
+        {/* Quick Add Action Button */}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedDate(selectedDay);
+            setIsAddExpenseOpen(true);
+          }}
+          style={{
+            width: '100%',
+            padding: '12px',
+            borderRadius: '14px',
+            backgroundColor: '#4A99E9',
+            color: '#FFFFFF',
+            fontWeight: 700,
+            fontSize: '13px',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            cursor: 'pointer',
+            marginTop: '12px',
+            boxShadow: '0 4px 14px rgba(74, 153, 233, 0.25)',
+            transition: 'opacity 0.15s ease',
+          }}
+        >
+          <Plus size={15} strokeWidth={2.5} />
+          <span>Add</span>
+        </button>
       </div>
     </div>
   );

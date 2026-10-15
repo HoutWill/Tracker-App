@@ -6,7 +6,7 @@ import { PaymentMethod } from '../types';
 import { X, Plus, PiggyBank } from 'lucide-react';
 
 export const AddSavingModal: React.FC = () => {
-  const { isAddSavingOpen, setIsAddSavingOpen, addExpense, categories, currency, trips, selectedTripId } = useExpenses();
+  const { isAddSavingOpen, setIsAddSavingOpen, addExpense, categories, currency, trips, selectedTripId, selectedDate } = useExpenses();
 
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
@@ -24,10 +24,10 @@ export const AddSavingModal: React.FC = () => {
     if (isAddSavingOpen) {
       setCategoryId(savingCategories[0]?.id || 'cat-saving-vault');
       setPaymentMethod('Bank');
-      setDateStr(getTodayDateString());
+      setDateStr(selectedDate || getTodayDateString());
       setTripId(selectedTripId || undefined);
     }
-  }, [isAddSavingOpen, selectedTripId]);
+  }, [isAddSavingOpen, selectedTripId, selectedDate]);
 
   if (!isAddSavingOpen) return null;
 
