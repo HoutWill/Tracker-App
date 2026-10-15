@@ -55,3 +55,27 @@ export const playAlertChime = () => {
     console.error('Audio chime error:', e);
   }
 };
+
+// Global audio autoplay unlock on first touch or click
+if (typeof window !== 'undefined') {
+  const unlockAudio = () => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        const tempCtx = new AudioContextClass();
+        if (tempCtx.state === 'suspended') {
+          tempCtx.resume();
+        }
+        setTimeout(() => {
+          try {
+            tempCtx.close();
+          } catch (e) {}
+        }, 1000);
+      }
+    } catch (e) {}
+    window.removeEventListener('click', unlockAudio);
+    window.removeEventListener('touchstart', unlockAudio);
+  };
+  window.addEventListener('click', unlockAudio, { passive: true, once: true });
+  window.addEventListener('touchstart', unlockAudio, { passive: true, once: true });
+}

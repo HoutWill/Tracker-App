@@ -26,8 +26,32 @@ export const getNowTimeString = (d: Date = new Date()): string => {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
+    hourCycle: 'h23',
   });
   return formatter.format(d);
+};
+
+export const getReminderDueTimestamp = (r: ReminderItem): number => {
+  const targetDate = (r.alertDate || r.dueDate || '').trim();
+  if (!targetDate) return NaN;
+
+  const dateParts = targetDate.split('-');
+  if (dateParts.length < 3) return NaN;
+
+  const y = parseInt(dateParts[0], 10);
+  const m = parseInt(dateParts[1], 10);
+  const d = parseInt(dateParts[2], 10);
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return NaN;
+
+  const rawTime = (r.alertTime || r.dueTime || '09:00').trim();
+  const timeParts = rawTime.split(':');
+  const hour = parseInt(timeParts[0] || '9', 10);
+  const minute = parseInt(timeParts[1] || '0', 10);
+
+  // Timezone Directive: Cambodia (ICT / UTC+7).
+  // A local Cambodia time of Y-M-D H:M corresponds to UTC timestamp:
+  // Date.UTC(y, m - 1, d, hour - 7, minute, 0)
+  return Date.UTC(y, m - 1, d, hour - 7, minute, 0);
 };
 
 export const getStartOfWeekDateString = (d: Date = new Date()): string => {

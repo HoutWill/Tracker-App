@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ReminderItem } from '../types';
-import { StorageService, getTodayDateString, getNowTimeString } from '../services/storageService';
+import { StorageService, getTodayDateString, getNowTimeString, getReminderDueTimestamp } from '../services/storageService';
 import { playAlertChime, triggerHaptic } from '../services/soundService';
 import { Bell, CheckCircle2, X } from 'lucide-react';
 
@@ -27,8 +27,9 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isAddReminderOpen, setIsAddReminderOpen] = useState<boolean>(false);
   const [presetDraft, setPresetDraft] = useState<Partial<ReminderItem> | null>(null);
 
-  // Active In-App Alarm Popup Modal State
-  const [activeAlarmReminder, setActiveAlarmReminder] = useState<ReminderItem | null>(null);
+  // Active In-App Alarm Popup Queue
+  const [activeAlarmQueue, setActiveAlarmQueue] = useState<ReminderItem[]>([]);
+  const activeAlarmReminder = activeAlarmQueue[0] || null;
 
   const openAddReminderWithPreset = (preset: Partial<ReminderItem>) => {
     setPresetDraft(preset);
@@ -61,6 +62,41 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return false;
   };
 
+  const showNativeNotification = async (item: ReminderItem | { title: string; body?: string }) => {
+    if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
+      return;
+    }
+
+    const cleanTitle = item.title;
+    const bodyText = (item as any).body !== undefined
+      ? (item as any).body
+      : `${(item as ReminderItem).dueTime || 'Scheduled'} - ${((item as ReminderItem).notes || '').replace(/<[^>]*>/g, '') || (item as ReminderItem).category || 'Task'}`;
+
+    const options: any = {
+      body: bodyText,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      vibrate: [200, 100, 200],
+      tag: `pitrack-${(item as any).id || Date.now()}`,
+    };
+
+    // 1. Try Service Worker showNotification first (Required for iOS PWAs and background tabs)
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.ready;
+        if (reg && reg.showNotification) {
+          await reg.showNotification(cleanTitle, options);
+          return;
+        }
+      }
+    } catch (e) {}
+
+    // 2. Fallback to standard constructor
+    try {
+      new Notification(cleanTitle, options);
+    } catch (e) {}
+  };
+
   const triggerTestNotification = async (): Promise<string> => {
     playAlertChime();
     triggerHaptic([80, 100, 80, 100]);
@@ -86,16 +122,12 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } catch (e) {}
     }
 
-    try {
-      new Notification('PiTrack Alert Test', {
-        body: 'Red badge (3) set on Home Screen icon. Tap to open!',
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
-      });
-      return 'Alert sent & red badge set on Home Screen icon!';
-    } catch (e: any) {
-      return 'Alert triggered! Check Home Screen icon badge.';
-    }
+    await showNativeNotification({
+      title: 'PiTrack Alert Test',
+      body: 'Red badge (3) set on Home Screen icon. Tap to open!',
+    });
+
+    return 'Alert sent & red badge set on Home Screen icon!';
   };
 
   const addReminder = (item: Omit<ReminderItem, 'id' | 'createdAt' | 'completed'>) => {
@@ -127,7 +159,17 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const toggleReminder = (id: string) => {
     if (!id || typeof id !== 'string') return;
     const cleanId = id.trim();
-    const updated = reminders.map(r => (r.id === cleanId ? { ...r, completed: !r.completed, completedAt: !r.completed ? Date.now() : undefined } : r));
+    const updated = reminders.map(r => {
+      if (r.id !== cleanId) return r;
+      const nextCompleted = !r.completed;
+      return {
+        ...r,
+        completed: nextCompleted,
+        completedAt: nextCompleted ? Date.now() : undefined,
+        // Reset notifiedAt when uncompleting so user can be reminded again if rescheduled or active
+        notifiedAt: nextCompleted ? r.notifiedAt : undefined,
+      };
+    });
     setReminders(updated);
     StorageService.saveReminders(updated);
   };
@@ -142,7 +184,22 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       fields.title = cleanTitle.slice(0, 150);
     }
 
-    const updated = reminders.map(r => (r.id === cleanId ? { ...r, ...fields } : r));
+    // If date or time is rescheduled, reset notifiedAt unless explicitly specified
+    const isRescheduled = fields.dueDate !== undefined || fields.dueTime !== undefined || fields.alertDate !== undefined || fields.alertTime !== undefined;
+
+    const updated = reminders.map(r => {
+      if (r.id !== cleanId) return r;
+      const nextNotifiedAt = fields.notifiedAt !== undefined
+        ? fields.notifiedAt
+        : isRescheduled
+          ? undefined
+          : r.notifiedAt;
+      return {
+        ...r,
+        ...fields,
+        notifiedAt: nextNotifiedAt,
+      };
+    });
     setReminders(updated);
     StorageService.saveReminders(updated);
   };
@@ -153,33 +210,36 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const updated = reminders.filter(r => r.id !== cleanId);
     setReminders(updated);
     StorageService.saveReminders(updated);
+    setActiveAlarmQueue(prev => prev.filter(r => r.id !== cleanId));
   };
 
-  // High-Precision Real-Time Alarm Alert Engine (Runs every 3 seconds)
+  // High-Precision Real-Time Alarm Alert Engine (Every 2s + visibility/focus instant check)
   useEffect(() => {
-    const interval = setInterval(() => {
-      const todayStr = getTodayDateString();
-      const nowTimeStr = getNowTimeString(); // HH:mm aligned with Asia/Phnom_Penh
+    const checkDueReminders = () => {
+      const now = Date.now();
+      const oneDayMs = 24 * 60 * 60 * 1000;
 
       let hasStateChanges = false;
-      let triggeredAlarmItem: ReminderItem | null = null;
+      const dueToAlert: ReminderItem[] = [];
 
       setReminders(prevReminders => {
         const updated = prevReminders.map(r => {
           if (r.completed || r.notifiedAt) return r;
+          if (r.alertEnabled === false) return r;
 
-          const targetAlertDate = r.alertDate || r.dueDate;
-          const targetAlertTime = r.alertTime || r.dueTime || '09:00';
+          const dueTimestamp = getReminderDueTimestamp(r);
+          if (isNaN(dueTimestamp)) return r;
 
-          // Trigger condition: today's date & time reached or passed
-          const isDateDue = todayStr >= targetAlertDate;
-          const isTimeDue = targetAlertDate < todayStr || nowTimeStr >= targetAlertTime;
-
-          if (isDateDue && isTimeDue) {
+          // Check if scheduled Cambodia time has arrived or passed
+          if (now >= dueTimestamp) {
             hasStateChanges = true;
-            triggeredAlarmItem = r;
-            return { ...r, notifiedAt: Date.now() };
+            // Only trigger loud sound/popup if due recently (within 24 hours), to prevent ancient historical task spam
+            if (now - dueTimestamp <= oneDayMs) {
+              dueToAlert.push(r);
+            }
+            return { ...r, notifiedAt: now };
           }
+
           return r;
         });
 
@@ -189,32 +249,49 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return updated;
       });
 
-      // Fire Alarm Actions when a scheduled reminder is due
-      if (triggeredAlarmItem) {
-        const item: ReminderItem = triggeredAlarmItem;
-
-        // 1. Play Audio Alarm Chime + Double Vibration Haptics
+      if (dueToAlert.length > 0) {
+        // 1. Play Audio Chime & Haptic
         playAlertChime();
         triggerHaptic([100, 100, 100, 100]);
 
-        // 2. Trigger In-App Alarm Popup Modal Banner
-        setActiveAlarmReminder(item);
+        // 2. Trigger native Notification for each due item
+        dueToAlert.forEach(item => {
+          showNativeNotification(item);
+        });
 
-        // 3. Trigger OS Native Browser Notification
-        if ('Notification' in window && Notification.permission === 'granted') {
-          try {
-            const cleanNotes = item.notes ? item.notes.replace(/<[^>]*>/g, '') : '';
-            new Notification(`Alert: ${item.title}`, {
-              body: `${item.dueTime || 'Scheduled'} — ${cleanNotes || item.category}`,
-              icon: '/icon-192.png',
-              badge: '/icon-192.png',
-            });
-          } catch (e) {}
-        }
+        // 3. Queue in-app alarm popup banners without dropping any items
+        setActiveAlarmQueue(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const newItems = dueToAlert.filter(item => !existingIds.has(item.id));
+          return [...prev, ...newItems];
+        });
       }
-    }, 3000); // High precision 3s ticker
+    };
 
-    return () => clearInterval(interval);
+    // Run check immediately on mount
+    checkDueReminders();
+
+    // 2-second interval
+    const interval = setInterval(checkDueReminders, 2000);
+
+    // Immediate check when screen turns on or user switches back to app tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkDueReminders();
+      }
+    };
+    const handleFocus = () => {
+      checkDueReminders();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   return (
@@ -263,14 +340,29 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 <Bell size={15} />
               </div>
               <span style={{ fontSize: '11px', fontWeight: 800, color: '#EC668C', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                Reminder Due Now
+                Alert
               </span>
+              {activeAlarmQueue.length > 1 && (
+                <span
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 800,
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(236, 102, 140, 0.25)',
+                    color: '#EC668C',
+                  }}
+                >
+                  ({activeAlarmQueue.length})
+                </span>
+              )}
             </div>
 
             <button
               type="button"
-              onClick={() => setActiveAlarmReminder(null)}
+              onClick={() => setActiveAlarmQueue(prev => prev.filter(r => r.id !== activeAlarmReminder.id))}
               style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+              title="Close"
             >
               <X size={16} />
             </button>
@@ -292,7 +384,7 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               onClick={() => {
                 triggerHaptic(12);
                 toggleReminder(activeAlarmReminder.id);
-                setActiveAlarmReminder(null);
+                setActiveAlarmQueue(prev => prev.filter(r => r.id !== activeAlarmReminder.id));
               }}
               style={{
                 flex: 1,
@@ -312,12 +404,12 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               }}
             >
               <CheckCircle2 size={15} />
-              <span>Mark Done</span>
+              <span>Done</span>
             </button>
 
             <button
               type="button"
-              onClick={() => setActiveAlarmReminder(null)}
+              onClick={() => setActiveAlarmQueue(prev => prev.filter(r => r.id !== activeAlarmReminder.id))}
               style={{
                 padding: '10px 16px',
                 borderRadius: '12px',
