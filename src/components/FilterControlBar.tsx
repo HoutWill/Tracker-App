@@ -6,8 +6,6 @@ import { Search, SlidersHorizontal, X, RotateCcw, Mic, Square } from 'lucide-rea
 import { PaymentMethod } from '../types';
 import { startVoiceRecognition } from '../services/speechService';
 
-import { TripFolderBar } from './TripFolderBar';
-
 interface FilterControlBarProps {
   screenType?: 'EXPENSE' | 'SAVING';
 }
