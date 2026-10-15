@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export interface HolidayTheme {
+export interface AppTheme {
   id: string;
   name: string;
-  icon: string;
   description: string;
   bgMain: string;
   bgCard: string;
@@ -11,58 +10,107 @@ export interface HolidayTheme {
   bgMainLight: string;
   bgCardLight: string;
   bgCardHoverLight: string;
+  accent: string;
+  border: string;
 }
 
-export const HOLIDAY_THEMES: HolidayTheme[] = [
+export type HolidayTheme = AppTheme;
+
+export const APP_THEMES: AppTheme[] = [
   {
     id: 'DEFAULT',
-    name: 'Default',
-    icon: 'sparkles',
-    description: 'Dark',
+    name: 'Midnight',
+    description: 'Navy',
     bgMain: '#0B131E',
-    bgCard: '#151720',
-    bgCardHover: '#1C1E2B',
+    bgCard: '#151D2A',
+    bgCardHover: '#1E293B',
     bgMainLight: '#F8FAFC',
     bgCardLight: '#FFFFFF',
     bgCardHoverLight: '#F1F5F9',
+    accent: '#4A99E9',
+    border: 'rgba(74, 153, 233, 0.2)',
   },
   {
-    id: 'CHRISTMAS',
-    name: 'Christmas',
-    icon: 'gift',
-    description: 'Pines',
-    bgMain: '#0B1A15',
-    bgCard: '#142721',
-    bgCardHover: '#1A332B',
-    bgMainLight: '#EBF7F4',
+    id: 'ONYX',
+    name: 'Onyx',
+    description: 'Pitch',
+    bgMain: '#000000',
+    bgCard: '#141416',
+    bgCardHover: '#1E1E22',
+    bgMainLight: '#F2F2F7',
     bgCardLight: '#FFFFFF',
-    bgCardHoverLight: '#DFF0EC',
+    bgCardHoverLight: '#E5E5EA',
+    accent: '#FFFFFF',
+    border: 'rgba(255, 255, 255, 0.15)',
   },
   {
-    id: 'CHINESE',
-    name: 'Chinese',
-    icon: 'flame',
-    description: 'Lanterns',
-    bgMain: '#1C0B0E',
-    bgCard: '#2F1117',
-    bgCardHover: '#3C161E',
-    bgMainLight: '#FDF2F4',
+    id: 'CHARCOAL',
+    name: 'Charcoal',
+    description: 'Titanium',
+    bgMain: '#121214',
+    bgCard: '#1C1C20',
+    bgCardHover: '#26262C',
+    bgMainLight: '#F4F4F6',
     bgCardLight: '#FFFFFF',
-    bgCardHoverLight: '#FBE4E7',
+    bgCardHoverLight: '#E9E9EB',
+    accent: '#6C7B8A',
+    border: 'rgba(108, 123, 138, 0.25)',
   },
   {
-    id: 'HALLOWEEN',
-    name: 'Halloween',
-    icon: 'moon',
-    description: 'Embers',
-    bgMain: '#140A1A',
-    bgCard: '#24132F',
-    bgCardHover: '#2E193C',
-    bgMainLight: '#F5EFF9',
+    id: 'EMERALD',
+    name: 'Emerald',
+    description: 'Forest',
+    bgMain: '#081410',
+    bgCard: '#10221B',
+    bgCardHover: '#183027',
+    bgMainLight: '#F0FDF4',
     bgCardLight: '#FFFFFF',
-    bgCardHoverLight: '#EDE1F4',
+    bgCardHoverLight: '#DCFCE7',
+    accent: '#30D158',
+    border: 'rgba(48, 209, 88, 0.2)',
+  },
+  {
+    id: 'AMETHYST',
+    name: 'Amethyst',
+    description: 'Lavender',
+    bgMain: '#100B1A',
+    bgCard: '#1C142C',
+    bgCardHover: '#281D3E',
+    bgMainLight: '#FAF5FF',
+    bgCardLight: '#FFFFFF',
+    bgCardHoverLight: '#F3E8FF',
+    accent: '#8B5CF6',
+    border: 'rgba(139, 92, 246, 0.25)',
+  },
+  {
+    id: 'ESPRESSO',
+    name: 'Espresso',
+    description: 'Mocha',
+    bgMain: '#140D0A',
+    bgCard: '#221712',
+    bgCardHover: '#2E2019',
+    bgMainLight: '#FFFBEB',
+    bgCardLight: '#FFFFFF',
+    bgCardHoverLight: '#FEF3C7',
+    accent: '#F3A85B',
+    border: 'rgba(243, 168, 91, 0.25)',
+  },
+  {
+    id: 'CRIMSON',
+    name: 'Crimson',
+    description: 'Ruby',
+    bgMain: '#180A0E',
+    bgCard: '#271117',
+    bgCardHover: '#351820',
+    bgMainLight: '#FFF1F2',
+    bgCardLight: '#FFFFFF',
+    bgCardHoverLight: '#FFE4E6',
+    accent: '#ED6C6C',
+    border: 'rgba(237, 108, 108, 0.25)',
   },
 ];
+
+export const HOLIDAY_THEMES = APP_THEMES;
 
 export interface ColorPack {
   id: string;
@@ -75,60 +123,60 @@ export interface ColorPack {
 
 export const COLOR_PACKS: ColorPack[] = [
   {
+    id: 'SKY',
+    name: 'Sky',
+    description: 'Soft',
+    accent: '#4A99E9',
+    expensesColor: '#4A99E9',
+    savingColor: '#30D158',
+  },
+  {
+    id: 'CORAL',
+    name: 'Coral',
+    description: 'Warm',
+    accent: '#ED6C6C',
+    expensesColor: '#ED6C6C',
+    savingColor: '#30D158',
+  },
+  {
+    id: 'PEACH',
+    name: 'Peach',
+    description: 'Gold',
+    accent: '#F3A85B',
+    expensesColor: '#F3A85B',
+    savingColor: '#4A99E9',
+  },
+  {
+    id: 'ROSE',
+    name: 'Rose',
+    description: 'Pink',
+    accent: '#EC668C',
+    expensesColor: '#EC668C',
+    savingColor: '#30D158',
+  },
+  {
+    id: 'MINT',
+    name: 'Mint',
+    description: 'Green',
+    accent: '#30D158',
+    expensesColor: '#30D158',
+    savingColor: '#4A99E9',
+  },
+  {
+    id: 'STEEL',
+    name: 'Steel',
+    description: 'Charcoal',
+    accent: '#6C7B8A',
+    expensesColor: '#6C7B8A',
+    savingColor: '#30D158',
+  },
+  {
     id: 'MINIMAL_WHITE',
-    name: 'Clean White',
-    description: 'Pure Minimalist White & Platinum',
+    name: 'White',
+    description: 'Clean',
     accent: '#FFFFFF',
     expensesColor: '#FFFFFF',
     savingColor: '#E2E8F0',
-  },
-  {
-    id: 'MODERN',
-    name: 'Modern',
-    description: 'PiTrack Cyan & Navy',
-    accent: '#11B5C6',
-    expensesColor: '#11B5C6',
-    savingColor: '#0E4F88',
-  },
-  {
-    id: 'CAFE',
-    name: 'Cafe',
-    description: 'Espresso & Warm Latte',
-    accent: '#C88A58',
-    expensesColor: '#C88A58',
-    savingColor: '#A0522D',
-  },
-  {
-    id: 'ROBOTIC',
-    name: 'Robotic',
-    description: 'Cyber Matrix Neon Green',
-    accent: '#00FF9D',
-    expensesColor: '#00FF9D',
-    savingColor: '#00E5FF',
-  },
-  {
-    id: 'VIOLET',
-    name: 'Violet',
-    description: 'Deep Royal Lavender',
-    accent: '#6C5CE7',
-    expensesColor: '#6C5CE7',
-    savingColor: '#00B894',
-  },
-  {
-    id: 'GOLD',
-    name: 'Gold',
-    description: 'Sunset Gold & Coral Rose',
-    accent: '#FDCB6E',
-    expensesColor: '#FF7675',
-    savingColor: '#FDCB6E',
-  },
-  {
-    id: 'EMERALD',
-    name: 'Emerald',
-    description: 'Rich Emerald & Mint Jade',
-    accent: '#00B894',
-    expensesColor: '#00B894',
-    savingColor: '#55E6C1',
   },
 ];
 
@@ -138,27 +186,25 @@ export interface PageColors {
 }
 
 export const DEFAULT_PAGE_COLORS: PageColors = {
-  EXPENSES: '#11B5C6',
-  SAVING: '#0E4F88',
+  EXPENSES: '#4A99E9',
+  SAVING: '#30D158',
 };
 
 export const COLOR_PALETTE_OPTIONS = [
+  { name: 'Sky', hex: '#4A99E9' },
+  { name: 'Coral', hex: '#ED6C6C' },
+  { name: 'Peach', hex: '#F3A85B' },
+  { name: 'Rose', hex: '#EC668C' },
+  { name: 'Mint', hex: '#30D158' },
+  { name: 'Steel', hex: '#6C7B8A' },
+  { name: 'Violet', hex: '#8B5CF6' },
   { name: 'White', hex: '#FFFFFF' },
-  { name: 'Silver', hex: '#E2E8F0' },
-  { name: 'Cyan', hex: '#11B5C6' },
-  { name: 'Navy', hex: '#0E4F88' },
-  { name: 'Cafe', hex: '#C88A58' },
-  { name: 'Robotic', hex: '#00FF9D' },
-  { name: 'Violet', hex: '#6C5CE7' },
-  { name: 'Emerald', hex: '#00B894' },
-  { name: 'Gold', hex: '#FDCB6E' },
-  { name: 'Rose', hex: '#FF7675' },
 ];
 
 export const DEFAULT_PRESET_PALETTE = [
-  '#6366F1', '#3B82F6', '#10B981',
-  '#F59E0B', '#EF4444', '#8B5CF6',
-  '#EC4899', '#0EA5E9', '#64748B'
+  '#4A99E9', '#ED6C6C', '#F3A85B',
+  '#EC668C', '#30D158', '#8B5CF6',
+  '#6C7B8A', '#38BDF8', '#FFFFFF'
 ];
 
 export const hexToRgba = (hex: string, alpha: number): string => {
@@ -177,8 +223,8 @@ export const hexToRgba = (hex: string, alpha: number): string => {
 export const generateRandomVibrantHex = (): string => {
   const mutedPastelPalette = [
     '#4A99E9', '#ED6C6C', '#F3A85B', '#EC668C',
-    '#6C7B8A', '#8B5CF6', '#34D399', '#FBBF24',
-    '#38BDF8', '#F472B6', '#A7F3D0', '#FDE047'
+    '#6C7B8A', '#8B5CF6', '#30D158', '#FBBF24',
+    '#38BDF8', '#F472B6', '#A7F3D0', '#FFFFFF'
   ];
   return mutedPastelPalette[Math.floor(Math.random() * mutedPastelPalette.length)];
 };
@@ -187,8 +233,11 @@ interface ThemeContextType {
   isDark: boolean;
   toggleTheme: () => void;
   activeThemeId: string;
+  themes: AppTheme[];
+  setTheme: (themeId: string) => void;
   setHolidayTheme: (themeId: string) => void;
   activePackId: string;
+  colorPacks: ColorPack[];
   setColorPack: (packId: string) => void;
   pageColors: PageColors;
   setPageColor: (pageKey: keyof PageColors, colorHex: string) => void;
@@ -212,7 +261,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   const [activePackId, setActivePackId] = useState<string>(() => {
-    return localStorage.getItem('theme_pack_id') || 'MODERN';
+    return localStorage.getItem('theme_pack_id') || 'SKY';
   });
 
   const [pageColors, setPageColors] = useState<PageColors>(() => {
@@ -247,7 +296,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     const root = document.documentElement;
-    const theme = HOLIDAY_THEMES.find(t => t.id === activeThemeId) || HOLIDAY_THEMES[0];
+    const theme = APP_THEMES.find(t => t.id === activeThemeId) || APP_THEMES[0];
     const pack = COLOR_PACKS.find(p => p.id === activePackId) || COLOR_PACKS[0];
 
     const bgToUse = isDark ? theme.bgMain : theme.bgMainLight;
@@ -260,23 +309,24 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.style.setProperty('--bg-main', bgToUse);
     root.style.setProperty('--bg-card', cardToUse);
     root.style.setProperty('--bg-card-hover', cardHoverToUse);
+    root.style.setProperty('--border-theme', theme.border);
 
     if (isDark) {
-      root.style.setProperty('--text-primary', '#F9FAFB');
-      root.style.setProperty('--text-secondary', '#9CA3AF');
-      root.style.setProperty('--text-muted', '#6B7280');
+      root.style.setProperty('--text-primary', '#FFFFFF');
+      root.style.setProperty('--text-secondary', '#EBEBF5');
+      root.style.setProperty('--text-muted', '#8E8E93');
       root.style.setProperty('--border-glass', 'rgba(255, 255, 255, 0.08)');
       root.style.setProperty('--border-subtle', 'rgba(255, 255, 255, 0.04)');
-      root.style.setProperty('--pill-bg', 'rgba(255, 255, 255, 0.04)');
-      root.style.setProperty('--pill-hover', 'rgba(255, 255, 255, 0.08)');
+      root.style.setProperty('--pill-bg', 'rgba(255, 255, 255, 0.06)');
+      root.style.setProperty('--pill-hover', 'rgba(255, 255, 255, 0.12)');
     } else {
-      root.style.setProperty('--text-primary', '#0F172A');
-      root.style.setProperty('--text-secondary', '#475569');
-      root.style.setProperty('--text-muted', '#94A3B8');
+      root.style.setProperty('--text-primary', '#000000');
+      root.style.setProperty('--text-secondary', '#3C3C43');
+      root.style.setProperty('--text-muted', '#6C6C70');
       root.style.setProperty('--border-glass', 'rgba(0, 0, 0, 0.08)');
       root.style.setProperty('--border-subtle', 'rgba(0, 0, 0, 0.04)');
-      root.style.setProperty('--pill-bg', 'rgba(0, 0, 0, 0.03)');
-      root.style.setProperty('--pill-hover', 'rgba(0, 0, 0, 0.06)');
+      root.style.setProperty('--pill-bg', 'rgba(0, 0, 0, 0.04)');
+      root.style.setProperty('--pill-hover', 'rgba(0, 0, 0, 0.08)');
     }
 
     root.style.setProperty('--accent', pack.accent);
@@ -286,10 +336,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const toggleTheme = () => setIsDark(prev => !prev);
 
-  const setHolidayTheme = (themeId: string) => {
+  const setTheme = (themeId: string) => {
     setActiveThemeId(themeId);
     localStorage.setItem('active_theme_id', themeId);
+    const theme = APP_THEMES.find(t => t.id === themeId);
+    if (theme) {
+      setPageColor('EXPENSES', theme.accent);
+    }
   };
+
+  const setHolidayTheme = setTheme;
 
   const setColorPack = (packId: string) => {
     const pack = COLOR_PACKS.find(p => p.id === packId);
@@ -334,8 +390,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const resetDefaultColors = () => {
-    setHolidayTheme('DEFAULT');
-    setColorPack('MODERN');
+    setTheme('DEFAULT');
+    setColorPack('SKY');
     setPresetPalette(DEFAULT_PRESET_PALETTE);
     localStorage.removeItem('custom_preset_palette');
   };
@@ -345,8 +401,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       isDark,
       toggleTheme,
       activeThemeId,
+      themes: APP_THEMES,
+      setTheme,
       setHolidayTheme,
       activePackId,
+      colorPacks: COLOR_PACKS,
       setColorPack,
       pageColors,
       setPageColor,

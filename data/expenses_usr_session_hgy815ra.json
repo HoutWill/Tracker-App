@@ -1,5 +1,35 @@
 [
   {
+    "id": "exp-1792075407286-765",
+    "title": "Vault",
+    "amount": 1,
+    "currency": "USD",
+    "type": "SAVING",
+    "categoryId": "cat-saving-vault",
+    "categoryName": "Vault",
+    "categoryIcon": "piggy-bank",
+    "categoryColor": "green",
+    "date": "2026-10-15",
+    "paymentMethod": "Bank",
+    "notes": "Vault deposit via Bank",
+    "createdAt": 1792075407286
+  },
+  {
+    "id": "exp-1792075403312-3",
+    "title": "Drink",
+    "amount": 1,
+    "currency": "USD",
+    "type": "EXPENSE",
+    "categoryId": "cat-drink",
+    "categoryName": "Drink",
+    "categoryIcon": "coffee",
+    "categoryColor": "brown",
+    "date": "2026-10-15",
+    "paymentMethod": "Cash",
+    "notes": "Quick log via Cash",
+    "createdAt": 1792075403312
+  },
+  {
     "id": "exp-1792073417001-672",
     "title": "Drink",
     "amount": 1,

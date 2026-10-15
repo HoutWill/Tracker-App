@@ -14,6 +14,7 @@ export const SettingsScreen: React.FC = () => {
     setHideBalances,
     clearAllData,
   } = useExpenses();
+  const { activeThemeId, setTheme, themes } = useTheme();
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -208,18 +209,35 @@ export const SettingsScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Unified Appearance Customizer Card (Themes, Colors & Presets) */}
-      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px' }}>
+      {/* Unified Appearance Customizer Card (Interactive Theme Bento) */}
+      <div className="glass-panel" style={{ padding: '16px', borderRadius: '20px', marginBottom: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Palette size={18} color="var(--accent)" />
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                backgroundColor: 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
+                color: 'var(--accent)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Palette size={18} />
+            </div>
             <div>
               <h4 style={{ fontSize: '14px', fontWeight: 800 }}>Appearance</h4>
-              <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Themes, colors & presets</p>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                {themes.find(t => t.id === activeThemeId)?.name || 'Theme'}
+              </p>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={() => setIsAppearanceModalOpen(true)}
             style={{
               display: 'flex',
@@ -237,8 +255,58 @@ export const SettingsScreen: React.FC = () => {
             }}
           >
             <Sparkles size={14} />
-            Theme
+            <span>Theme</span>
           </button>
+        </div>
+
+        {/* Quick 1-Tap Theme Pills Row */}
+        <div
+          style={{
+            marginTop: '12px',
+            paddingTop: '12px',
+            borderTop: '1px solid var(--border-glass)',
+            display: 'flex',
+            gap: '6px',
+            overflowX: 'auto',
+            paddingBottom: '2px',
+          }}
+        >
+          {themes.map(t => {
+            const isSelected = activeThemeId === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTheme(t.id)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  borderRadius: '10px',
+                  border: isSelected ? '1.5px solid #4A99E9' : '1px solid var(--border-glass)',
+                  backgroundColor: isSelected ? 'var(--pill-hover)' : 'var(--pill-bg)',
+                  color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: t.accent,
+                    display: 'inline-block',
+                  }}
+                />
+                <span>{t.name}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
