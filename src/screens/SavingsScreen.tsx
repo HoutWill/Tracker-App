@@ -6,10 +6,11 @@ import { FilterControlBar } from '../components/FilterControlBar';
 import { TripFolderBar } from '../components/TripFolderBar';
 import { ArtPresetGrid } from '../components/ArtPresetGrid';
 import { CategoryIconRenderer } from '../components/CategoryIconRenderer';
+import { BootstrapIcon } from '../components/BootstrapIcon';
 import { SAVING_QUICK_PRESETS } from '../constants/presets';
-import { formatCurrency, StorageService, getTodayDateString, getStartOfWeekDateString, getEndOfWeekDateString } from '../services/storageService';
+import { formatCurrency, StorageService, getTodayDateString, getStartOfWeekDateString, getEndOfWeekDateString, formatCleanDate } from '../services/storageService';
 import { PaymentMethod, QuickPreset, BudgetPeriod } from '../types';
-import { Plus, Zap, CheckCircle2, Layers, SearchX, X, Check, PiggyBank, Target, TrendingUp, Trash2, CreditCard, Edit3, Wallet } from 'lucide-react';
+import { Plus, Zap, CheckCircle2, Layers, SearchX, X, Check, PiggyBank, Target, TrendingUp, Trash2, CreditCard, Edit3, Wallet, ChevronLeft, ChevronRight, Calendar, Eye, EyeOff } from 'lucide-react';
 
 const SAVING_PRESET_ICONS = [
   'piggy-bank', 'vault', 'wallet', 'shield-check', 'target', 'trending-up',
@@ -38,6 +39,8 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
     setSavingPeriod,
     cycleHistory,
     archiveCycleSnapshot,
+    hideBalances,
+    toggleHideBalances,
     addExpense,
     setIsAddSavingOpen,
     setSelectedExpenseForEdit,
@@ -52,6 +55,34 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
   const [presetAmount, setPresetAmount] = useState<string>('');
   const [presetCurrency, setPresetCurrency] = useState<'USD' | 'KHR'>('USD');
   const [presetDate, setPresetDate] = useState<string>(getTodayDateString());
+
+  // Date Check filter state
+  const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
+
+  // Month Selection state (defaults to current month in Cambodia UTC+7 e.g. "2026-10")
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => getTodayDateString().slice(0, 7));
+
+  const currentMonthKey = getTodayDateString().slice(0, 7);
+  const isCurrentMonth = selectedMonth === currentMonthKey;
+
+  const monthDate = new Date(`${selectedMonth}-01T12:00:00Z`);
+  const monthName = monthDate.toLocaleString('en-US', { month: 'long', timeZone: 'Asia/Phnom_Penh' });
+
+  const goToPrevMonth = () => {
+    const [y, m] = selectedMonth.split('-').map(Number);
+    const prevDate = new Date(y, m - 2, 1);
+    const prevStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+    setSelectedMonth(prevStr);
+    setSelectedDateFilter(null);
+  };
+
+  const goToNextMonth = () => {
+    const [y, m] = selectedMonth.split('-').map(Number);
+    const nextDate = new Date(y, m, 1);
+    const nextStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
+    setSelectedMonth(nextStr);
+    setSelectedDateFilter(null);
+  };
 
   // Edit Savings Goal Target state
   const [isEditingGoal, setIsEditingGoal] = useState<boolean>(false);
@@ -78,31 +109,40 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
     }
   }, []);
 
-  // Savings only filter
-  const savingItems = expenses.filter(e => e.type === 'SAVING' || e.categoryId.startsWith('cat-saving'));
+  // Savings filter (with optional Check Date filter)
+  const rawSavingItems = expenses.filter(e => e.type === 'SAVING' || e.categoryId.startsWith('cat-saving'));
+  const savingItems = selectedDateFilter
+    ? rawSavingItems.filter(e => e.date === selectedDateFilter)
+    : rawSavingItems;
   const filteredSavingItems = filteredExpenses.filter(e => e.type === 'SAVING' || e.categoryId.startsWith('cat-saving'));
 
   const totalSavingUSD = savingItems.reduce((sum, e) => sum + e.amount, 0);
-  const averageSavingUSD = savingItems.length > 0 ? totalSavingUSD / savingItems.length : 0;
 
-  // Period Savings Calculation for Multi-Period Goals (Daily / Weekly / Monthly)
-  const getActivePeriodSavingUSD = () => {
-    const todayStr = getTodayDateString();
-    if (savingPeriod === 'DAILY') {
-      return savingItems.filter(e => e.date === todayStr).reduce((sum, e) => sum + e.amount, 0);
-    }
-    if (savingPeriod === 'WEEKLY') {
-      const startW = getStartOfWeekDateString();
-      const endW = getEndOfWeekDateString();
-      return savingItems.filter(e => e.date >= startW && e.date <= endW).reduce((sum, e) => sum + e.amount, 0);
-    }
-    const monthPrefix = todayStr.substring(0, 7);
-    return savingItems.filter(e => e.date.startsWith(monthPrefix)).reduce((sum, e) => sum + e.amount, 0);
-  };
+  // Monthly savings (strictly scoped to selectedMonth so savings reset each month on the 1st in Cambodia UTC+7)
+  const monthSavingItems = rawSavingItems.filter(e => e.date.startsWith(selectedMonth));
+  const monthSavingUSD = monthSavingItems.reduce((sum, e) => sum + e.amount, 0);
 
-  const activePeriodSavingUSD = getActivePeriodSavingUSD();
+  // Saved amount shown in the hero card (either single filtered date or selected active month)
+  const displaySavingUSD = selectedDateFilter
+    ? savingItems.reduce((sum, e) => sum + e.amount, 0)
+    : monthSavingUSD;
+
+  // Active savings target
   const currentGoal = savingGoal || (savingPeriod === 'DAILY' ? 50 : savingPeriod === 'WEEKLY' ? 500 : 2000);
-  const goalProgressPct = Math.min(100, Math.round((activePeriodSavingUSD / currentGoal) * 100));
+  const remainingGoalUSD = Math.max(0, currentGoal - displaySavingUSD);
+  const goalProgressPct = Math.min(100, Math.round((displaySavingUSD / currentGoal) * 100));
+
+  // Allowance & Pacing calculation (Cambodia UTC+7)
+  const [todayY, todayM, todayD] = getTodayDateString().split('-').map(Number);
+  const daysInMonth = new Date(todayY, todayM, 0).getDate();
+  const daysRemaining = isCurrentMonth ? Math.max(1, daysInMonth - todayD + 1) : 1;
+  const dailySavingsPaceUSD = isCurrentMonth && remainingGoalUSD > 0
+    ? remainingGoalUSD / daysRemaining
+    : (isCurrentMonth ? 0 : Math.max(0, currentGoal - displaySavingUSD) / daysInMonth);
+
+  // Financial Insights:
+  const uniqueDays = Array.from(new Set(rawSavingItems.map(e => e.date)));
+  const dailyAvgUSD = uniqueDays.length > 0 ? rawSavingItems.reduce((sum, e) => sum + e.amount, 0) / uniqueDays.length : 0;
 
 
   const handleOpenPresetModal = (preset: QuickPreset) => {
@@ -299,7 +339,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
         </button>
       </div>
 
-      {/* Ultra-Clean Hero Savings Vault Card */}
+      {/* 1. Monthly / Period Overview Hero Bento Card */}
       <div
         className="glass-panel"
         style={{
@@ -308,23 +348,139 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-glass)',
           boxShadow: 'var(--shadow-card)',
-          marginBottom: '16px',
+          marginBottom: '12px',
         }}
       >
-        {/* Top Row: Period Title (Left) | Interactive Date Picker (Right) */}
+        {/* Top Row: Month Selector & Navigation */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
-            {savingPeriod === 'DAILY' ? 'Today' : savingPeriod === 'WEEKLY' ? 'This week' : 'This month'}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={goToPrevMonth}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '4px',
+                borderRadius: '6px',
+              }}
+              title="Previous"
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
+              {selectedDateFilter ? selectedDateFilter : monthName}
+            </span>
+
+            <button
+              type="button"
+              onClick={goToNextMonth}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '4px',
+                borderRadius: '6px',
+              }}
+              title="Next"
+            >
+              <ChevronRight size={16} />
+            </button>
+
+            {isCurrentMonth && (
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 800,
+                  padding: '2px 7px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(48, 209, 88, 0.15)',
+                  color: '#30D158',
+                }}
+              >
+                Current
+              </span>
+            )}
+          </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-              {new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}
-            </span>
+            {/* Interactive Date Check Picker */}
+            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  color: selectedDateFilter ? '#30D158' : 'var(--text-secondary)',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <Calendar size={13} color={selectedDateFilter ? '#30D158' : 'var(--text-secondary)'} />
+                <span>
+                  {selectedDateFilter
+                    ? formatCleanDate(selectedDateFilter)
+                    : selectedMonth}
+                </span>
+              </div>
+              <input
+                type="date"
+                value={selectedDateFilter || ''}
+                onChange={(e) => setSelectedDateFilter(e.target.value || null)}
+                onClick={(e) => {
+                  try { (e.currentTarget as any).showPicker?.(); } catch (err) {}
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  opacity: 0,
+                  cursor: 'pointer',
+                  zIndex: 10,
+                  border: 'none',
+                  margin: 0,
+                  padding: 0,
+                  WebkitAppearance: 'none',
+                }}
+                title="Date"
+              />
+            </div>
+
+            {selectedDateFilter && (
+              <button
+                type="button"
+                onClick={() => setSelectedDateFilter(null)}
+                style={{
+                  padding: '2px 7px',
+                  borderRadius: '6px',
+                  backgroundColor: 'var(--pill-bg)',
+                  border: '1px solid var(--border-glass)',
+                  color: 'var(--text-secondary)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+                title="All"
+              >
+                All
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Main Big Saved Amount */}
+        {/* Main Big Saved Amount with Eye Toggle directly next to price */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
           <div
             className="tabular-nums"
@@ -334,17 +490,48 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
               letterSpacing: '-1px',
               color: 'var(--text-primary)',
               lineHeight: 1.1,
+              filter: hideBalances ? 'blur(9px)' : 'none',
+              transition: 'filter 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              userSelect: hideBalances ? 'none' : 'auto',
             }}
           >
-            {formatCurrency(totalSavingUSD, currency)}
+            {formatCurrency(displaySavingUSD, currency)}
           </div>
+
+          <button
+            type="button"
+            onClick={() => toggleHideBalances()}
+            style={{
+              padding: '4px',
+              background: 'none',
+              border: 'none',
+              color: hideBalances ? '#30D158' : 'var(--text-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            title={hideBalances ? 'Show' : 'Hide'}
+          >
+            {hideBalances ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
         </div>
 
         {/* Middle Info Row: Remaining Label (Left) & Green Amount (Right) */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', marginBottom: '8px' }}>
           <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Remaining</span>
-          <span className="tabular-nums" style={{ color: '#30D158', fontWeight: 800 }}>
-            {formatCurrency(Math.max(0, currentGoal - totalSavingUSD), currency)}
+          <span
+            className="tabular-nums"
+            style={{
+              color: '#30D158',
+              fontWeight: 800,
+              filter: hideBalances ? 'blur(6px)' : 'none',
+              transition: 'filter 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              userSelect: hideBalances ? 'none' : 'auto',
+            }}
+          >
+            {formatCurrency(remainingGoalUSD, currency)}
           </span>
         </div>
 
@@ -369,7 +556,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
           />
         </div>
 
-        {/* Bottom Info Row: Clickable Goal Target (Left) & Avg/day (Right) */}
+        {/* Bottom Info Row: Clickable Goal Target (Left) & Average (Right) */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: 'var(--text-secondary)' }}>
           <button
             type="button"
@@ -390,15 +577,145 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
               alignItems: 'center',
               gap: '4px',
             }}
-            title="Tap to Set Saving Goal"
+            title="Goal"
           >
             <span>Goal: {formatCurrency(currentGoal, currency)}</span>
             <Edit3 size={11} color="var(--text-muted)" />
           </button>
 
           <span style={{ fontWeight: 500 }}>
-            Avg/day: {formatCurrency(averageSavingUSD, currency)}
+            Average: {formatCurrency(dailyAvgUSD, currency)}
           </span>
+        </div>
+      </div>
+
+      {/* 2. iOS 18 Muted Pastel Bento Grid: Pacing & Growth */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+        {/* Bento Tile 1: Pacing */}
+        <div
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-glass)',
+            borderRadius: '20px',
+            padding: '14px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(48, 209, 88, 0.15)',
+                  border: '1px solid rgba(48, 209, 88, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <BootstrapIcon name="speedometer2" size={15} color="#30D158" />
+              </div>
+              <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Pacing</span>
+            </div>
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 800,
+                padding: '2px 7px',
+                borderRadius: '6px',
+                backgroundColor: remainingGoalUSD <= 0 ? 'rgba(48, 209, 88, 0.15)' : 'rgba(74, 153, 233, 0.15)',
+                color: remainingGoalUSD <= 0 ? '#30D158' : '#4A99E9',
+              }}
+            >
+              {remainingGoalUSD <= 0 ? 'Done' : 'Paced'}
+            </span>
+          </div>
+          <div style={{ marginTop: '10px' }}>
+            <div
+              className="tabular-nums"
+              style={{
+                fontSize: '22px',
+                fontWeight: 900,
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.5px',
+                lineHeight: 1.1,
+                filter: hideBalances ? 'blur(6px)' : 'none',
+                transition: 'filter 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                userSelect: hideBalances ? 'none' : 'auto',
+              }}
+            >
+              {formatCurrency(dailySavingsPaceUSD, currency)}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: 600 }}>
+              Daily
+            </div>
+          </div>
+        </div>
+
+        {/* Bento Tile 2: Growth */}
+        <div
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-glass)',
+            borderRadius: '20px',
+            padding: '14px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(243, 168, 91, 0.15)',
+                  border: '1px solid rgba(243, 168, 91, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <BootstrapIcon name="graph-up-arrow" size={14} color="#F3A85B" />
+              </div>
+              <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Growth</span>
+            </div>
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 800,
+                padding: '2px 7px',
+                borderRadius: '6px',
+                backgroundColor: goalProgressPct >= 100 ? 'rgba(48, 209, 88, 0.15)' : 'rgba(243, 168, 91, 0.15)',
+                color: goalProgressPct >= 100 ? '#30D158' : '#F3A85B',
+              }}
+            >
+              {goalProgressPct >= 100 ? 'Done' : goalProgressPct >= 50 ? 'Strong' : 'Active'}
+            </span>
+          </div>
+          <div style={{ marginTop: '10px' }}>
+            <div
+              className="tabular-nums"
+              style={{
+                fontSize: '22px',
+                fontWeight: 900,
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.5px',
+                lineHeight: 1.1,
+              }}
+            >
+              {goalProgressPct}%
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: 600 }}>
+              {daysRemaining}d
+            </div>
+          </div>
         </div>
       </div>
 
@@ -483,7 +800,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
 
             <div>
               <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                Target Amount
+                Target
               </label>
               <input
                 type="number"
@@ -597,7 +914,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {cycleHistory.filter(c => c.type === 'SAVING').length === 0 ? (
                 <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-                  Empty History
+                  Empty
                 </div>
               ) : (
                 cycleHistory
@@ -727,7 +1044,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
 
             <div>
               <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                Amount & Currency
+                Amount
               </label>
               <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                 <input
@@ -920,7 +1237,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                     padding: '6px',
                     cursor: 'pointer',
                   }}
-                  title="Delete Preset"
+                  title="Delete"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -936,7 +1253,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
             {/* Editable Amount & Currency Input */}
             <div>
               <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                Amount & Currency
+                Amount
               </label>
               <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                 <input
