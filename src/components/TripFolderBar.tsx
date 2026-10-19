@@ -84,11 +84,7 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE', 
   const generalMonthUSD = generalMonthItems.reduce((sum, e) => sum + e.amount, 0);
   const generalMonthCount = generalMonthItems.length;
 
-  // 3. All items for the Current Month
-  const allMonthUSD = monthItems.reduce((sum, e) => sum + e.amount, 0);
-  const allMonthCount = monthItems.length;
-
-  // 4. Metrics per folder strictly for the Current Month
+  // 3. Metrics per folder strictly for the Current Month
   const getFolderMetrics = (trip: TripFolder) => {
     const folderItems = monthItems.filter(e => isExpenseInTrip(e, trip));
     const spentUSD = folderItems.reduce((sum, e) => sum + e.amount, 0);
@@ -164,7 +160,7 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE', 
         </button>
       </div>
 
-      {/* 2. iOS 18 Bento Horizontal Carousel */}
+      {/* 2. iOS 18 Bento Horizontal Carousel (No redundant twin cards!) */}
       <div
         style={{
           display: 'flex',
@@ -176,25 +172,25 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE', 
           WebkitOverflowScrolling: 'touch',
         }}
       >
-        {/* Card 1: All Bento Card (Current Month Total) */}
+        {/* Card 1: General Living Expenses Envelope (Current Month) */}
         <div
-          onClick={() => setSelectedTripId(null)}
+          onClick={() => setSelectedTripId(selectedTripId === 'GENERAL' ? null : 'GENERAL')}
           style={{
-            width: '120px',
-            minWidth: '120px',
+            width: '126px',
+            minWidth: '126px',
             padding: '12px 14px',
             borderRadius: '18px',
-            border: selectedTripId === null ? `2px solid ${accentColor}` : defaultBorder,
+            border: (selectedTripId === 'GENERAL' || selectedTripId === null) ? `2px solid ${accentColor}` : defaultBorder,
             backgroundColor: cardBg,
             cursor: 'pointer',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            boxShadow: selectedTripId === null
+            boxShadow: (selectedTripId === 'GENERAL' || selectedTripId === null)
               ? `0 4px 14px ${hexToRgba(accentColor, isDark ? 0.25 : 0.15)}`
               : '0 2px 8px rgba(0, 0, 0, 0.04)',
             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-            transform: selectedTripId === null ? 'scale(1.02)' : 'none',
+            transform: (selectedTripId === 'GENERAL' || selectedTripId === null) ? 'scale(1.02)' : 'none',
             flexShrink: 0,
           }}
         >
@@ -211,83 +207,9 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE', 
                 color: accentColor,
               }}
             >
-              <Folder size={16} />
-            </div>
-            {selectedTripId === null && (
-              <span
-                style={{
-                  fontSize: '9px',
-                  fontWeight: 800,
-                  padding: '2px 6px',
-                  borderRadius: '6px',
-                  backgroundColor: hexToRgba(accentColor, isDark ? 0.25 : 0.15),
-                  color: accentColor,
-                }}
-              >
-                Active
-              </span>
-            )}
-          </div>
-
-          <div style={{ marginTop: '10px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
-              All
-            </div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 600 }}>
-              {allMonthCount} Items
-            </div>
-            <div
-              className="tabular-nums"
-              style={{
-                fontSize: '12px',
-                fontWeight: 800,
-                color: selectedTripId === null ? accentColor : 'var(--text-secondary)',
-                marginTop: '6px',
-              }}
-            >
-              {formatCurrency(allMonthUSD, currency)}
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: General Bento Card (SEPARATED from Travel/Folders, Current Month) */}
-        <div
-          onClick={() => setSelectedTripId(selectedTripId === 'GENERAL' ? null : 'GENERAL')}
-          style={{
-            width: '120px',
-            minWidth: '120px',
-            padding: '12px 14px',
-            borderRadius: '18px',
-            border: selectedTripId === 'GENERAL' ? `2px solid ${accentColor}` : defaultBorder,
-            backgroundColor: cardBg,
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            boxShadow: selectedTripId === 'GENERAL'
-              ? `0 4px 14px ${hexToRgba(accentColor, isDark ? 0.25 : 0.15)}`
-              : '0 2px 8px rgba(0, 0, 0, 0.04)',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-            transform: selectedTripId === 'GENERAL' ? 'scale(1.02)' : 'none',
-            flexShrink: 0,
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div
-              style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '10px',
-                backgroundColor: hexToRgba('#4A99E9', isDark ? 0.2 : 0.12),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#4A99E9',
-              }}
-            >
               <Wallet size={16} />
             </div>
-            {selectedTripId === 'GENERAL' && (
+            {(selectedTripId === 'GENERAL' || selectedTripId === null) && (
               <span
                 style={{
                   fontSize: '9px',
@@ -313,9 +235,9 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE', 
             <div
               className="tabular-nums"
               style={{
-                fontSize: '12px',
+                fontSize: '13px',
                 fontWeight: 800,
-                color: selectedTripId === 'GENERAL' ? accentColor : 'var(--text-secondary)',
+                color: (selectedTripId === 'GENERAL' || selectedTripId === null) ? accentColor : 'var(--text-secondary)',
                 marginTop: '6px',
               }}
             >
@@ -537,220 +459,196 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE', 
         </div>
       )}
 
-      {/* 4. Active General Scope Strip (when General is selected) */}
-      {selectedTripId === 'GENERAL' && (
-        <div
-          style={{
-            marginTop: '10px',
-            padding: '8px 12px',
-            borderRadius: '14px',
-            border: `1px solid ${hexToRgba(accentColor, isDark ? 0.35 : 0.25)}`,
-            backgroundColor: cardBg,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div
-              style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '8px',
-                backgroundColor: hexToRgba('#4A99E9', isDark ? 0.2 : 0.12),
-                color: '#4A99E9',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Wallet size={14} />
-            </div>
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-primary)' }}>
-                General
-              </div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>
-                {generalMonthCount} Items • {formatCurrency(generalMonthUSD, currency)}
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setSelectedTripId(null)}
-            style={{
-              padding: '5px 8px',
-              borderRadius: '8px',
-              border: defaultBorder,
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: '11px',
-              fontWeight: 700,
-            }}
-          >
-            <X size={12} />
-            <span>All</span>
-          </button>
-        </div>
-      )}
-
-      {/* 5. REDESIGNED iOS 18 Compact Envelope Control Strip (when specific Folder is selected) */}
+      {/* 4. REDESIGNED iOS 18 Compact & Optically Balanced Active Folder Capsule */}
       {activeTrip && activeMetrics && (
         <div
           style={{
-            marginTop: '10px',
-            padding: '8px 12px',
-            borderRadius: '16px',
+            marginTop: '12px',
+            padding: '12px 16px',
+            borderRadius: '18px',
             border: `1px solid ${hexToRgba(activeColor, isDark ? 0.35 : 0.25)}`,
             backgroundColor: cardBg,
             boxShadow: isDark
               ? `0 4px 14px ${hexToRgba(activeColor, 0.15)}`
               : '0 2px 10px rgba(0, 0, 0, 0.05)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '8px',
           }}
         >
-          {/* Left: Icon & Dates */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '10px',
-                backgroundColor: hexToRgba(activeColor, isDark ? 0.2 : 0.12),
-                color: activeColor,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <CategoryIconRenderer icon={activeTrip.category.toLowerCase()} size={16} color={activeColor} />
-            </div>
-            <div style={{ minWidth: 0 }}>
+          {/* Main Content: Left info with inline pill, Right compact actions */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            {/* Left: Icon Badge + Title + Inline Left Pill + Dates */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
               <div
                 style={{
-                  fontSize: '12px',
-                  fontWeight: 800,
-                  color: 'var(--text-primary)',
-                  letterSpacing: '-0.2px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '11px',
+                  backgroundColor: hexToRgba(activeColor, isDark ? 0.2 : 0.12),
+                  color: activeColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               >
-                {formatFolderDate(activeTrip.startDate)} – {formatFolderDate(activeTrip.endDate)}
+                <CategoryIconRenderer icon={activeTrip.category.toLowerCase()} size={18} color={activeColor} />
               </div>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>
-                {activeMetrics.itemCount} Items • Budget {formatCurrency(activeMetrics.budgetUSD, currency)}
+
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span
+                    style={{
+                      fontSize: '14px',
+                      fontWeight: 800,
+                      color: 'var(--text-primary)',
+                      letterSpacing: '-0.2px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {activeTrip.name}
+                  </span>
+                  <span
+                    className="tabular-nums"
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      padding: '2px 7px',
+                      borderRadius: '6px',
+                      backgroundColor: hexToRgba(activeColor, isDark ? 0.25 : 0.14),
+                      color: activeColor,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {formatCurrency(activeMetrics.remainingUSD, currency)} Left
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: 'var(--text-muted)',
+                    fontWeight: 600,
+                    marginTop: '2px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {formatFolderDate(activeTrip.startDate)} – {formatFolderDate(activeTrip.endDate)} • Budget {formatCurrency(activeMetrics.budgetUSD, currency)}
+                </div>
               </div>
+            </div>
+
+            {/* Right: Tightly Grouped Action Buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => (isSaving ? setIsAddSavingOpen(true) : setIsAddExpenseOpen(true))}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '6px 12px',
+                  borderRadius: '9px',
+                  border: 'none',
+                  backgroundColor: activeColor,
+                  color: '#FFFFFF',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: `0 2px 6px ${hexToRgba(activeColor, 0.25)}`,
+                }}
+              >
+                <Plus size={13} />
+                <span>Add</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedTripForEdit(activeTrip)}
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '9px',
+                  border: defaultBorder,
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                title="Edit"
+              >
+                <Edit3 size={13} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm(`Delete folder "${activeTrip.name}"?`)) {
+                    deleteTrip(activeTrip.id);
+                  }
+                }}
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '9px',
+                  border: '1px solid rgba(237, 108, 108, 0.25)',
+                  backgroundColor: isDark ? 'rgba(237, 108, 108, 0.12)' : 'rgba(237, 108, 108, 0.08)',
+                  color: '#ED6C6C',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                title="Delete"
+              >
+                <Trash2 size={13} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedTripId(null)}
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '9px',
+                  border: defaultBorder,
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                title="Close"
+              >
+                <X size={13} />
+              </button>
             </div>
           </div>
 
-          {/* Center: Clean Financial Remaining Pill */}
+          {/* Micro Progress Bar */}
           <div
             style={{
-              padding: '4px 10px',
-              borderRadius: '8px',
-              backgroundColor: hexToRgba(activeColor, isDark ? 0.18 : 0.1),
-              border: `1px solid ${hexToRgba(activeColor, isDark ? 0.3 : 0.2)}`,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              flexShrink: 0,
+              height: '4px',
+              borderRadius: '2px',
+              backgroundColor: trackBg,
+              overflow: 'hidden',
+              marginTop: '10px',
             }}
           >
-            <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Left
-            </span>
-            <span className="tabular-nums" style={{ fontSize: '12px', fontWeight: 900, color: activeColor }}>
-              {formatCurrency(activeMetrics.remainingUSD, currency)}
-            </span>
-          </div>
-
-          {/* Right: Unified Action Group */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            <button
-              type="button"
-              onClick={() => (isSaving ? setIsAddSavingOpen(true) : setIsAddExpenseOpen(true))}
+            <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '6px 10px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: activeColor,
-                color: '#FFFFFF',
-                fontSize: '11px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                boxShadow: `0 2px 6px ${hexToRgba(activeColor, 0.25)}`,
+                height: '100%',
+                width: `${activeMetrics.progress}%`,
+                backgroundColor: activeMetrics.progress >= 100 ? '#ED6C6C' : activeColor,
+                borderRadius: '2px',
+                transition: 'width 0.25s ease',
               }}
-            >
-              <Plus size={13} />
-              <span>Add</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedTripForEdit(activeTrip)}
-              style={{
-                padding: '6px',
-                borderRadius: '8px',
-                border: defaultBorder,
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-              }}
-              title="Edit"
-            >
-              <Edit3 size={13} />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (window.confirm(`Delete folder "${activeTrip.name}"?`)) {
-                  deleteTrip(activeTrip.id);
-                }
-              }}
-              style={{
-                padding: '6px',
-                borderRadius: '8px',
-                border: '1px solid rgba(237, 108, 108, 0.25)',
-                backgroundColor: isDark ? 'rgba(237, 108, 108, 0.12)' : 'rgba(237, 108, 108, 0.08)',
-                color: '#ED6C6C',
-                cursor: 'pointer',
-              }}
-              title="Delete"
-            >
-              <Trash2 size={13} />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedTripId(null)}
-              style={{
-                padding: '6px',
-                borderRadius: '8px',
-                border: defaultBorder,
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-              }}
-              title="Close"
-            >
-              <X size={13} />
-            </button>
+            />
           </div>
         </div>
       )}
