@@ -388,16 +388,28 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     filtered = filtered.filter(e => e.categoryId === categoryFilter);
   }
 
-  if (selectedTripId) {
+  if (selectedTripId === 'GENERAL') {
+    filtered = filtered.filter(e => {
+      return !trips.some(t => {
+        if (e.tripId === t.id) return true;
+        const tripCat = t.category.toLowerCase();
+        const tripName = t.name.toLowerCase();
+        if (e.categoryName && (e.categoryName.toLowerCase() === tripName || e.categoryName.toLowerCase() === tripCat)) return true;
+        if (e.categoryId && (e.categoryId.toLowerCase().includes(tripCat) || e.categoryId.toLowerCase().includes(tripName))) return true;
+        if (e.title && (e.title.toLowerCase().includes(tripName) || e.title.toLowerCase().includes(tripCat))) return true;
+        return false;
+      });
+    });
+  } else if (selectedTripId) {
     const activeTrip = trips.find(t => t.id === selectedTripId);
     if (activeTrip) {
       const tripCat = activeTrip.category.toLowerCase();
       const tripName = activeTrip.name.toLowerCase();
       filtered = filtered.filter(e => {
         if (e.tripId === selectedTripId) return true;
-        if (e.categoryName.toLowerCase() === tripName || e.categoryName.toLowerCase() === tripCat) return true;
-        if (e.categoryId.toLowerCase().includes(tripCat) || e.categoryId.toLowerCase().includes(tripName)) return true;
-        if (e.title.toLowerCase().includes(tripName) || e.title.toLowerCase().includes(tripCat)) return true;
+        if (e.categoryName && (e.categoryName.toLowerCase() === tripName || e.categoryName.toLowerCase() === tripCat)) return true;
+        if (e.categoryId && (e.categoryId.toLowerCase().includes(tripCat) || e.categoryId.toLowerCase().includes(tripName))) return true;
+        if (e.title && (e.title.toLowerCase().includes(tripName) || e.title.toLowerCase().includes(tripCat))) return true;
         return false;
       });
     }

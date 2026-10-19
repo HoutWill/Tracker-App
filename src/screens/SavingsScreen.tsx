@@ -979,7 +979,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
       )}
 
       {/* Saving Folder Vault & Target Organizer Bar */}
-      <TripFolderBar type="SAVING" />
+      <TripFolderBar type="SAVING" selectedMonth={selectedMonth} />
 
       {/* Futuristic 3D Neo-Glass Art Preset Grid */}
       <ArtPresetGrid

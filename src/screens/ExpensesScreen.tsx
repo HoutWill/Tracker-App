@@ -1010,7 +1010,7 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
       )}
 
       {/* Trip Folder Travel & Event Organizer Bar */}
-      <TripFolderBar />
+      <TripFolderBar selectedMonth={selectedMonth} />
 
       {/* Futuristic 3D Neo-Glass Art Preset Grid */}
       <ArtPresetGrid

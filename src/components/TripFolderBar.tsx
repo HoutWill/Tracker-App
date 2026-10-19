@@ -1,13 +1,14 @@
 import React from 'react';
 import { useExpenses } from '../context/ExpenseContext';
-import { formatCurrency } from '../services/storageService';
+import { formatCurrency, getTodayDateString } from '../services/storageService';
 import { CategoryIconRenderer } from './CategoryIconRenderer';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { TripFolder } from '../types';
-import { Folder, Plus, X, Trash2, Edit3, Sparkles } from 'lucide-react';
+import { Folder, Wallet, Plus, X, Trash2, Edit3, Sparkles } from 'lucide-react';
 
 interface TripFolderBarProps {
   type?: 'EXPENSE' | 'SAVING';
+  selectedMonth?: string;
 }
 
 const formatFolderDate = (dateStr: string): string => {
@@ -17,7 +18,7 @@ const formatFolderDate = (dateStr: string): string => {
   return `${d} ${months[m - 1]}`;
 };
 
-export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }) => {
+export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE', selectedMonth }) => {
   const isSaving = type === 'SAVING';
   const { pageColors, isDark } = useTheme();
   const {
@@ -34,6 +35,9 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
     currency,
   } = useExpenses();
 
+  // Active month key (defaults to current month in Cambodia UTC+7, e.g. "2026-10")
+  const currentMonthKey = selectedMonth || getTodayDateString().slice(0, 7);
+
   // Primary accent colors adhering to iOS 18 Muted Pastel palette
   const accentColor = isSaving
     ? pageColors?.SAVING || '#30D158'
@@ -49,24 +53,44 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
 
   const activeTrip = visibleTrips.find(t => t.id === selectedTripId);
 
-  // Helper to calculate folder metrics accurately
+  // Helper to check if an expense matches a specific trip
+  const isExpenseInTrip = (e: any, trip: TripFolder) => {
+    if (e.tripId === trip.id) return true;
+    const tripCat = trip.category.toLowerCase();
+    const tripName = trip.name.toLowerCase();
+    if (e.categoryName && (e.categoryName.toLowerCase() === tripName || e.categoryName.toLowerCase() === tripCat)) return true;
+    if (e.categoryId && (e.categoryId.toLowerCase().includes(tripCat) || e.categoryId.toLowerCase().includes(tripName))) return true;
+    if (e.title && (e.title.toLowerCase().includes(tripName) || e.title.toLowerCase().includes(tripCat))) return true;
+    return false;
+  };
+
+  // Helper to check if an expense belongs to ANY visible trip/folder
+  const isExpenseInAnyVisibleTrip = (e: any) => {
+    return visibleTrips.some(t => isExpenseInTrip(e, t));
+  };
+
+  // 1. Current Month Expenses (strictly scoped to currentMonthKey, resetting each month!)
+  const monthItems = expenses.filter(e => {
+    if (isSaving) {
+      if (e.type !== 'SAVING' && !e.categoryId.startsWith('cat-saving')) return false;
+    } else {
+      if (e.type === 'SAVING' || e.categoryId.startsWith('cat-saving')) return false;
+    }
+    return e.date ? e.date.startsWith(currentMonthKey) : false;
+  });
+
+  // 2. Separate General (non-folder) expenses for the Current Month
+  const generalMonthItems = monthItems.filter(e => !isExpenseInAnyVisibleTrip(e));
+  const generalMonthUSD = generalMonthItems.reduce((sum, e) => sum + e.amount, 0);
+  const generalMonthCount = generalMonthItems.length;
+
+  // 3. All items for the Current Month
+  const allMonthUSD = monthItems.reduce((sum, e) => sum + e.amount, 0);
+  const allMonthCount = monthItems.length;
+
+  // 4. Metrics per folder strictly for the Current Month
   const getFolderMetrics = (trip: TripFolder) => {
-    const folderItems = expenses.filter(e => {
-      if (isSaving) {
-        if (e.type !== 'SAVING' && !e.categoryId.startsWith('cat-saving')) return false;
-      } else {
-        if (e.type === 'SAVING' || e.categoryId.startsWith('cat-saving')) return false;
-      }
-
-      if (e.tripId === trip.id) return true;
-      const tripCat = trip.category.toLowerCase();
-      const tripName = trip.name.toLowerCase();
-      if (e.categoryName.toLowerCase() === tripName || e.categoryName.toLowerCase() === tripCat) return true;
-      if (e.categoryId.toLowerCase().includes(tripCat) || e.categoryId.toLowerCase().includes(tripName)) return true;
-      if (e.title.toLowerCase().includes(tripName) || e.title.toLowerCase().includes(tripCat)) return true;
-      return false;
-    });
-
+    const folderItems = monthItems.filter(e => isExpenseInTrip(e, trip));
     const spentUSD = folderItems.reduce((sum, e) => sum + e.amount, 0);
     const budgetUSD = trip.budget || 0;
     const remainingUSD = Math.max(0, budgetUSD - spentUSD);
@@ -81,16 +105,6 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
       progress,
     };
   };
-
-  // Screen total metrics for the "All" Bento card
-  const screenItems = expenses.filter(e => {
-    if (isSaving) {
-      return e.type === 'SAVING' || e.categoryId.startsWith('cat-saving');
-    }
-    return e.type !== 'SAVING' && !e.categoryId.startsWith('cat-saving');
-  });
-  const totalAllUSD = screenItems.reduce((sum, e) => sum + e.amount, 0);
-  const totalAllCount = screenItems.length;
 
   // Active trip specific metrics
   const activeMetrics = activeTrip ? getFolderMetrics(activeTrip) : null;
@@ -162,7 +176,7 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
           WebkitOverflowScrolling: 'touch',
         }}
       >
-        {/* Card 1: All Bento Card */}
+        {/* Card 1: All Bento Card (Current Month Total) */}
         <div
           onClick={() => setSelectedTripId(null)}
           style={{
@@ -220,7 +234,7 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
               All
             </div>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 600 }}>
-              {totalAllCount} Items
+              {allMonthCount} Items
             </div>
             <div
               className="tabular-nums"
@@ -231,12 +245,86 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
                 marginTop: '6px',
               }}
             >
-              {formatCurrency(totalAllUSD, currency)}
+              {formatCurrency(allMonthUSD, currency)}
             </div>
           </div>
         </div>
 
-        {/* Dynamic Trip / Vault Folder Cards */}
+        {/* Card 2: General Bento Card (SEPARATED from Travel/Folders, Current Month) */}
+        <div
+          onClick={() => setSelectedTripId(selectedTripId === 'GENERAL' ? null : 'GENERAL')}
+          style={{
+            width: '120px',
+            minWidth: '120px',
+            padding: '12px 14px',
+            borderRadius: '18px',
+            border: selectedTripId === 'GENERAL' ? `2px solid ${accentColor}` : defaultBorder,
+            backgroundColor: cardBg,
+            cursor: 'pointer',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            boxShadow: selectedTripId === 'GENERAL'
+              ? `0 4px 14px ${hexToRgba(accentColor, isDark ? 0.25 : 0.15)}`
+              : '0 2px 8px rgba(0, 0, 0, 0.04)',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: selectedTripId === 'GENERAL' ? 'scale(1.02)' : 'none',
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div
+              style={{
+                width: '34px',
+                height: '34px',
+                borderRadius: '10px',
+                backgroundColor: hexToRgba('#4A99E9', isDark ? 0.2 : 0.12),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#4A99E9',
+              }}
+            >
+              <Wallet size={16} />
+            </div>
+            {selectedTripId === 'GENERAL' && (
+              <span
+                style={{
+                  fontSize: '9px',
+                  fontWeight: 800,
+                  padding: '2px 6px',
+                  borderRadius: '6px',
+                  backgroundColor: hexToRgba(accentColor, isDark ? 0.25 : 0.15),
+                  color: accentColor,
+                }}
+              >
+                Active
+              </span>
+            )}
+          </div>
+
+          <div style={{ marginTop: '10px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
+              General
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 600 }}>
+              {generalMonthCount} Items
+            </div>
+            <div
+              className="tabular-nums"
+              style={{
+                fontSize: '12px',
+                fontWeight: 800,
+                color: selectedTripId === 'GENERAL' ? accentColor : 'var(--text-secondary)',
+                marginTop: '6px',
+              }}
+            >
+              {formatCurrency(generalMonthUSD, currency)}
+            </div>
+          </div>
+        </div>
+
+        {/* Dynamic Trip / Vault Folder Cards (Strictly Current Month Metrics) */}
         {visibleTrips.map((t, idx) => {
           const isSelected = selectedTripId === t.id;
           const cardColor = folderColors[idx % folderColors.length];
@@ -449,7 +537,70 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE' }
         </div>
       )}
 
-      {/* 4. REDESIGNED iOS 18 Compact Envelope Control Strip */}
+      {/* 4. Active General Scope Strip (when General is selected) */}
+      {selectedTripId === 'GENERAL' && (
+        <div
+          style={{
+            marginTop: '10px',
+            padding: '8px 12px',
+            borderRadius: '14px',
+            border: `1px solid ${hexToRgba(accentColor, isDark ? 0.35 : 0.25)}`,
+            backgroundColor: cardBg,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '8px',
+                backgroundColor: hexToRgba('#4A99E9', isDark ? 0.2 : 0.12),
+                color: '#4A99E9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Wallet size={14} />
+            </div>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                General
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                {generalMonthCount} Items • {formatCurrency(generalMonthUSD, currency)}
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setSelectedTripId(null)}
+            style={{
+              padding: '5px 8px',
+              borderRadius: '8px',
+              border: defaultBorder,
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '11px',
+              fontWeight: 700,
+            }}
+          >
+            <X size={12} />
+            <span>All</span>
+          </button>
+        </div>
+      )}
+
+      {/* 5. REDESIGNED iOS 18 Compact Envelope Control Strip (when specific Folder is selected) */}
       {activeTrip && activeMetrics && (
         <div
           style={{
