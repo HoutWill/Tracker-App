@@ -396,21 +396,6 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
             >
               <ChevronRight size={16} />
             </button>
-
-            {isCurrentMonth && (
-              <span
-                style={{
-                  fontSize: '10px',
-                  fontWeight: 800,
-                  padding: '2px 7px',
-                  borderRadius: '6px',
-                  backgroundColor: 'rgba(48, 209, 88, 0.15)',
-                  color: '#30D158',
-                }}
-              >
-                Current
-              </span>
-            )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -622,18 +607,6 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
               </div>
               <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Pacing</span>
             </div>
-            <span
-              style={{
-                fontSize: '10px',
-                fontWeight: 800,
-                padding: '2px 7px',
-                borderRadius: '6px',
-                backgroundColor: remainingGoalUSD <= 0 ? 'rgba(48, 209, 88, 0.15)' : 'rgba(74, 153, 233, 0.15)',
-                color: remainingGoalUSD <= 0 ? '#30D158' : '#4A99E9',
-              }}
-            >
-              {remainingGoalUSD <= 0 ? 'Done' : 'Paced'}
-            </span>
           </div>
           <div style={{ marginTop: '10px' }}>
             <div
@@ -687,18 +660,6 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
               </div>
               <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Growth</span>
             </div>
-            <span
-              style={{
-                fontSize: '10px',
-                fontWeight: 800,
-                padding: '2px 7px',
-                borderRadius: '6px',
-                backgroundColor: goalProgressPct >= 100 ? 'rgba(48, 209, 88, 0.15)' : 'rgba(243, 168, 91, 0.15)',
-                color: goalProgressPct >= 100 ? '#30D158' : '#F3A85B',
-              }}
-            >
-              {goalProgressPct >= 100 ? 'Done' : goalProgressPct >= 50 ? 'Strong' : 'Active'}
-            </span>
           </div>
           <div style={{ marginTop: '10px' }}>
             <div

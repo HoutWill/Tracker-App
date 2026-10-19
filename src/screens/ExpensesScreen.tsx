@@ -426,21 +426,6 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
             >
               <ChevronRight size={16} />
             </button>
-
-            {isCurrentMonth && (
-              <span
-                style={{
-                  fontSize: '10px',
-                  fontWeight: 800,
-                  padding: '2px 7px',
-                  borderRadius: '6px',
-                  backgroundColor: 'rgba(74, 153, 233, 0.15)',
-                  color: '#4A99E9',
-                }}
-              >
-                Current
-              </span>
-            )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -652,18 +637,6 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               </div>
               <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Allowance</span>
             </div>
-            <span
-              style={{
-                fontSize: '10px',
-                fontWeight: 800,
-                padding: '2px 7px',
-                borderRadius: '6px',
-                backgroundColor: dailyAllowanceUSD > 0 ? 'rgba(48, 209, 88, 0.15)' : 'rgba(237, 108, 108, 0.15)',
-                color: dailyAllowanceUSD > 0 ? '#30D158' : '#ED6C6C',
-              }}
-            >
-              {dailyAllowanceUSD > 20 ? 'Safe' : dailyAllowanceUSD > 0 ? 'Paced' : 'Limit'}
-            </span>
           </div>
           <div style={{ marginTop: '10px' }}>
             <div
@@ -717,18 +690,6 @@ export const ExpensesScreen: React.FC<ExpensesScreenProps> = ({ onSwitchTab }) =
               </div>
               <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>Pacing</span>
             </div>
-            <span
-              style={{
-                fontSize: '10px',
-                fontWeight: 800,
-                padding: '2px 7px',
-                borderRadius: '6px',
-                backgroundColor: budgetProgress <= 80 ? 'rgba(48, 209, 88, 0.15)' : 'rgba(237, 108, 108, 0.15)',
-                color: budgetProgress <= 80 ? '#30D158' : '#ED6C6C',
-              }}
-            >
-              {budgetProgress <= 80 ? 'Normal' : budgetProgress < 100 ? 'Caution' : 'Exceeded'}
-            </span>
           </div>
           <div style={{ marginTop: '10px' }}>
             <div

@@ -209,20 +209,6 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE', 
             >
               <Wallet size={16} />
             </div>
-            {(selectedTripId === 'GENERAL' || selectedTripId === null) && (
-              <span
-                style={{
-                  fontSize: '9px',
-                  fontWeight: 800,
-                  padding: '2px 6px',
-                  borderRadius: '6px',
-                  backgroundColor: hexToRgba(accentColor, isDark ? 0.25 : 0.15),
-                  color: accentColor,
-                }}
-              >
-                Active
-              </span>
-            )}
           </div>
 
           <div style={{ marginTop: '10px' }}>
@@ -291,30 +277,15 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE', 
                   <CategoryIconRenderer icon={t.category.toLowerCase()} size={16} color={cardColor} />
                 </div>
 
-                {isSelected ? (
-                  <span
-                    style={{
-                      fontSize: '9px',
-                      fontWeight: 800,
-                      padding: '2px 6px',
-                      borderRadius: '6px',
-                      backgroundColor: hexToRgba(cardColor, isDark ? 0.25 : 0.15),
-                      color: cardColor,
-                    }}
-                  >
-                    Active
-                  </span>
-                ) : (
-                  <span
-                    style={{
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      color: metrics.progress >= 100 ? '#ED6C6C' : 'var(--text-muted)',
-                    }}
-                  >
-                    {metrics.progress}%
-                  </span>
-                )}
+                <span
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: metrics.progress >= 100 ? '#ED6C6C' : 'var(--text-muted)',
+                  }}
+                >
+                  {metrics.progress}%
+                </span>
               </div>
 
               <div style={{ marginTop: '10px' }}>
