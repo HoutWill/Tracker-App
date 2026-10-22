@@ -6,19 +6,25 @@ import { PaymentMethod } from '../types';
 import { X, Check, ArrowDownRight, Trash2 } from 'lucide-react';
 
 export const EditExpenseModal: React.FC = () => {
-  const { selectedExpenseForEdit, setSelectedExpenseForEdit, updateExpense, deleteExpense, categories, currency } = useExpenses();
+  const { selectedExpenseForEdit, setSelectedExpenseForEdit, updateExpense, deleteExpense, categories, currency, trips } = useExpenses();
 
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
   const [dateStr, setDateStr] = useState('');
+  const [tripId, setTripId] = useState<string | undefined>(undefined);
   const [notes, setNotes] = useState('');
 
   const isSavingItem = selectedExpenseForEdit?.type === 'SAVING' || selectedExpenseForEdit?.categoryId.startsWith('cat-saving');
 
   // Pure Expense categories list
   const expenseCategories = categories.filter(c => c.type !== 'SAVING' && c.type !== 'INCOME' && !c.id.startsWith('cat-saving'));
+  const expenseFolders = trips.filter(t => t.type !== 'SAVING' && !['vault', 'emergency', 'goal', 'house', 'gadget', 'phone'].includes(t.category.toLowerCase()));
+
+  const quickUSDAmounts = [1, 1.5, 2, 2.5, 3, 5, 10, 20];
+  const quickKHRAmounts = [1000, 2000, 4000, 5000, 10000, 20000, 40000, 50000];
+  const quickAmounts = currency === 'KHR' ? quickKHRAmounts : quickUSDAmounts;
 
   useEffect(() => {
     if (selectedExpenseForEdit && !isSavingItem) {
@@ -27,6 +33,7 @@ export const EditExpenseModal: React.FC = () => {
       setCategoryId(selectedExpenseForEdit.categoryId || expenseCategories[0]?.id || 'cat-food');
       setPaymentMethod(selectedExpenseForEdit.paymentMethod || 'Cash');
       setDateStr(selectedExpenseForEdit.date || getTodayDateString());
+      setTripId(selectedExpenseForEdit.tripId || undefined);
       setNotes(selectedExpenseForEdit.notes || '');
     }
   }, [selectedExpenseForEdit]);
@@ -60,6 +67,7 @@ export const EditExpenseModal: React.FC = () => {
       date: safeDate,
       paymentMethod,
       notes: notes.trim().slice(0, 500),
+      tripId: tripId || undefined,
     });
   };
 
@@ -184,6 +192,35 @@ export const EditExpenseModal: React.FC = () => {
               outline: 'none',
             }}
           />
+          {/* Quick Amount Chips */}
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingTop: '8px', paddingBottom: '2px', scrollbarWidth: 'none' }}>
+            {quickAmounts.map(val => {
+              const isSelected = parseFloat(amount) === val;
+              return (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setAmount(val.toString())}
+                  className="glass-pill"
+                  style={{
+                    padding: '5px 10px',
+                    borderRadius: '8px',
+                    backgroundColor: isSelected ? 'var(--accent)' : 'rgba(255, 255, 255, 0.06)',
+                    borderColor: isSelected ? 'var(--accent)' : 'var(--border-glass)',
+                    color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
+                    fontSize: '11px',
+                    fontWeight: isSelected ? 800 : 600,
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {currency === 'KHR' ? `${val.toLocaleString()}៛` : `$${val}`}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Expense Category Selector */}
@@ -213,6 +250,52 @@ export const EditExpenseModal: React.FC = () => {
             })}
           </div>
         </div>
+
+        {/* Folder / Envelope Selector */}
+        {(expenseFolders.length > 0 || tripId) && (
+          <div>
+            <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+              Folder
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+              <button
+                type="button"
+                className="glass-pill"
+                onClick={() => setTripId(undefined)}
+                style={{
+                  backgroundColor: !tripId ? 'var(--accent)' : 'rgba(255, 255, 255, 0.06)',
+                  borderColor: !tripId ? 'var(--accent)' : 'var(--border-glass)',
+                  color: !tripId ? '#FFF' : 'var(--text-primary)',
+                  fontSize: '11px',
+                  fontWeight: !tripId ? 800 : 600,
+                }}
+              >
+                General
+              </button>
+              {expenseFolders.map(t => {
+                const isActive = tripId === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className="glass-pill"
+                    onClick={() => setTripId(t.id)}
+                    style={{
+                      backgroundColor: isActive ? 'var(--accent)' : 'rgba(255, 255, 255, 0.06)',
+                      borderColor: isActive ? 'var(--accent)' : 'var(--border-glass)',
+                      color: isActive ? '#FFF' : 'var(--text-primary)',
+                      fontSize: '11px',
+                      fontWeight: isActive ? 800 : 600,
+                    }}
+                  >
+                    <CategoryIconRenderer icon={t.category.toLowerCase()} size={12} color={isActive ? '#FFF' : 'var(--text-secondary)'} />
+                    {t.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Payment Method Selector */}
         <div>

@@ -320,7 +320,16 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     // 1. Instant Optimistic State Update
-    setExpenses(prev => prev.map(e => (e.id === cleanId ? { ...e, ...updated } : e)));
+    setExpenses(prev => prev.map(e => {
+      if (e.id === cleanId) {
+        const next = { ...e, ...updated };
+        if (updated.tripId === undefined || updated.tripId === null || updated.tripId === 'GENERAL') {
+          delete next.tripId;
+        }
+        return next;
+      }
+      return e;
+    }));
 
     // 2. Non-blocking background sync
     StorageService.updateExpense(cleanId, updated);

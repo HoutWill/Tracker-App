@@ -58,6 +58,7 @@ export const ExpenseDetailModal: React.FC = () => {
       paymentMethod,
       date: safeDate,
       notes: notes.trim().slice(0, 500),
+      tripId: selectedExpenseForEdit.tripId,
     });
     setSelectedExpenseForEdit(null);
   };

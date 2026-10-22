@@ -55,6 +55,12 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
   const [presetAmount, setPresetAmount] = useState<string>('');
   const [presetCurrency, setPresetCurrency] = useState<'USD' | 'KHR'>('USD');
   const [presetDate, setPresetDate] = useState<string>(getTodayDateString());
+  const [presetTripId, setPresetTripId] = useState<string | undefined>(undefined);
+
+  const savingFolders = trips.filter(t => t.type === 'SAVING' || ['vault', 'emergency', 'goal', 'gold', 'stocks', 'income', 'house', 'gadget', 'phone', 'car'].includes(t.category.toLowerCase()));
+  const quickUSDAmounts = [5, 10, 20, 50, 100, 200, 500];
+  const quickKHRAmounts = [20000, 40000, 50000, 100000, 200000, 500000, 1000000];
+  const currentQuickAmounts = presetCurrency === 'USD' ? quickUSDAmounts : quickKHRAmounts;
 
   // Date Check filter state
   const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
@@ -151,6 +157,15 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
     setPresetCurrency(preset.currency || 'USD');
     setPresetDate(getTodayDateString());
     setSelectedPayment('Bank');
+
+    const matchingTrip = selectedTripId
+      ? trips.find(t => t.id === selectedTripId)
+      : trips.find(t =>
+          t.name.toLowerCase() === preset.title.toLowerCase() ||
+          t.category.toLowerCase() === preset.title.toLowerCase() ||
+          preset.categoryId.includes(t.category.toLowerCase())
+        );
+    setPresetTripId(matchingTrip?.id || undefined);
   };
 
   const handleConfirmPreset = () => {
@@ -170,14 +185,6 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
 
     const amountUSD = presetCurrency === 'KHR' ? num / 4000 : num;
 
-    const matchingTrip = selectedTripId
-      ? trips.find(t => t.id === selectedTripId)
-      : trips.find(t =>
-          t.name.toLowerCase() === activePreset.title.toLowerCase() ||
-          t.category.toLowerCase() === activePreset.title.toLowerCase() ||
-          activePreset.categoryId.includes(t.category.toLowerCase())
-        );
-
     // Reset preset popover & set toast INSTANTLY for 0ms UI lag
     const presetTitle = activePreset.title;
     setActivePreset(null);
@@ -196,7 +203,7 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
       date: presetDate,
       paymentMethod: selectedPayment,
       notes: `Vault deposit via ${selectedPayment}`,
-      tripId: matchingTrip?.id,
+      tripId: presetTripId || undefined,
     });
   };
 
@@ -1250,7 +1257,13 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                 >
                   <button
                     type="button"
-                    onClick={() => setPresetCurrency('USD')}
+                    onClick={() => {
+                      if (presetCurrency === 'KHR') {
+                        const n = parseFloat(presetAmount);
+                        if (!isNaN(n) && n >= 1000) setPresetAmount((n / 4000).toString());
+                      }
+                      setPresetCurrency('USD');
+                    }}
                     style={{
                       flex: 1,
                       padding: '6px 0',
@@ -1269,7 +1282,13 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                   </button>
                   <button
                     type="button"
-                    onClick={() => setPresetCurrency('KHR')}
+                    onClick={() => {
+                      if (presetCurrency === 'USD') {
+                        const n = parseFloat(presetAmount);
+                        if (!isNaN(n) && n > 0 && n <= 100) setPresetAmount((n * 4000).toString());
+                      }
+                      setPresetCurrency('KHR');
+                    }}
                     style={{
                       flex: 1,
                       padding: '6px 0',
@@ -1287,6 +1306,36 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                     ៛ KHR
                   </button>
                 </div>
+              </div>
+
+              {/* Fixed Amount Chips */}
+              <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingTop: '8px', paddingBottom: '2px', scrollbarWidth: 'none' }}>
+                {currentQuickAmounts.map(val => {
+                  const isSelected = parseFloat(presetAmount) === val;
+                  return (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setPresetAmount(val.toString())}
+                      className="glass-pill"
+                      style={{
+                        padding: '6px 11px',
+                        borderRadius: '9px',
+                        backgroundColor: isSelected ? pageAccent : 'rgba(255, 255, 255, 0.06)',
+                        borderColor: isSelected ? pageAccent : 'var(--border-glass)',
+                        color: isSelected ? '#FFFFFF' : 'var(--text-primary)',
+                        fontSize: '11px',
+                        fontWeight: isSelected ? 800 : 600,
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {presetCurrency === 'USD' ? `$${val}` : `${val.toLocaleString()}៛`}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -1345,6 +1394,52 @@ export const SavingsScreen: React.FC<SavingsScreenProps> = ({ onSwitchTab }) => 
                 }}
               />
             </div>
+
+            {/* Optional Folder / Vault Selector */}
+            {savingFolders.length > 0 && (
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                  Folder
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                  <button
+                    type="button"
+                    className="glass-pill"
+                    onClick={() => setPresetTripId(undefined)}
+                    style={{
+                      backgroundColor: !presetTripId ? pageAccent : 'rgba(255, 255, 255, 0.06)',
+                      borderColor: !presetTripId ? pageAccent : 'var(--border-glass)',
+                      color: !presetTripId ? '#FFF' : 'var(--text-primary)',
+                      fontSize: '11px',
+                      fontWeight: !presetTripId ? 800 : 600,
+                    }}
+                  >
+                    General
+                  </button>
+                  {savingFolders.map(t => {
+                    const isActive = presetTripId === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        className="glass-pill"
+                        onClick={() => setPresetTripId(t.id)}
+                        style={{
+                          backgroundColor: isActive ? pageAccent : 'rgba(255, 255, 255, 0.06)',
+                          borderColor: isActive ? pageAccent : 'var(--border-glass)',
+                          color: isActive ? '#FFF' : 'var(--text-primary)',
+                          fontSize: '11px',
+                          fontWeight: isActive ? 800 : 600,
+                        }}
+                      >
+                        <CategoryIconRenderer icon={t.category.toLowerCase()} size={12} color={isActive ? '#FFF' : 'var(--text-secondary)'} />
+                        {t.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Confirm & Log Button */}
             <button

@@ -265,7 +265,12 @@ app.put('/api/expenses/:id', (req, res) => {
   }
 
   if (req.body.tripId !== undefined) {
-    updates.tripId = typeof req.body.tripId === 'string' && req.body.tripId.trim() ? req.body.tripId.slice(0, 80) : undefined;
+    if (typeof req.body.tripId === 'string' && req.body.tripId.trim() && req.body.tripId !== 'GENERAL') {
+      updates.tripId = req.body.tripId.slice(0, 80);
+    } else {
+      delete existing.tripId;
+      updates.tripId = undefined;
+    }
   }
 
   expenses[index] = { ...existing, ...updates, updatedAt: Date.now() };

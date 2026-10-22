@@ -414,7 +414,16 @@ export const StorageService = {
     // 1. Update local cache synchronously
     try {
       const current = this.getCachedExpenses();
-      const updated = current.map(e => (e.id === cleanId ? { ...e, ...updatedFields } : e));
+      const updated = current.map(e => {
+        if (e.id === cleanId) {
+          const next = { ...e, ...updatedFields };
+          if (updatedFields.tripId === undefined || updatedFields.tripId === null || updatedFields.tripId === 'GENERAL') {
+            delete next.tripId;
+          }
+          return next;
+        }
+        return e;
+      });
       localStorage.setItem('pitrack_expenses_data', JSON.stringify(updated));
       localStorage.setItem(`pitrack_expenses_${guestId}`, JSON.stringify(updated));
     } catch (e) {}

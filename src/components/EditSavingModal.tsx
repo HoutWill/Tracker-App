@@ -6,19 +6,25 @@ import { PaymentMethod } from '../types';
 import { X, Check, PiggyBank, Trash2 } from 'lucide-react';
 
 export const EditSavingModal: React.FC = () => {
-  const { selectedExpenseForEdit, setSelectedExpenseForEdit, updateExpense, deleteExpense, categories, currency } = useExpenses();
+  const { selectedExpenseForEdit, setSelectedExpenseForEdit, updateExpense, deleteExpense, categories, currency, trips } = useExpenses();
 
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Bank');
   const [dateStr, setDateStr] = useState('');
+  const [tripId, setTripId] = useState<string | undefined>(undefined);
   const [notes, setNotes] = useState('');
 
   const isSavingItem = selectedExpenseForEdit?.type === 'SAVING' || selectedExpenseForEdit?.categoryId.startsWith('cat-saving');
 
   // Pure Savings Vault categories list
   const savingCategories = categories.filter(c => c.type === 'SAVING' || c.id.startsWith('cat-saving'));
+  const savingFolders = trips.filter(t => t.type === 'SAVING' || ['vault', 'emergency', 'goal', 'gold', 'stocks', 'income', 'house', 'gadget', 'phone', 'car'].includes(t.category.toLowerCase()));
+
+  const quickUSDAmounts = [5, 10, 20, 50, 100, 200, 500];
+  const quickKHRAmounts = [20000, 40000, 50000, 100000, 200000, 500000, 1000000];
+  const quickAmounts = currency === 'KHR' ? quickKHRAmounts : quickUSDAmounts;
 
   useEffect(() => {
     if (selectedExpenseForEdit && isSavingItem) {
@@ -27,6 +33,7 @@ export const EditSavingModal: React.FC = () => {
       setCategoryId(selectedExpenseForEdit.categoryId || savingCategories[0]?.id || 'cat-saving-vault');
       setPaymentMethod(selectedExpenseForEdit.paymentMethod || 'Bank');
       setDateStr(selectedExpenseForEdit.date || getTodayDateString());
+      setTripId(selectedExpenseForEdit.tripId || undefined);
       setNotes(selectedExpenseForEdit.notes || '');
     }
   }, [selectedExpenseForEdit]);
@@ -60,6 +67,7 @@ export const EditSavingModal: React.FC = () => {
       date: safeDate,
       paymentMethod,
       notes: notes.trim().slice(0, 500),
+      tripId: tripId || undefined,
     });
   };
 
@@ -184,6 +192,35 @@ export const EditSavingModal: React.FC = () => {
               outline: 'none',
             }}
           />
+          {/* Quick Amount Chips */}
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingTop: '8px', paddingBottom: '2px', scrollbarWidth: 'none' }}>
+            {quickAmounts.map(val => {
+              const isSelected = parseFloat(amount) === val;
+              return (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setAmount(val.toString())}
+                  className="glass-pill"
+                  style={{
+                    padding: '5px 10px',
+                    borderRadius: '8px',
+                    backgroundColor: isSelected ? 'var(--accent-success)' : 'rgba(255, 255, 255, 0.06)',
+                    borderColor: isSelected ? 'var(--accent-success)' : 'var(--border-glass)',
+                    color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
+                    fontSize: '11px',
+                    fontWeight: isSelected ? 800 : 600,
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {currency === 'KHR' ? `${val.toLocaleString()}៛` : `$${val}`}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Bucket Selector */}
@@ -214,6 +251,52 @@ export const EditSavingModal: React.FC = () => {
             })}
           </div>
         </div>
+
+        {/* Folder / Vault Selector */}
+        {(savingFolders.length > 0 || tripId) && (
+          <div>
+            <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+              Folder
+            </label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+              <button
+                type="button"
+                className="glass-pill"
+                onClick={() => setTripId(undefined)}
+                style={{
+                  backgroundColor: !tripId ? 'var(--accent-success)' : 'rgba(255, 255, 255, 0.06)',
+                  borderColor: !tripId ? 'var(--accent-success)' : 'var(--border-glass)',
+                  color: !tripId ? '#FFF' : 'var(--text-primary)',
+                  fontSize: '11px',
+                  fontWeight: !tripId ? 800 : 600,
+                }}
+              >
+                General
+              </button>
+              {savingFolders.map(t => {
+                const isActive = tripId === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className="glass-pill"
+                    onClick={() => setTripId(t.id)}
+                    style={{
+                      backgroundColor: isActive ? 'var(--accent-success)' : 'rgba(255, 255, 255, 0.06)',
+                      borderColor: isActive ? 'var(--accent-success)' : 'var(--border-glass)',
+                      color: isActive ? '#FFF' : 'var(--text-primary)',
+                      fontSize: '11px',
+                      fontWeight: isActive ? 800 : 600,
+                    }}
+                  >
+                    <CategoryIconRenderer icon={t.category.toLowerCase()} size={12} color={isActive ? '#FFF' : 'var(--accent-success)'} />
+                    {t.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Source Selector */}
         <div>

@@ -55,7 +55,9 @@ export const TripFolderBar: React.FC<TripFolderBarProps> = ({ type = 'EXPENSE', 
 
   // Helper to check if an expense matches a specific trip
   const isExpenseInTrip = (e: any, trip: TripFolder) => {
-    if (e.tripId === trip.id) return true;
+    if (e.tripId !== undefined && e.tripId !== null && e.tripId !== '') {
+      return e.tripId === trip.id;
+    }
     const tripCat = trip.category.toLowerCase();
     const tripName = trip.name.toLowerCase();
     if (e.categoryName && (e.categoryName.toLowerCase() === tripName || e.categoryName.toLowerCase() === tripCat)) return true;
