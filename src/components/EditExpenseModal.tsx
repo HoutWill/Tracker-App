@@ -10,6 +10,7 @@ export const EditExpenseModal: React.FC = () => {
 
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
+  const [itemCurrency, setItemCurrency] = useState<'USD' | 'KHR'>('USD');
   const [categoryId, setCategoryId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
   const [dateStr, setDateStr] = useState('');
@@ -24,12 +25,19 @@ export const EditExpenseModal: React.FC = () => {
 
   const quickUSDAmounts = [1, 1.5, 2, 2.5, 3, 5, 10, 20];
   const quickKHRAmounts = [1000, 2000, 4000, 5000, 10000, 20000, 40000, 50000];
-  const quickAmounts = currency === 'KHR' ? quickKHRAmounts : quickUSDAmounts;
+  const quickAmounts = itemCurrency === 'KHR' ? quickKHRAmounts : quickUSDAmounts;
 
   useEffect(() => {
     if (selectedExpenseForEdit && !isSavingItem) {
       setTitle(selectedExpenseForEdit.title || '');
-      setAmount(selectedExpenseForEdit.amount ? selectedExpenseForEdit.amount.toString() : '0');
+      const isKHR = selectedExpenseForEdit.currency === 'KHR';
+      setItemCurrency(isKHR ? 'KHR' : 'USD');
+      if (isKHR) {
+        const val = selectedExpenseForEdit.amountOriginal || Math.round((selectedExpenseForEdit.amount || 0) * 4000);
+        setAmount(val ? val.toString() : '0');
+      } else {
+        setAmount(selectedExpenseForEdit.amount ? selectedExpenseForEdit.amount.toString() : '0');
+      }
       setCategoryId(selectedExpenseForEdit.categoryId || expenseCategories[0]?.id || 'cat-food');
       setPaymentMethod(selectedExpenseForEdit.paymentMethod || 'Cash');
       setDateStr(selectedExpenseForEdit.date || getTodayDateString());
@@ -56,9 +64,13 @@ export const EditExpenseModal: React.FC = () => {
     // Close modal INSTANTLY for 0ms UI lag
     setSelectedExpenseForEdit(null);
 
+    const amountUSD = itemCurrency === 'KHR' ? num / 4000 : num;
+
     updateExpense(editId, {
       title: cleanTitle,
-      amount: num,
+      amount: amountUSD,
+      currency: itemCurrency,
+      amountOriginal: num,
       type: 'EXPENSE',
       categoryId: cat.id,
       categoryName: cat.name,
@@ -167,31 +179,95 @@ export const EditExpenseModal: React.FC = () => {
           />
         </div>
 
-        {/* Amount Input */}
+        {/* Amount & Currency Input */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Amount ({currency})
+            Amount & Currency
           </label>
-          <input
-            type="number"
-            step="0.01"
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            required
-            style={{
-              width: '100%',
-              height: '42px',
-              padding: '0 12px',
-              borderRadius: '10px',
-              border: '1px solid var(--border-glass)',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              color: 'var(--accent-danger)',
-              fontSize: '15px',
-              fontWeight: 800,
-              marginTop: '4px',
-              outline: 'none',
-            }}
-          />
+          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+            <input
+              type="number"
+              step="0.01"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              required
+              style={{
+                flex: 1,
+                height: '42px',
+                padding: '0 12px',
+                borderRadius: '10px',
+                border: '1px solid var(--border-glass)',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                color: 'var(--accent-danger)',
+                fontSize: '15px',
+                fontWeight: 800,
+                outline: 'none',
+              }}
+            />
+            {/* Modern Liquid Glass Toggle Switch for Currency */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '3px',
+                borderRadius: '10px',
+                backgroundColor: 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
+                width: '130px',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  if (itemCurrency === 'KHR') {
+                    const n = parseFloat(amount);
+                    if (!isNaN(n) && n >= 1000) setAmount((n / 4000).toString());
+                  }
+                  setItemCurrency('USD');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '6px 0',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: itemCurrency === 'USD' ? 'var(--accent)' : 'transparent',
+                  color: itemCurrency === 'USD' ? '#FFFFFF' : 'var(--text-primary)',
+                  fontSize: '11px',
+                  fontWeight: itemCurrency === 'USD' ? 800 : 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: itemCurrency === 'USD' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+                }}
+              >
+                $ USD
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (itemCurrency === 'USD') {
+                    const n = parseFloat(amount);
+                    if (!isNaN(n) && n > 0 && n <= 100) setAmount((n * 4000).toString());
+                  }
+                  setItemCurrency('KHR');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '6px 0',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: itemCurrency === 'KHR' ? 'var(--accent)' : 'transparent',
+                  color: itemCurrency === 'KHR' ? '#FFFFFF' : 'var(--text-primary)',
+                  fontSize: '11px',
+                  fontWeight: itemCurrency === 'KHR' ? 800 : 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: itemCurrency === 'KHR' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+                }}
+              >
+                ៛ KHR
+              </button>
+            </div>
+          </div>
           {/* Quick Amount Chips */}
           <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingTop: '8px', paddingBottom: '2px', scrollbarWidth: 'none' }}>
             {quickAmounts.map(val => {
@@ -203,8 +279,8 @@ export const EditExpenseModal: React.FC = () => {
                   onClick={() => setAmount(val.toString())}
                   className="glass-pill"
                   style={{
-                    padding: '5px 10px',
-                    borderRadius: '8px',
+                    padding: '6px 11px',
+                    borderRadius: '9px',
                     backgroundColor: isSelected ? 'var(--accent)' : 'rgba(255, 255, 255, 0.06)',
                     borderColor: isSelected ? 'var(--accent)' : 'var(--border-glass)',
                     color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
@@ -216,7 +292,7 @@ export const EditExpenseModal: React.FC = () => {
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  {currency === 'KHR' ? `${val.toLocaleString()}៛` : `$${val}`}
+                  {itemCurrency === 'KHR' ? `${val.toLocaleString()}៛` : `$${val}`}
                 </button>
               );
             })}

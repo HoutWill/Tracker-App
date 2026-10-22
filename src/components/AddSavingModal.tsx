@@ -10,6 +10,7 @@ export const AddSavingModal: React.FC = () => {
 
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
+  const [itemCurrency, setItemCurrency] = useState<'USD' | 'KHR'>(currency || 'USD');
   const [categoryId, setCategoryId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Bank');
   const [dateStr, setDateStr] = useState(getTodayDateString());
@@ -20,14 +21,19 @@ export const AddSavingModal: React.FC = () => {
   const savingCategories = categories.filter(c => c.type === 'SAVING' || c.id.startsWith('cat-saving'));
   const savingFolders = trips.filter(t => t.type === 'SAVING' || ['vault', 'emergency', 'goal', 'gold', 'stocks'].includes(t.category.toLowerCase()));
 
+  const quickUSDAmounts = [5, 10, 20, 50, 100, 200, 500];
+  const quickKHRAmounts = [20000, 40000, 50000, 100000, 200000, 500000, 1000000];
+  const quickAmounts = itemCurrency === 'KHR' ? quickKHRAmounts : quickUSDAmounts;
+
   useEffect(() => {
     if (isAddSavingOpen) {
       setCategoryId(savingCategories[0]?.id || 'cat-saving-vault');
       setPaymentMethod('Bank');
       setDateStr(selectedDate || getTodayDateString());
       setTripId(selectedTripId || undefined);
+      setItemCurrency(currency || 'USD');
     }
-  }, [isAddSavingOpen, selectedTripId, selectedDate]);
+  }, [isAddSavingOpen, selectedTripId, selectedDate, currency]);
 
   if (!isAddSavingOpen) return null;
 
@@ -49,10 +55,13 @@ export const AddSavingModal: React.FC = () => {
     setNotes('');
     setIsAddSavingOpen(false);
 
+    const amountUSD = itemCurrency === 'KHR' ? num / 4000 : num;
+
     addExpense({
       title: cleanTitle,
-      amount: num,
-      currency: currency,
+      amount: amountUSD,
+      currency: itemCurrency,
+      amountOriginal: num,
       type: 'SAVING',
       categoryId: cat.id,
       categoryName: cat.name,
@@ -133,32 +142,125 @@ export const AddSavingModal: React.FC = () => {
           />
         </div>
 
-        {/* Deposit Amount Input */}
+        {/* Deposit Amount & Currency Input */}
         <div>
           <label style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            Amount
+            Amount & Currency
           </label>
-          <input
-            type="number"
-            step="0.01"
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            placeholder="0.00"
-            required
-            style={{
-              width: '100%',
-              height: '42px',
-              padding: '0 12px',
-              borderRadius: '10px',
-              border: '1px solid var(--border-glass)',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              color: 'var(--accent-success)',
-              fontSize: '15px',
-              fontWeight: 800,
-              marginTop: '4px',
-              outline: 'none',
-            }}
-          />
+          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+            <input
+              type="number"
+              step="0.01"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              placeholder="0.00"
+              required
+              style={{
+                flex: 1,
+                height: '42px',
+                padding: '0 12px',
+                borderRadius: '10px',
+                border: '1px solid var(--border-glass)',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                color: 'var(--accent-success)',
+                fontSize: '15px',
+                fontWeight: 800,
+                outline: 'none',
+              }}
+            />
+            {/* Modern Liquid Glass Toggle Switch for Currency */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '3px',
+                borderRadius: '10px',
+                backgroundColor: 'var(--pill-bg)',
+                border: '1px solid var(--border-glass)',
+                width: '130px',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  if (itemCurrency === 'KHR') {
+                    const n = parseFloat(amount);
+                    if (!isNaN(n) && n >= 1000) setAmount((n / 4000).toString());
+                  }
+                  setItemCurrency('USD');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '6px 0',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: itemCurrency === 'USD' ? 'var(--accent-success)' : 'transparent',
+                  color: itemCurrency === 'USD' ? '#FFFFFF' : 'var(--text-primary)',
+                  fontSize: '11px',
+                  fontWeight: itemCurrency === 'USD' ? 800 : 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: itemCurrency === 'USD' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+                }}
+              >
+                $ USD
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (itemCurrency === 'USD') {
+                    const n = parseFloat(amount);
+                    if (!isNaN(n) && n > 0 && n <= 100) setAmount((n * 4000).toString());
+                  }
+                  setItemCurrency('KHR');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '6px 0',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: itemCurrency === 'KHR' ? 'var(--accent-success)' : 'transparent',
+                  color: itemCurrency === 'KHR' ? '#FFFFFF' : 'var(--text-primary)',
+                  fontSize: '11px',
+                  fontWeight: itemCurrency === 'KHR' ? 800 : 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: itemCurrency === 'KHR' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+                }}
+              >
+                ៛ KHR
+              </button>
+            </div>
+          </div>
+          {/* Quick Amount Chips */}
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingTop: '8px', paddingBottom: '2px', scrollbarWidth: 'none' }}>
+            {quickAmounts.map(val => {
+              const isSelected = parseFloat(amount) === val;
+              return (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setAmount(val.toString())}
+                  className="glass-pill"
+                  style={{
+                    padding: '6px 11px',
+                    borderRadius: '9px',
+                    backgroundColor: isSelected ? 'var(--accent-success)' : 'rgba(255, 255, 255, 0.06)',
+                    borderColor: isSelected ? 'var(--accent-success)' : 'var(--border-glass)',
+                    color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
+                    fontSize: '11px',
+                    fontWeight: isSelected ? 800 : 600,
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {itemCurrency === 'KHR' ? `${val.toLocaleString()}៛` : `$${val}`}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Bucket Selector */}

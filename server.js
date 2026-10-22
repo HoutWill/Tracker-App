@@ -240,6 +240,13 @@ app.put('/api/expenses/:id', (req, res) => {
     updates.currency = req.body.currency === 'KHR' ? 'KHR' : 'USD';
   }
 
+  if (req.body.amountOriginal !== undefined) {
+    const rawOrig = typeof req.body.amountOriginal === 'number' ? req.body.amountOriginal : parseFloat(req.body.amountOriginal);
+    if (!isNaN(rawOrig) && isFinite(rawOrig) && rawOrig > 0) {
+      updates.amountOriginal = rawOrig;
+    }
+  }
+
   if (req.body.paymentMethod !== undefined && typeof req.body.paymentMethod === 'string') {
     updates.paymentMethod = req.body.paymentMethod.slice(0, 30);
   }
